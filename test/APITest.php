@@ -42,7 +42,7 @@ class APITest extends BaseTest
             $response = $this->doJSONRequest($request['method'], $request['path'], $request['data']);
 
             // Assert that the status code received is 400
-            $this->assertEquals(400, $response->getStatusCode());
+            $this->assertEquals(400, $response->getStatusCode(), "Failed on path {$request['path']} With method: {$request['method']}");
 
             // Retrieve the response data, assert that it is valid
             $responseData = $this->responseToArray($response);
