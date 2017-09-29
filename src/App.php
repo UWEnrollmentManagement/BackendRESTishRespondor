@@ -3,15 +3,6 @@ namespace FormsAPI;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use \Psr\Http\Message\ServerRequestInterface as Request;
-use \Psr\Http\Message\ResponseInterface as Response;
-
-$mah_handler = function(Request $request, Response $response) {
-    $name = $request->getAttribute('name');
-    $response->getBody()->write("Hello, $name");
-
-    return $response;
-};
 
 class App
 {
@@ -27,20 +18,20 @@ class App
     {
         $app = new \Slim\App;
 
-        global $mah_handler;
+        $respondor = new Respondor();
 
-        $app->get('/forms/', $mah_handler);
-        $app->post('/forms/', $mah_handler);
-        $app->get('/forms/{id}/', $mah_handler);
-        $app->patch('/forms/{id}/', $mah_handler);
-        $app->delete('/forms/{id}/', $mah_handler);
-        $app->get('/forms/{id}/elements/', $mah_handler);
+        $app->get('/forms/', $respondor);
+        $app->post('/forms/', $respondor);
+        $app->get('/forms/{id}/', $respondor);
+        $app->patch('/forms/{id}/', $respondor);
+        $app->delete('/forms/{id}/', $respondor);
+        $app->get('/forms/{id}/elements/', $respondor);
 
-        $app->get('/elements/', $mah_handler);
-        $app->post('/elements/', $mah_handler);
-        $app->get('/elements/{id}/', $mah_handler);
-        $app->patch('/elements/{id}/', $mah_handler);
-        $app->delete('/elements/{id}/', $mah_handler);
+        $app->get('/elements/', $respondor);
+        $app->post('/elements/', $respondor);
+        $app->get('/elements/{id}/', $respondor);
+        $app->patch('/elements/{id}/', $respondor);
+        $app->delete('/elements/{id}/', $respondor);
 
         return $app;
     }

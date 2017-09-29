@@ -8,23 +8,31 @@ use FormsAPI\App;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use Slim\Http\Uri;
 
 
-class BaseTest extends \PHPUnit_Framework_TestCase
+abstract class BaseTest extends \PHPUnit_Framework_TestCase
 {
     /** @var Slim\App $app */
     protected $app;
 
-    protected function doJSONRequest($vars)
+    protected function doJSONRequest($method, $path, $data)
     {
         $app = App::get();
 
-        $vars['CONTENT_TYPE'] = 'application/json;charset=utf8';
+        $vars = [
+            'REQUEST_METHOD' => $method,
+            'REQUEST_URI' => Uri::createFromString($path),
+            'CONTENT_TYPE' => 'application/json;charset=utf8',
+        ];
+
         $env = Environment::mock($vars);
 
-        $req = Request::createFromEnvironment($env);
+        $request = Request::createFromEnvironment($env);
 
-        $app->getContainer()['request'] = $req;
+        $request->getBody()->write(json_encode($data));
+
+        $app->getContainer()['request'] = $request;
 
         return $app->run(true);
     }
@@ -34,7 +42,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
         $body = (string)$response->getBody();
 
         $responseData = json_decode($body, true);
-        $this->assertNotNull($responseData, "Response should be valid json. Instead was {(string)$response->getBody()}");
+        $this->assertNotNull($responseData, "Response should be valid json. Instead was: " . (string)$body);
 
         return $responseData;
     }

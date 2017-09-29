@@ -20,17 +20,17 @@ class APITest extends BaseTest
     {
         $requests = [
             [
-                'REQUEST_METHOD' => 'POST',
-                'REQUEST_URI' => '/forms/',
-                'REQUEST_BODY' => [
+                'method' => 'POST',
+                'path' => '/forms/',
+                'data' => [
                     'name' => 'mah mah mah form',
                     'bob' => 'bob',
                 ]
             ],
             [
-                'REQUEST_METHOD' => 'POST',
-                'REQUEST_URI' => '/elements/',
-                'REQUEST_BODY' => [
+                'method' => 'POST',
+                'path' => '/elements/',
+                'data' => [
                     'label' => 'mah mah mah form',
                     'bob' => 'bob',
                 ]
@@ -38,17 +38,20 @@ class APITest extends BaseTest
         ];
 
         foreach ($requests as $request) {
-            $response = $this->doJSONRequest($request);
+            // Issue the request
+            $response = $this->doJSONRequest($request['method'], $request['path'], $request['data']);
 
+            // Assert that the status code received is 400
             $this->assertEquals(400, $response->getStatusCode());
 
+            // Retrieve the response data, assert that it is valid
             $responseData = $this->responseToArray($response);
             $this->assertHasRequiredResponseElements($responseData);
 
+            // Assert that the response values are conformant to a 400 error
             $this->assertEquals(400, $responseData['status']);
             $this->assertFalse($responseData['success']);
             $this->assertNull($responseData['data']);
-
             $this->assertArrayHasKey('message', $responseData['error']);
         }
     }
@@ -69,19 +72,19 @@ class APITest extends BaseTest
             'parentId' => null,
         ];
 
+        $request = [
+            'method' => 'POST',
+            'path' => '/forms/',
+            'data' => $requestData,
+        ];
+
         $allParameters = [
             'id', 'href', 'active', 'type', 'label', 'initialValue', 'helpText', 'placeholderText',
             'required', 'parentId', 'parent',
         ];
 
-        $request = [
-            'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/forms/',
-            'REQUEST_BODY' => $requestData,
-        ];
-
         // Issue the request
-        $response = $this->doJSONRequest($request);
+        $response = $this->doJSONRequest($request['method'], $request['path'], $request['data']);
 
         // Assert that the return code is 200
         $this->assertEquals(200, $response->getStatusCode());
