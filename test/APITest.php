@@ -96,7 +96,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
@@ -150,7 +150,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
@@ -165,15 +165,12 @@ class APITest extends BaseTest
     {
 
         // Create a form to use
-        $newForm = $this->testCreateForm();
+        $requestData = $this->testCreateForm();
 
-        $requestData = [
-            'id' => 0
-        ];
 
         $request = [
             'method' => 'GET',
-            'path' => '/forms/',
+            'path' => '/forms/$requestData.data.id',
             'data' => $requestData
         ];
 
@@ -198,7 +195,7 @@ class APITest extends BaseTest
 
          //Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
          //Assert that the id is an int
@@ -243,7 +240,7 @@ class APITest extends BaseTest
 
         //Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         //Assert that the id is an int
@@ -294,7 +291,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
@@ -350,7 +347,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
@@ -364,7 +361,7 @@ class APITest extends BaseTest
     public function testGetElements()
     {
         // create an instance to test with
-        $this-> testCreateElement();
+        $newForm = $this-> testCreateElement();
 
         // does php or slim automatically url decode the params?
         $requestData = [
@@ -379,7 +376,7 @@ class APITest extends BaseTest
 
         $request = [
             'method' => 'GET',
-            'path' => '/elements/',
+            'path' => '/elements/$newForm.data.id',
             'data' => $requestData,
         ];
 
@@ -404,7 +401,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
@@ -467,16 +464,11 @@ class APITest extends BaseTest
     {
 
         // create an instance to test with
-        $this-> testCreateElement();
-
-        $requestData = [
-            'id' => 0
-        ];
+        $requestData = $this-> testCreateElement();
 
         $request = [
             'method' => 'DELETE',
-            'path' => '/elements/',
-            'data' => $requestData
+            'path' => '/elements/$requestData.element.id'
         ];
 
         $allParameters = [];
@@ -497,7 +489,7 @@ class APITest extends BaseTest
 
         //Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         //Assert that the id is an int
@@ -553,7 +545,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEqual($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data']['key']);
         }
 
         // Assert that the id is an int
