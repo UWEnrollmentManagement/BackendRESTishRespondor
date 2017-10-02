@@ -59,15 +59,17 @@ class APITest extends BaseTest
     /**
      * A client shall be able to create a form, providing all required parameters.
      */
-    public function testCreateForm()
+    public function testCreateForm($requestData = null)
     {
-        $requestData = [
-            'name' => 'mah mah mah form',
-            'slug' => 'a form about slugs',
-            'rootElementId' => 0,
-            'successMessage' => 'mild success',
-            'retired' => false
-        ];
+        if ($requestData == null) {
+            $requestData = [
+                'name' => 'mah mah mah form',
+                'slug' => 'a form about slugs',
+                'rootElementId' => 0,
+                'successMessage' => 'mild success',
+                'retired' => false
+            ];
+        }
 
         $request = [
             'method' => 'POST',
@@ -101,6 +103,8 @@ class APITest extends BaseTest
 
         // Assert that the id is an int
         $this->assertInternalType('int', $responseData['data']['id']);
+
+        return $responseData['data'];
 
     }
 
@@ -306,19 +310,21 @@ class APITest extends BaseTest
     /**
      * A client shall be able to create an element, providing all required parameters.
      */
-    public function testCreateElement()
+    public function testCreateElement($requestData = null)
     {
-        $requestData = [
-            'id' => 1,
-            'retired' => false,
-            'type' => 'section-label',
-            'label' => 'extra spicy',
-            'initial value' => 'initial value',
-            'helpText' => 'help text',
-            'placeholderText' => 'placeholder text',
-            'required' => true,
-            'parentId' => 0
-        ];
+        if ($requestData == null) {
+            $requestData = [
+                'id' => 1,
+                'retired' => false,
+                'type' => 'section-label',
+                'label' => 'extra spicy',
+                'initial value' => 'initial value',
+                'helpText' => 'help text',
+                'placeholderText' => 'placeholder text',
+                'required' => true,
+                'parentId' => 0
+            ];
+        }
 
         $request = [
             'method' => 'POST',
