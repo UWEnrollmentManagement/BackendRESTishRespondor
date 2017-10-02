@@ -39,7 +39,7 @@ class APITest extends BaseTest
 
         foreach ($requests as $request) {
             // Issue the request
-            $response = $this->doJSONRequest($request['method'], $request['path'], $request['data']);
+            $response = $this->doRequest($request['method'], $request['path'], $request['data']);
 
             // Assert that the status code received is 400
             $this->assertEquals(400, $response->getStatusCode(), "Failed on path {$request['path']} With method: {$request['method']}");
@@ -62,14 +62,11 @@ class APITest extends BaseTest
     public function testCreateForm()
     {
         $requestData = [
-            'active' => 'mah mah mah form',
-            'type' => 'section-label',
-            'label' => 'Mah Section Label',
-            'initialValue' => 'some initial value',
-            'helpText' => 'some help text',
-            'placeholderText' => 'some placeholder text',
-            'required' => true,
-            'parentId' => null,
+            'name' => 'mah mah mah form',
+            'slug' => 'a form about slugs',
+            'rootElementId' => 0,
+            'successMessage' => 'mild success',
+            'retired' => false
         ];
 
         $request = [
@@ -79,12 +76,469 @@ class APITest extends BaseTest
         ];
 
         $allParameters = [
-            'id', 'href', 'active', 'type', 'label', 'initialValue', 'helpText', 'placeholderText',
-            'required', 'parentId', 'parent',
+            'id', 'href', 'href', 'elements', 'rootElement', 'name',
+            'slug', 'rootElementId', 'successMessage', 'retired'
         ];
 
         // Issue the request
-        $response = $this->doJSONRequest($request['method'], $request['path'], $request['data']);
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can get a list of the forms if they have provided the necessary parameters
+     **/
+    public function testGetForms()
+    {
+        // Create a form to use so that there is a form in the db
+        $newForm = $this->testCreateForm();
+
+        // does php or slim automatically url decode the params?
+        $requestData = [
+            // max number of items to return
+            'limit' => 25,
+            'start' => 1,
+            'filter-field' => ['id1', 'id2'],
+            'filter-condition' => ['greater than'],
+//            'filter-condition' => ['greater%20than'],
+            'filter-criterion' => 'ascending'
+        ];
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/forms/',
+            'data' => $requestData
+        ];
+
+        $allParameters = [
+            'id', 'href', 'elements', 'rootElement', 'name',
+            'slug', 'rootElementId', 'successMessage', 'retired'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can get a form if they have provided the necessary parameters
+     **/
+    public function testGetForm()
+    {
+
+        // Create a form to use
+        $newForm = $this->testCreateForm();
+
+        $requestData = [
+            'id' => 0
+        ];
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/forms/',
+            'data' => $requestData
+        ];
+
+        $allParameters = [
+            'id', 'href', 'elements', 'rootElement', 'name',
+            'slug', 'rootElementId', 'successMessage', 'retired'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+         //Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+         //Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can delete a form if they have provided the necessary parameters
+     **/
+    public function testDeleteForm()
+    {
+
+        // Create a form to use
+        $newForm = $this->testCreateForm();
+
+        $requestData = [
+            'id' => 0
+        ];
+
+        $request = [
+            'method' => 'DELETE',
+            'path' => '/forms/',
+            'data' => $requestData
+        ];
+
+        $allParameters = [];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        //Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        //Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can modify/update a form if they have provided the necessary parameters
+     **/
+    public function testModifyForm() {
+        // Create a form to use
+        $newForm = $this->testCreateForm();
+
+        $requestData = [
+            'name' => 'mah mah mah form',
+            'slug' => 'a form about slugs',
+            'rootElementId' => 0,
+            'successMessage' => 'mild success',
+            'retired' => false,
+            'id' => 0
+        ];
+
+        $request = [
+            'method' => 'PATCH',
+            'path' => '/forms/',
+            'data' => $requestData,
+        ];
+
+        $allParameters = [
+            'id', 'href', 'href', 'elements', 'rootElement', 'name',
+            'slug', 'rootElementId', 'successMessage', 'retired'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /*
+     * Elements Tests
+     */
+
+    /**
+     * A client shall be able to create an element, providing all required parameters.
+     */
+    public function testCreateElement()
+    {
+        $requestData = [
+            'id' => 1,
+            'retired' => false,
+            'type' => 'section-label',
+            'label' => 'extra spicy',
+            'initial value' => 'initial value',
+            'helpText' => 'help text',
+            'placeholderText' => 'placeholder text',
+            'required' => true,
+            'parentId' => 0
+        ];
+
+        $request = [
+            'method' => 'POST',
+            'path' => '/elements/',
+            'data' => $requestData,
+        ];
+
+        $allParameters = [
+            'id', 'href', 'retired', 'type', 'label', 'initialValue',
+            'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * A client shall be able to create an element, providing all required parameters.
+     */
+    public function testGetElements()
+    {
+        // create an instance to test with
+        $this-> testCreateElement();
+
+        // does php or slim automatically url decode the params?
+        $requestData = [
+            // max number of items to return
+            'limit' => 25,
+            'start' => 1,
+            'filter-field' => ['id1', 'id2'],
+            'filter-condition' => ['greater than'],
+//            'filter-condition' => ['greater%20than'],
+            'filter-criterion' => 'ascending'
+        ];
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/elements/',
+            'data' => $requestData,
+        ];
+
+        $allParameters = [
+            'id', 'href', 'retired', 'type', 'label', 'initialValue',
+            'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can get a form if they have provided the necessary parameters
+     **/
+
+    public function testGetElement()
+    {
+        // create an instance to test with
+        $this-> testCreateElement();
+
+        $requestData = [
+            'id' => 0
+        ];
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/elements/',
+            'data' => $requestData,
+        ];
+
+        $allParameters = [
+            'id', 'href', 'retired', 'type', 'label', 'initialValue',
+            'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        // Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        // Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+    /**
+     * Client can delete a form if they have provided the necessary parameters
+     **/
+    public function testDeleteElement()
+    {
+
+        // create an instance to test with
+        $this-> testCreateElement();
+
+        $requestData = [
+            'id' => 0
+        ];
+
+        $request = [
+            'method' => 'DELETE',
+            'path' => '/elements/',
+            'data' => $requestData
+        ];
+
+        $allParameters = [];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array and has the necessary parameters
+        $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+        //Assert that the return object has the values we provided
+        foreach ($requestData as $key => $value) {
+            $this->assertEqual($value, $responseData['data']['key']);
+        }
+
+        //Assert that the id is an int
+        $this->assertInternalType('int', $responseData['data']['id']);
+
+    }
+
+
+    /**
+     * Client can modify/update a form if they have provided the necessary parameters
+     **/
+    public function testModifyElement() {
+
+        // create an instance to test with
+        $this-> testCreateElement();
+
+        $requestData = [
+            'id' => 1,
+            'retired' => false,
+            'type' => 0,
+            'label' => 'mild success',
+            'initial value' => 'initial value',
+            'helpText' => 'help text',
+            'placeholderText' => 'placeholder text',
+            'required' => true,
+            'parentId' => 0
+        ];
+
+        $request = [
+            'method' => 'PATCH',
+            'path' => '/forms/',
+            'data' => $requestData,
+        ];
+
+        $allParameters = [
+            'id', 'href', 'retired', 'type', 'label', 'initialValue',
+            'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
 
         // Assert that the return code is 200
         $this->assertEquals(200, $response->getStatusCode());

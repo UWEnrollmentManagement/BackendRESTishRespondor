@@ -16,7 +16,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     /** @var Slim\App $app */
     protected $app;
 
-    protected function doJSONRequest($method, $path, $data)
+    protected function doRequest($method, $path, $data = null)
     {
         $app = App::get();
 
@@ -29,8 +29,10 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         $env = Environment::mock($vars);
 
         $request = Request::createFromEnvironment($env);
-
-        $request->getBody()->write(json_encode($data));
+        
+        if($data) {
+            $request->getBody()->write(json_encode($data));   
+        }
 
         $app->getContainer()['request'] = $request;
 
