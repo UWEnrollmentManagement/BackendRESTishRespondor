@@ -170,8 +170,7 @@ class APITest extends BaseTest
 
         // Create a form to use
         $requestData = $this->testCreateForm();
-
-
+        
         $request = [
             'method' => 'GET',
             'path' => '/forms/$requestData.data.id',
