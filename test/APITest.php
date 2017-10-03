@@ -170,7 +170,7 @@ class APITest extends BaseTest
 
         // Create a form to use
         $requestData = $this->testCreateForm();
-        
+
         $request = [
             'method' => 'GET',
             'path' => '/forms/$requestData.data.id',
@@ -213,15 +213,11 @@ class APITest extends BaseTest
     {
 
         // Create a form to use
-        $newForm = $this->testCreateForm();
-
-        $requestData = [
-            'id' => 0
-        ];
+        $requestData = $this->testCreateForm();
 
         $request = [
             'method' => 'DELETE',
-            'path' => '/forms/',
+            'path' => '/forms/$requestData.data.id',
             'data' => $requestData
         ];
 
@@ -256,20 +252,11 @@ class APITest extends BaseTest
      **/
     public function testModifyForm() {
         // Create a form to use
-        $newForm = $this->testCreateForm();
-
-        $requestData = [
-            'name' => 'mah mah mah form',
-            'slug' => 'a form about slugs',
-            'rootElementId' => 0,
-            'successMessage' => 'mild success',
-            'retired' => false,
-            'id' => 0
-        ];
+        $requestData = $this->testCreateForm();
 
         $request = [
             'method' => 'PATCH',
-            'path' => '/forms/',
+            'path' => '/forms/$requestData.data.id',
             'data' => $requestData,
         ];
 
@@ -421,15 +408,11 @@ class APITest extends BaseTest
     public function testGetElement()
     {
         // create an instance to test with
-        $this-> testCreateElement();
-
-        $requestData = [
-            'id' => 0
-        ];
+        $requestData = $this-> testCreateElement();
 
         $request = [
             'method' => 'GET',
-            'path' => '/elements/',
+            'path' => '/elements/$requestData.data.id',
             'data' => $requestData,
         ];
 
@@ -473,7 +456,8 @@ class APITest extends BaseTest
 
         $request = [
             'method' => 'DELETE',
-            'path' => '/elements/$requestData.element.id'
+            'path' => '/elements/$requestData.element.id',
+            'data' => $requestData
         ];
 
         $allParameters = [];
@@ -509,23 +493,11 @@ class APITest extends BaseTest
     public function testModifyElement() {
 
         // create an instance to test with
-        $this-> testCreateElement();
-
-        $requestData = [
-            'id' => 1,
-            'retired' => false,
-            'type' => 0,
-            'label' => 'mild success',
-            'initial value' => 'initial value',
-            'helpText' => 'help text',
-            'placeholderText' => 'placeholder text',
-            'required' => true,
-            'parentId' => 0
-        ];
+        $requestData = $this-> testCreateElement();
 
         $request = [
             'method' => 'PATCH',
-            'path' => '/forms/',
+            'path' => '/forms/$requestData.data.id',
             'data' => $requestData,
         ];
 
