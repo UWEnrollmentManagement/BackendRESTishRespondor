@@ -1,0 +1,73 @@
+<!--
+    Awesome, your propel set up is nearly done! You just have to describe how you want your database to look like.
+
+    You can let propel set up your sqlite database by running `vendor/bin/propel database:create && vendor/bin/propel database:insert-sql`.
+    This will create your database including all the tables.
+-->
+
+<!--
+    The root tag of the XML schema is the <database> tag.
+
+    The `name` attribute defines the name of the connection that Propel uses for the tables in this schema. It is not
+    necessarily the name of the actual database. In fact, Propel uses some configuration properties to link a connection
+    name with real connection settings (like database name, user and password).
+
+    The `defaultIdMethod` attribute indicates that the tables in this schema use the database's "native"
+    auto-increment/sequence features to handle id columns that are set to auto-increment.
+
+   [TIP]: You can define several schemas for a single project. Just make sure that each of the schema
+          filenames end with schema.xml.
+-->
+<database name="default" defaultIdMethod="native"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://xsd.propelorm.org/1.6/database.xsd"
+          namespace="FormsAPI"
+        >
+
+    <table name="element">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
+        <column name="type" type="varchar" size="31" required="true"/>
+        <column name="label" type="varchar" size="8191" required="true"/>
+
+        <column name="active" type="boolean" required="true" default="true" />
+
+        <column name="administrative" type="boolean" required="true" default="false" />
+
+        <column name="short_name" type="varchar" size="31" required="true"/>
+        <column name="initial_value" type="varchar" size="127" required="false"/>
+        <column name="help_text" type="varchar" size="4095" required="false"/>
+        <column name="placeholder_text" type="varchar" size="127" required="false"/>
+        <column name="choices" type="varchar" size="4095" required="false"/>
+
+        <column name="dependent_upon" type="varchar" size="127" required="false" />
+
+        <column name="required" type="boolean" required="true" default="true" />
+
+        <column name="parent_id" type="integer" required="false"/>
+        <foreign-key foreignTable="element" refPhpName="Parent" onDelete="setnull">
+            <reference local="parent_id" foreign="id"/>
+        </foreign-key>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: type, validator: Choice, options: {choices: [section-label, information, affirmation, date, text-field, big-text-field, choice-field, secure-upload, secure-upload-multiple, choices-from-file]}}" />
+        </behavior>
+
+    </table>
+
+    <table name="form">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
+        <column name="name" type="varchar" size="127" required="true"/>
+        <column name="slug" type="varchar" size="127" required="true"/>
+        <column name="success_message" type="varchar" size="1683" required="false" default=""/>
+
+        <column name="retired" type="boolean" required="true" default="false" />
+
+        <column name="root_element_id" type="integer" required="false"/>
+        <foreign-key foreignTable="element" refPhpName="RootElement" onDelete="setnull">
+            <reference local="root_element_id" foreign="id"/>
+        </foreign-key>
+    </table>
+
+</database>
