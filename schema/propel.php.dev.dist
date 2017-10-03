@@ -18,12 +18,11 @@ return [
             // The directory where Propel should output generated object model classes.
             'phpDir' => $dir,
         ],
-        /*
         'database' => [
             'connections' => [
                 'default' => [
                     'adapter' => 'sqlite',
-                    'dsn' => 'sqlite:' . $dir . '/schema/my.app.sq3',
+                    'dsn' => 'sqlite:' . $dir . '/db.sq3',
                     'user' => 'root',
                     'password' => '',
                     'settings' => [
@@ -32,6 +31,5 @@ return [
                 ]
             ]
         ]
-        */
     ]
 ];
