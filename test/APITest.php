@@ -78,7 +78,7 @@ class APITest extends BaseTest
         ];
 
         $allParameters = [
-            'id', 'href', 'href', 'elements', 'rootElement', 'name',
+            'id', 'href', 'elements', 'rootElement', 'name',
             'slug', 'rootElementId', 'successMessage', 'retired'
         ];
 
@@ -261,7 +261,7 @@ class APITest extends BaseTest
         ];
 
         $allParameters = [
-            'id', 'href', 'href', 'elements', 'rootElement', 'name',
+            'id', 'href', 'elements', 'rootElement', 'name',
             'slug', 'rootElementId', 'successMessage', 'retired'
         ];
 
