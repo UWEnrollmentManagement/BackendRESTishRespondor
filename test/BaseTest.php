@@ -27,7 +27,6 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         ];
 
         $env = Environment::mock($vars);
-
         $request = Request::createFromEnvironment($env);
         
         if($data) {
@@ -36,7 +35,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
 
         $app->getContainer()['request'] = $request;
 
-        return $app->run(true);
+        return $app->run(false);
     }
 
     protected function responseToArray(Response $response)

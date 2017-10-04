@@ -66,7 +66,7 @@ class APITest extends BaseTest
                 'name' => 'mah mah mah form',
                 'slug' => 'a form about slugs',
                 'rootElementId' => 0,
-                'successMessage' => 'mild success',
+                'successMessage' => 'success',
                 'retired' => false
             ];
         }
@@ -98,7 +98,7 @@ class APITest extends BaseTest
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data'][$key]);
         }
 
         // Assert that the id is an int
