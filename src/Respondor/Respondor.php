@@ -1,12 +1,12 @@
 <?php
 
-namespace FormsAPI;
+namespace FormsAPI\Respondor;
 
-require_once __DIR__ . '/setup.php';
+require_once __DIR__ . '/../setup.php';
 
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
-
+use FormsAPI\Form;
 
 class Respondor
 {
@@ -23,7 +23,8 @@ class Respondor
         $form = new Form();
         $form->setName($parsedBody["name"])
             ->setSlug($parsedBody["slug"])
-            ->setSuccessMessage($parsedBody["successMessage"]);
+            ->setSuccessMessage($parsedBody["successMessage"])
+            ->setRetired($parsedBody["retired"]);
 
         // if the validate method exists, validate before saving
         if(method_exists($form, 'validate')) {
@@ -38,12 +39,13 @@ class Respondor
         // toArray() capitalizes the first letter of each element
         // so lowercase the first letter of each element
         $objectData = $form->toArray();
-        foreach($objectData as $key => $value) {
-            $objectData[lcfirst($key)] = $value;
-            unset($objectData[$key]);
-        }
+//        foreach($objectData as $key => $value) {
+//            $objectData[lcfirst($key)] = $value;
+//            unset($objectData[$key]);
+//        }
         // href and some other keys are generated in the respondor to return
-        $objectData['href'] = "sdf";
+        //
+        $objectData['href'] = "df";
         $objectData['elements'] = "sdf";
         $objectData['rootElement'] = "sdfds";
 

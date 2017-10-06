@@ -4,7 +4,7 @@ namespace FormsAPI\Test;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use FormsAPI\App;
+use FormsAPI\App\App;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -19,6 +19,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     protected function doRequest($method, $path, $data = null)
     {
         $app = App::get();
+//        $app = new \Slim\App;
 
         $vars = [
             'REQUEST_METHOD' => $method,

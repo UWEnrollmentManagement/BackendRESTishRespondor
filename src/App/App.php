@@ -1,8 +1,8 @@
 <?php
-namespace FormsAPI;
+namespace FormsAPI\App;
 
-require_once __DIR__ . '/setup.php';
-
+require_once __DIR__ . '/../setup.php';
+use FormsAPI\Respondor\Respondor;
 
 class App
 {
