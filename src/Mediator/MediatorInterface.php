@@ -40,6 +40,22 @@ Interface MediatorInterface
     public function save($resource);
 
     /**
+     * Returns a resource given a primary key, or false if the resource can't be found.
+     *
+     * @param mixed $key
+     * @return mixed|false
+     */
+    public function retrieve($key);
+
+    /**
+     * Deletes a given resource. Return true on success or false on failure to delete.
+     *
+     * @param $resource
+     * @return boolean
+     */
+    public function delete($resource);
+
+    /**
      * Sets the given resource's attributes from the given key => value array.
      *
      *
@@ -58,12 +74,10 @@ Interface MediatorInterface
     public function getAttributes($resource);
 
     /**
-     * @param $error
-     *
      * Returns errors
      *
-     * @return mixed
+     * @return string[]
      */
-//    public function error($error);
+    public function error();
 
 }

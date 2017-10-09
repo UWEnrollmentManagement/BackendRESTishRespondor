@@ -15,9 +15,12 @@ use FormsAPI\Element;
 class PropelMediator implements MediatorInterface
 {
     protected $href;
+
+    protected $errors = [];
+
     protected static $classMap = [
-        'forms' => Form::class,
-        'elements' => Element::class,
+        '/forms/' => Form::class,
+        '/elements/' => Element::class,
     ];
 
     public function __construct($baseHref) {
@@ -53,10 +56,10 @@ class PropelMediator implements MediatorInterface
         return $resource;
     }
 
-    public function getAttributes($resource) {
+    public function getAttributes($attributes) {
 
-        $attributes = $resource->toArray();
-        foreach($attributes as $key => $value) {
+//        $attributes = $resource->toArray();
+        foreach($attributes['data'] as $key => $value) {
             unset($attributes[$key]);
             $attributes[lcfirst($key)] = $value;
         }
@@ -65,8 +68,10 @@ class PropelMediator implements MediatorInterface
 
         // if element, build reference to parentId
         // ex. /forms/{form_id}/
-        $hrefRoot = static::$classMap[$resource];
-        $hrefRoot = "/$hrefRoot/";
+
+//        $hrefRoot = "forms";
+
+
 
         //forms
         if(array_key_exists("rootElementId", $attributes)) {
@@ -77,11 +82,31 @@ class PropelMediator implements MediatorInterface
             $hrefRoot .= $attributes["parentId"]."/";
         }
 
+        // we'll make a test for these
         $attributes["href"] = $hrefRoot;
+        $attributes['elements'] = "/";
+        $attributes['rootElement'] = "/";
+
         return $attributes;
 
     }
 
+    public function retrieve($key)
+    {
+        return false;
+    }
+
+    public function delete($resource)
+    {
+        $resource->delete();
+
+        return $resource->wasDeleted();
+    }
+
+    public function error()
+    {
+        return $this->errors;
+    }
 
 
 }

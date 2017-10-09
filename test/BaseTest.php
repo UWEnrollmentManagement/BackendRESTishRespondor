@@ -9,7 +9,7 @@ use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\Uri;
-
+//use FormsAPI\Mediator\PropelMediator;
 
 abstract class BaseTest extends \PHPUnit_Framework_TestCase
 {
@@ -19,7 +19,6 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     protected function doRequest($method, $path, $data = null)
     {
         $app = App::get();
-//        $app = new \Slim\App;
 
         $vars = [
             'REQUEST_METHOD' => $method,
