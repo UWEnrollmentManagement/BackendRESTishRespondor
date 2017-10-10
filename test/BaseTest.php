@@ -9,12 +9,23 @@ use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\Uri;
-//use FormsAPI\Mediator\PropelMediator;
+
+
 
 abstract class BaseTest extends \PHPUnit_Framework_TestCase
 {
-    /** @var Slim\App $app */
+    /** @var \Slim\App $app */
     protected $app;
+
+    /** @var FormsAPIFaker */
+    protected $faker;
+
+    public function __construct($name = null, array $data = [], $dataName = '')
+    {
+        parent::__construct($name, $data, $dataName);
+
+        $this->faker = new FormsAPIFaker();
+    }
 
     protected function doRequest($method, $path, $data = null)
     {
