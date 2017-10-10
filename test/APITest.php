@@ -7,7 +7,7 @@ require_once __DIR__  . '/../vendor/autoload.php';
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
-use FormsAPI\Mediator\PropelMediator;
+
 
 class APITest extends BaseTest
 {
@@ -16,7 +16,6 @@ class APITest extends BaseTest
      * Various endpoints shall produce a 400 response when called with incorrect
      * parameters.
      */
-
     public function test400()
     {
         $requests = [
@@ -40,7 +39,6 @@ class APITest extends BaseTest
 
         foreach ($requests as $request) {
             // Issue the request
-//            $mediator = new PropelMediator($request['path']);
             $response = $this->doRequest($request['method'], $request['path'], $request['data']);
 
             // Assert that the status code received is 400
@@ -64,13 +62,7 @@ class APITest extends BaseTest
     public function testCreateForm($requestData = null)
     {
         if ($requestData == null) {
-            $requestData = [
-                'name' => 'mah mah mah form',
-                'slug' => 'a form about slugs',
-                'rootElementId' => 0,
-                'successMessage' => 'success',
-                'retired' => false
-            ];
+            $requestData = $this->faker->fake('forms');
         }
 
         $request = [
@@ -83,11 +75,10 @@ class APITest extends BaseTest
             'id', 'href', 'elements', 'rootElement', 'name',
             'slug', 'rootElementId', 'successMessage', 'retired'
         ];
-        $mediator = new PropelMediator($request);
+
         // Issue the request
         $response = $this->doRequest($request['method'], $request['path'], $request['data']);
-        var_dump($response);
-        echo "SDsdf";
+
         // Assert that the return code is 200
         $this->assertEquals(200, $response->getStatusCode());
 
@@ -97,11 +88,8 @@ class APITest extends BaseTest
 
         // Assert that data is an array and has the necessary parameters
         $this->assertInternalType('array', $responseData['data']);
+        $this->assertArrayHasKeys($allParameters, $responseData['data']);
 
-        // Process the data with the mediator
-        $processedData = $mediator->getAttributes($request);
-
-        $this->assertArrayHasKeys($allParameters, $processedData);
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
             $this->assertEquals($value, $responseData['data'][$key]);
@@ -305,17 +293,7 @@ class APITest extends BaseTest
     public function testCreateElement($requestData = null)
     {
         if ($requestData == null) {
-            $requestData = [
-                'id' => 1,
-                'retired' => false,
-                'type' => 'section-label',
-                'label' => 'extra spicy',
-                'initial value' => 'initial value',
-                'helpText' => 'help text',
-                'placeholderText' => 'placeholder text',
-                'required' => true,
-                'parentId' => 0
-            ];
+            $requestData = $this->faker->fake('elements');
         }
 
         $request = [
