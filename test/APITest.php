@@ -12,19 +12,6 @@ use Slim\Http\Response;
 class APITest extends BaseTest
 {
 
-    protected $allParameters = [
-        'forms' =>
-            [
-                'id', 'href', 'elements', 'rootElement', 'name',
-                'slug', 'rootElementId', 'successMessage', 'retired'
-            ],
-        'elements' =>
-            [
-                'id', 'href', 'retired', 'type', 'label', 'initialValue',
-                'helpText', 'placeholderText', 'required', 'parentId', 'parent'
-            ],
-    ];
-
     /**
      * Various endpoints shall produce a 400 response when called with incorrect
      * parameters.
@@ -279,47 +266,34 @@ class APITest extends BaseTest
 
     }
 
-    /*
-     * Elements Tests
-     */
-
     /**
-     * A client shall be able to create an element, providing all required parameters.
+     * A client shall be able to create all other resource types, in addition to
+     * forms.
      */
-    public function testCreateElement($requestData = null)
+    public function testCreateAllElse($requestData = [])
     {
-        if ($requestData == null) {
-            $requestData = $this->faker->fake('elements');
+        foreach ($this->allParameters as $resourceType => $allParameters) {
+            $response = $this->doCreate($resourceType, $requestData);
+
+            // Assert that the return code is 200
+            $this->assertEquals(200, $response->getStatusCode());
+
+            // Retrieve the response data, assert that it is valid
+            $responseData = $this->responseToArray($response);
+            $this->assertHasRequiredResponseElements($responseData);
+
+            // Assert that data is an array and has the necessary parameters
+            $this->assertInternalType('array', $responseData['data']);
+            $this->assertArrayHasKeys($allParameters, $responseData['data']);
+
+            // Assert that the return object has the values we provided
+            foreach ($requestData as $key => $value) {
+                $this->assertEquals($value, $responseData['data']['key']);
+            }
+
+            // Assert that the id is an int
+            $this->assertInternalType('int', $responseData['data']['id']);
         }
-
-        $request = [
-            'method' => 'POST',
-            'path' => '/elements/',
-            'data' => $requestData,
-        ];
-
-        // Issue the request
-        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
-
-        // Assert that the return code is 200
-        $this->assertEquals(200, $response->getStatusCode());
-
-        // Retrieve the response data, assert that it is valid
-        $responseData = $this->responseToArray($response);
-        $this->assertHasRequiredResponseElements($responseData);
-
-        // Assert that data is an array and has the necessary parameters
-        $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($this->allParameters['elements'], $responseData['data']);
-
-        // Assert that the return object has the values we provided
-        foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
-        }
-
-        // Assert that the id is an int
-        $this->assertInternalType('int', $responseData['data']['id']);
-
     }
 
     /**

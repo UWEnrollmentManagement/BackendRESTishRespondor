@@ -20,6 +20,102 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     /** @var FormsAPIFaker */
     protected $faker;
 
+    protected $allParameters = [
+        'forms' =>
+            [
+                'id', 'href', 'elements', 'rootElement', 'name',
+                'slug', 'rootElementId', 'successMessage', 'retired'
+            ],
+        'elements' =>
+            [
+                'id', 'href', 'retired', 'type', 'label', 'initialValue',
+                'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+            ],
+        'visitors' =>
+            [
+                'id', 'href', 'UWStudentNumber', 'UWNetID', 'firstName',
+                'middleName', 'lastName',
+            ],
+        'choices' =>
+            [
+                'id', 'href', 'value',
+            ],
+        'dependencies' =>
+            [
+                'id', 'href', 'element', 'slave', 'condition',
+            ],
+        'requirements' =>
+            [
+                'id', 'href', 'element', 'condition', 'failureMessage',
+            ],
+        'submissions' =>
+            [
+                'id', 'href', 'visitor', 'form', 'status', 'assignee', 'parent', 'submitted',
+            ],
+        'statuses' =>
+            [
+                'id', 'href', 'name', 'defaultMessage',
+            ],
+        'tags' =>
+            [
+                'id', 'href', 'name', 'defaultMessage',
+            ],
+        'notes' =>
+            [
+                'id', 'href', 'content', 'subject',
+            ],
+        'recipients' =>
+            [
+                'id', 'href', 'address', 'note',
+            ],
+        'stakeholders' =>
+            [
+                'id', 'href', 'label', 'address', 'form',
+            ],
+        'reactions' =>
+            [
+                'id', 'href', 'subject', 'recipient', 'sender', 'replyTo', 'cc', 'bcc',
+                'template', 'content',
+            ],
+        'settings' =>
+            [
+                'id', 'href', 'key', 'value',
+            ],
+        'dashboards' =>
+            [
+                'id', 'href', 'name',
+            ],
+        'childformrelationships' =>
+            [
+                'id', 'href',
+            ],
+        'elementchoices' =>
+            [
+                'id', 'href',
+            ],
+        'submissiontags' =>
+            [
+                'id', 'href',
+            ],
+        'formtags' =>
+            [
+                'id', 'href',
+            ],
+        'formreactions' =>
+            [
+                'id', 'href',
+            ],
+        'dashboardelements' =>
+            [
+                'id', 'href',
+            ],
+        'dashboardforms' =>
+            [
+                'id', 'href',
+            ],
+
+    ];
+
     public function __construct($name = null, array $data = [], $dataName = '')
     {
         parent::__construct($name, $data, $dataName);
