@@ -88,7 +88,6 @@ class APITest extends BaseTest
         $this->assertInternalType('int', $responseData['data']['id']);
 
         return $responseData['data'];
-
     }
 
     /**
