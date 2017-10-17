@@ -49,6 +49,21 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         return $app->run(false);
     }
 
+    protected function doCreate($resourceType, $requestData = [])
+    {
+        $requestData = $this->faker->fake($resourceType, $requestData);
+
+        // Build the request
+        $request = [
+            'method' => 'POST',
+            'path' => "/$resourceType/",
+            'data' => $requestData,
+        ];
+
+        // Issue the request
+        return $this->doRequest($request['method'], $request['path'], $request['data']);
+    }
+
     protected function responseToArray(Response $response)
     {
         $body = (string)$response->getBody();
