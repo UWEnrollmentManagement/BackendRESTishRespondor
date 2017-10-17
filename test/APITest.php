@@ -12,6 +12,19 @@ use Slim\Http\Response;
 class APITest extends BaseTest
 {
 
+    protected $allParameters = [
+        'forms' =>
+            [
+                'id', 'href', 'elements', 'rootElement', 'name',
+                'slug', 'rootElementId', 'successMessage', 'retired'
+            ],
+        'elements' =>
+            [
+                'id', 'href', 'retired', 'type', 'label', 'initialValue',
+                'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+            ],
+    ];
+
     /**
      * Various endpoints shall produce a 400 response when called with incorrect
      * parameters.
@@ -61,11 +74,6 @@ class APITest extends BaseTest
      */
     public function testCreateForm($requestData = [])
     {
-        $allParameters = [
-            'id', 'href', 'elements', 'rootElement', 'name',
-            'slug', 'rootElementId', 'successMessage', 'retired'
-        ];
-
         $response = $this->doCreate('forms', $requestData);
 
         // Assert that the return code is 200
@@ -77,7 +85,7 @@ class APITest extends BaseTest
 
         // Assert that data is an array and has the necessary parameters
         $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+        $this->assertArrayHasKeys($this->allParameters['forms'], $responseData['data']);
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
@@ -290,11 +298,6 @@ class APITest extends BaseTest
             'data' => $requestData,
         ];
 
-        $allParameters = [
-            'id', 'href', 'retired', 'type', 'label', 'initialValue',
-            'helpText', 'placeholderText', 'required', 'parentId', 'parent'
-        ];
-
         // Issue the request
         $response = $this->doRequest($request['method'], $request['path'], $request['data']);
 
@@ -307,7 +310,7 @@ class APITest extends BaseTest
 
         // Assert that data is an array and has the necessary parameters
         $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+        $this->assertArrayHasKeys($this->allParameters['elements'], $responseData['data']);
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
