@@ -65,19 +65,12 @@ class APITest extends BaseTest
             $requestData = $this->faker->fake('forms');
         }
 
-        $request = [
-            'method' => 'POST',
-            'path' => '/forms/',
-            'data' => $requestData,
-        ];
-
         $allParameters = [
             'id', 'href', 'elements', 'rootElement', 'name',
             'slug', 'rootElementId', 'successMessage', 'retired'
         ];
-
-        // Issue the request
-        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+        
+        $response = $this->doCreate('forms', $requestData);
 
         // Assert that the return code is 200
         $this->assertEquals(200, $response->getStatusCode());

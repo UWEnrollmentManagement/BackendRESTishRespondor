@@ -82,4 +82,17 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
 
         $this->assertArrayHasKeys($requiredResponseFields, $responseData, $message);
     }
+
+    protected function doCreate($resourceType, $requestData)
+    {
+        // Build the request
+        $request = [
+            'method' => 'POST',
+            'path' => '/forms/',
+            'data' => $requestData,
+        ];
+
+        // Issue the request
+        return $this->doRequest($request['method'], $request['path'], $request['data']);
+    }
 }
