@@ -112,10 +112,7 @@ class FormsAPIFaker
 
     public function fakeRequiredOnly($resourceType, $data = [])
     {
-        $template = array_merge(
-            static::$fieldsMap[$resourceType]['required'],
-            static::$fieldsMap[$resourceType]['optional']
-        );
+        $template = static::$fieldsMap[$resourceType]['required'];
 
         return array_merge($this->makeResult($template), $data);
     }
