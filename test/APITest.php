@@ -59,17 +59,13 @@ class APITest extends BaseTest
     /**
      * A client shall be able to create a form, providing all required parameters.
      */
-    public function testCreateForm($requestData = null)
+    public function testCreateForm($requestData = [])
     {
-        if ($requestData == null) {
-            $requestData = $this->faker->fake('forms');
-        }
-
         $allParameters = [
             'id', 'href', 'elements', 'rootElement', 'name',
             'slug', 'rootElementId', 'successMessage', 'retired'
         ];
-        
+
         $response = $this->doCreate('forms', $requestData);
 
         // Assert that the return code is 200
