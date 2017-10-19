@@ -10,6 +10,7 @@ namespace FormsAPI\Mediator;
 
 use FormsAPI\Form;
 use FormsAPI\Element;
+use FormsAPI\FormQuery;
 
 
 class PropelMediator implements MediatorInterface
@@ -19,8 +20,8 @@ class PropelMediator implements MediatorInterface
     protected $errors = [];
 
     protected static $classMap = [
-        '/forms/' => Form::class,
-        '/elements/' => Element::class,
+        'forms' => Form::class,
+        'elements' => Element::class,
     ];
 
     public function __construct($baseHref) {
@@ -40,10 +41,10 @@ class PropelMediator implements MediatorInterface
 
     public function create($resourceType) {
         //might receive strings forms, elements
-
         $selectedClass = static::$classMap[$resourceType];
 
         $resource = new $selectedClass();
+        return $resource;
     }
 
     public function setAttributes($resource, $attributes) {
@@ -56,10 +57,11 @@ class PropelMediator implements MediatorInterface
         return $resource;
     }
 
-    public function getAttributes($attributes) {
+    public function getAttributes($resource) {
 
-//        $attributes = $resource->toArray();
-        foreach($attributes['data'] as $key => $value) {
+        $attributes = $resource->toArray();
+
+        foreach($attributes as $key => $value) {
             unset($attributes[$key]);
             $attributes[lcfirst($key)] = $value;
         }
@@ -69,9 +71,7 @@ class PropelMediator implements MediatorInterface
         // if element, build reference to parentId
         // ex. /forms/{form_id}/
 
-//        $hrefRoot = "forms";
-
-
+        $hrefRoot = array_search(get_class($resource), static::$classMap);
 
         //forms
         if(array_key_exists("rootElementId", $attributes)) {
@@ -91,9 +91,38 @@ class PropelMediator implements MediatorInterface
 
     }
 
-    public function retrieve($key)
+    public function retrieve($resourceType, $key)
     {
-        return false;
+        $queryClass = static::$classMap[$resourceType];
+        $queryClass .= "Query";
+        $query = $queryClass::create()->findOneById($key);
+        return ($query != null ? $query : false);
+    }
+
+    public function retrieveList($resourceType)
+    {
+        $queryClass = static::$classMap[$resourceType];
+        $queryClass .= "Query";
+        $query = $queryClass::create();
+        return $query;
+    }
+
+    public function limit($collection, $limit)
+    {
+        $limit = max(1, $limit);
+        $limit = min(100, $limit);
+
+        return $collection->limit($limit);
+    }
+
+    public function collectionToIterable($collection)
+    {
+        return $collection->find();
+    }
+
+    public function offset($collection, $offset)
+    {
+        return $collection->offset($offset);
     }
 
     public function delete($resource)

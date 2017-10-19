@@ -42,10 +42,47 @@ Interface MediatorInterface
     /**
      * Returns a resource given a primary key, or false if the resource can't be found.
      *
+     * @param string $resourceType
      * @param mixed $key
      * @return mixed|false
      */
-    public function retrieve($key);
+    public function retrieve($resourceType, $key);
+
+    /**
+     * Returns a resource given a resource, or false if the resource can't be found.
+     *
+     * @param string $resourceType
+     * @return mixed|false
+     */
+    public function retrieveList($resourceType);
+
+    /**
+     * If you give me a "collection" then I will give you an iterable of resources
+     *
+     * @param $collection
+     * @return mixed
+     */
+    public function collectionToIterable($collection);
+
+    /**
+     * Limits the number of resources that will be returned when a $collection is
+     * iterated.
+     *
+     * @param mixed $collection
+     * @param int limit
+     * @return mixed
+     */
+    public function limit($collection, $limit);
+
+    /**
+     * Sets the first element that will be returned when a $collection is
+     * iterated.
+     *
+     * @param $collection
+     * @param int $offset
+     * @return mixed
+     */
+    public function offset($collection, $offset);
 
     /**
      * Deletes a given resource. Return true on success or false on failure to delete.

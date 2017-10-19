@@ -142,7 +142,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
 
         $app->getContainer()['request'] = $request;
 
-        return $app->run(false);
+        return $app->run(true);
     }
 
     protected function doCreate($resourceType, $requestData = [])

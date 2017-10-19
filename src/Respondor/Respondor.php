@@ -4,6 +4,7 @@ namespace FormsAPI\Respondor;
 
 require_once __DIR__ . '/../setup.php';
 
+use FormsAPI\Mediator\MediatorInterface;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use FormsAPI\Form;
@@ -11,6 +12,7 @@ use FormsAPI\Mediator\PropelMediator;
 
 class Respondor
 {
+    /** @var MediatorInterface PropelMediator  */
     public $mediator;
 
     public function __construct()
@@ -34,16 +36,20 @@ class Respondor
         $error = null;
         $status = 500;
 
+        $routeInfo = $request->getAttribute('routeInfo')[2];
+        $resourceType = $routeInfo['resourceType'];
+        $resourceId = null;
+        if(array_key_exists('id', $routeInfo)) {
+            $resourceId = $routeInfo['id'];
+        }
 
         // We assume that every request coming in is to create a form
         // That means we're assuming that the method is POST and the path is /forms/
 
-        // in request v
+        /** CREATE **/
+        if ($request->getMethod() === "POST") {
 
-        // if method === POST and path === form
-        if ($request.method === "POST") {
-            $resource = $this->mediator->create(trim($request.path, "/"));
-
+            $resource = $this->mediator->create($resourceType);
             // If $parsedBody is not already an array, then we will need
             // to make it one first
             $this->mediator->setAttributes($resource, $parsedBody);
@@ -62,14 +68,10 @@ class Respondor
             }
         }
 
-        if ($request.method === "GET") {
+        /** RETRIEVE **/
+        if ($request->getMethod() === "GET" && $resourceId) {
 
-            //check if the path has an id? If not, it's asking for a list so do something else
-//            $resource = $this->mediator->create(trim($request.path, "/"));
-            // parse anything after /elements/ or /forms/ to check if there is an id
-            if($request.id) {
-                $resource = $this->mediator->retrieve($request.id);
-            }
+            $resource = $this->mediator->retrieve($resourceType, $resourceId);
 
             if ($resource) {
                 $status = 200;
@@ -78,20 +80,39 @@ class Respondor
 
                 $objectData = $this->mediator->getAttributes($resource);
             } else {
-                $status = 400;
+                $status = 404;
                 $success = false;
                 $error = implode("; ", $this->mediator->error());
             }
         }
 
-        if ($request.method === "DELETE") {
+        /** LIST **/
+        if ($request->getMethod() === "GET" && !$resourceId) {
 
-            //check if the path has an id? If not, it's asking for a list so do something else
-//            $resource = $this->mediator->create(trim($request.path, "/"));
-            // parse anything after /elements/ or /forms/ to check if there is an id
-            if($request.id) {
-                $resource = $this->mediator->retrieve($request.id);
+            // don't forget to consider pagination and x amount of results per page
+            $collection = $this->mediator->retrieveList($resourceType);
+            if ($collection) {
+                $status = 200;
+                $success = true;
+                $error = null;
+
+                $objectData = [];
+
+                foreach($this->mediator->collectionToIterable($collection) as $resource) {
+                    $objectData[] = $this->mediator->getAttributes($resource);
+                }
+
+            } else {
+                $status = 404;
+                $success = false;
+                $error = implode("; ", $this->mediator->error());
             }
+
+        }
+
+        if ($request->getMethod() === "DELETE" && $resourceId) {
+            // make a thing, get it to make sure it worked, delete it, try to get it again and assert 404
+            $resource = $this->mediator->retrieve($resourceType, $resourceId);
 
             if ($resource) {
                 $status = 200;
@@ -106,14 +127,13 @@ class Respondor
             }
         }
 
-        if ($request.method === "UPDATE") {
+        /** UPDATE **/
+        if ($request->getMethod() === "PATCH") {
 
             // get it and save it again
-            if($request.id) {
-                $resource = $this->mediator->retrieve($request.id);
-                $setResource = $resource->mediator->setAttributes($resource, $parsedBody);
-                $resource = $this->mediator->save($setResource);
-            }
+            $resource = $this->mediator->retrieve($resourceType, $resourceId);
+            $setResource = $resource->mediator->setAttributes($resource, $parsedBody);
+            $resource = $this->mediator->save($setResource);
 
             if ($resource) {
                 $status = 200;

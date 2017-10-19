@@ -61,6 +61,7 @@ class APITest extends BaseTest
      */
     public function testCreateForm($requestData = [])
     {
+        $requestData = $this->faker->fake("forms", $requestData);
         $response = $this->doCreate('forms', $requestData);
 
         // Assert that the return code is 200
@@ -88,75 +89,18 @@ class APITest extends BaseTest
     /**
      * Client can get a list of the forms if they have provided the necessary parameters
      **/
-    public function testGetForms()
+    public function testListForms()
     {
-        // Create a form to use so that there is a form in the db
-        $newForm = $this->testCreateForm();
-
-        // does php or slim automatically url decode the params?
-        $requestData = [
-            // max number of items to return
-            'limit' => 25,
-            'start' => 1,
-            'filter-field' => ['id1', 'id2'],
-            'filter-condition' => ['greater than'],
-//            'filter-condition' => ['greater%20than'],
-            'filter-criterion' => 'ascending'
-        ];
-
-        $request = [
-            'method' => 'GET',
-            'path' => '/forms/',
-            'data' => $requestData
-        ];
-
-        $allParameters = [
-            'id', 'href', 'elements', 'rootElement', 'name',
-            'slug', 'rootElementId', 'successMessage', 'retired'
-        ];
-
-        // Issue the request
-        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
-
-        // Assert that the return code is 200
-        $this->assertEquals(200, $response->getStatusCode());
-
-        // Retrieve the response data, assert that it is valid
-        $responseData = $this->responseToArray($response);
-        $this->assertHasRequiredResponseElements($responseData);
-
-        // Assert that data is an array and has the necessary parameters
-        $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
-
-        // Assert that the return object has the values we provided
-        foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
+        // Make some forms so we can return more than one
+        $createResponseData = [];
+        for($i = 0; $i < 5; $i++) {
+            $responseData = $this->testCreateForm();
+            $createResponseData[$responseData['id']] = $responseData;
         }
 
-        // Assert that the id is an int
-        $this->assertInternalType('int', $responseData['data']['id']);
-
-    }
-
-    /**
-     * Client can get a form if they have provided the necessary parameters
-     **/
-    public function testGetForm()
-    {
-
-        // Create a form to use
-        $requestData = $this->testCreateForm();
-
         $request = [
             'method' => 'GET',
-            'path' => '/forms/$requestData.data.id',
-            'data' => $requestData
-        ];
-
-        $allParameters = [
-            'id', 'href', 'elements', 'rootElement', 'name',
-            'slug', 'rootElementId', 'successMessage', 'retired'
+            'path' => '/forms/'
         ];
 
         // Issue the request
@@ -169,13 +113,55 @@ class APITest extends BaseTest
         $responseData = $this->responseToArray($response);
         $this->assertHasRequiredResponseElements($responseData);
 
+        // Assert that data is an array
+        $this->assertInternalType('array', $responseData['data']);
+
+        foreach ($responseData['data'] as $formData) {
+            $this->assertArrayHasKeys($this->allParameters['forms'], $formData);
+
+            // Assert that the id is an int
+            $this->assertInternalType('int', $formData['id']);
+
+            // Assert that the return object has the values we provided
+            foreach ($createResponseData[$formData['id']] as $key => $value) {
+                $this->assertEquals($value, $responseData['data'][$key]);
+            }
+        }
+
+
+
+
+    }
+
+    /**
+     * Client can get a form if they have provided the necessary parameters
+     **/
+    public function testGetForm()
+    {
+
+        // Create a form to use
+        $createResponseData = $this->testCreateForm();
+        $request = [
+            'method' => 'GET',
+            'path' => "/forms/{$createResponseData['id']}/"
+        ];
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
         // Assert that data is an array and has the necessary parameters
         $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+        $this->assertArrayHasKeys($this->allParameters['forms'], $responseData['data']);
 
          //Assert that the return object has the values we provided
-        foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
+        foreach ($createResponseData as $key => $value) {
+            $this->assertEquals($value, $responseData['data'][$key]);
         }
 
          //Assert that the id is an int
