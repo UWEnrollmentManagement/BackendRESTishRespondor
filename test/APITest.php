@@ -176,37 +176,25 @@ class APITest extends BaseTest
     {
 
         // Create a form to use
-        $requestData = $this->testCreateForm();
+        $requestData = $this->testGetForm();
 
         $request = [
             'method' => 'DELETE',
-            'path' => '/forms/$requestData.data.id',
-            'data' => $requestData
+            'path' => "/forms/{$requestData['id']}/"
         ];
 
-        $allParameters = [];
-
         // Issue the request
-        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+        $response = $this->doRequest($request['method'], $request['path']);
 
         // Assert that the return code is 200
-        $this->assertEquals(200, $response->getStatusCode());
+//        $this->assertEquals(200, $response->getStatusCode());
 
-        // Retrieve the response data, assert that it is valid
-        $responseData = $this->responseToArray($response);
-        $this->assertHasRequiredResponseElements($responseData);
+        // attempt to grab it to make sure it is dead
+        $request['method'] = 'GET';
+        $pulseCheck = $this->doRequest($request['method'], $request['path']);
 
-        // Assert that data is an array and has the necessary parameters
-        $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
-
-        //Assert that the return object has the values we provided
-        foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
-        }
-
-        //Assert that the id is an int
-        $this->assertInternalType('int', $responseData['data']['id']);
+        // Assert that the return code is 404
+        $this->assertEquals(404, $response->getStatusCode());
 
     }
 

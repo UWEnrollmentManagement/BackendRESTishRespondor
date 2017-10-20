@@ -112,16 +112,26 @@ class Respondor
 
         if ($request->getMethod() === "DELETE" && $resourceId) {
             // make a thing, get it to make sure it worked, delete it, try to get it again and assert 404
-            $resource = $this->mediator->retrieve($resourceType, $resourceId);
+
+            $resource = $this->mediator->create($resourceType);
+            $this->mediator->setAttributes($resource, $parsedBody);
+            $resource = $this->mediator->save($resource);
 
             if ($resource) {
                 $status = 200;
                 $success = true;
                 $error = null;
 
-                $objectData = $this->mediator->delete($resource);
+                $objectData = $this->mediator->getAttributes($resource);
+                $deletion = $this->mediator->delete($resourceType, $objectData[$resourceId]);
+                if ($deletion) {
+                    $attempt = $this->mediator->retrieve($resourceType, $resourceId);
+                    if(!$attempt) {
+                        $status = 404;
+                    }
+                }
             } else {
-                $status = 400;
+                $status = 404;
                 $success = false;
                 $error = implode("; ", $this->mediator->error());
             }
