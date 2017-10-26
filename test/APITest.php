@@ -207,13 +207,8 @@ class APITest extends BaseTest
 
         $request = [
             'method' => 'PATCH',
-            'path' => '/forms/$requestData.data.id',
+            'path' => "/forms/{$requestData['id']}/",
             'data' => $requestData,
-        ];
-
-        $allParameters = [
-            'id', 'href', 'elements', 'rootElement', 'name',
-            'slug', 'rootElementId', 'successMessage', 'retired'
         ];
 
         // Issue the request
@@ -228,11 +223,11 @@ class APITest extends BaseTest
 
         // Assert that data is an array and has the necessary parameters
         $this->assertInternalType('array', $responseData['data']);
-        $this->assertArrayHasKeys($allParameters, $responseData['data']);
+        $this->assertArrayHasKeys($this->allParameters['forms'], $responseData['data']);
 
         // Assert that the return object has the values we provided
         foreach ($requestData as $key => $value) {
-            $this->assertEquals($value, $responseData['data']['key']);
+            $this->assertEquals($value, $responseData['data'][$key]);
         }
 
         // Assert that the id is an int
