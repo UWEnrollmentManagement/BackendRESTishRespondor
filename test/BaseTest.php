@@ -87,31 +87,35 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ],
         'childformrelationships' =>
             [
-                'id', 'href',
+                'id', 'href', 'parentId', 'childId', 'tagId', 'parent', 'child', 'tag',
             ],
         'elementchoices' =>
             [
-                'id', 'href',
+                'id', 'href', 'elementId', 'choiceId', 'element', 'choice',
             ],
         'submissiontags' =>
             [
-                'id', 'href',
+                'id', 'href', 'submissionId', 'submission', 'tagId', 'tag',
+            ],
+        'formstatuses' =>
+            [
+                'id', 'href', 'formId', 'form', 'statusId', 'status', 'message',
             ],
         'formtags' =>
             [
-                'id', 'href',
+                'id', 'href', 'formId', 'form', 'tagId', 'tag', 'message',
             ],
         'formreactions' =>
             [
-                'id', 'href',
+                'id', 'href', 'formId', 'form', 'reactionId', 'reaction',
             ],
         'dashboardelements' =>
             [
-                'id', 'href',
+                'id', 'href', 'dashboardId', 'dashboard', 'elementId', 'element',
             ],
         'dashboardforms' =>
             [
-                'id', 'href',
+                'id', 'href', 'dashboardId', 'dashboard', 'formId', 'form',
             ],
 
     ];
