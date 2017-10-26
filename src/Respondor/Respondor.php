@@ -142,7 +142,7 @@ class Respondor
 
             // get it and save it again
             $resource = $this->mediator->retrieve($resourceType, $resourceId);
-            $setResource = $resource->mediator->setAttributes($resource, $parsedBody);
+            $setResource = $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($setResource);
 
             if ($resource) {
