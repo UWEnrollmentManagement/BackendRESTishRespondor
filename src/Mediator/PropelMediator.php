@@ -30,13 +30,25 @@ class PropelMediator implements MediatorInterface
 
     public function save($resource)
     {
-        if(method_exists($resource, 'validate')) {
-            $resource -> validate()
-                -> save();
-        } else {
-            $resource -> save();
+        if(method_exists($resource, 'validate') && $resource->validate() === false) {
+            foreach ($resource->getValidationFailures() as $failure) {
+                $this->errors[] = "Property ".$failure->getPropertyPath().": ".$failure->getMessage()."\n";
+            }
+
+            return false;
         }
+
+        try {
+            $resource->save();
+        } catch (\Exception $e) {
+
+            $this->errors[] = 'Our database encountered an error fulfilling your request.';
+
+            return false;
+        }
+
         return $resource;
+
     }
 
     public function create($resourceType) {
