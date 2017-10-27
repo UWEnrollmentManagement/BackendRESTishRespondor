@@ -197,6 +197,22 @@ class APITest extends BaseTest
     /**
      * Client can modify/update a form if they have provided the necessary parameters
      **/
+    public function testFunkyForm() {
+        $requestData = "garbage";
+
+        $request = [
+            'method' => 'PATCH',
+            'path' => "/forms/{$requestData['id']}/",
+            'data' => $requestData,
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+    }
     public function testModifyForm() {
         // Create a form to use
         $requestData = $this->testCreateForm();
