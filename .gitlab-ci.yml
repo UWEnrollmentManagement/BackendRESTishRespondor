@@ -1,6 +1,6 @@
 before_script:
 - composer install
-- touch test.sqlite
+- cp schema/propel.php.dev.dist schema/propel.php;
 - (cd schema; ../vendor/bin/propel model:build; ../vendor/bin/propel migrate)
 - composer dump-autoload
 
