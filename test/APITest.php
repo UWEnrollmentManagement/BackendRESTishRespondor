@@ -27,14 +27,6 @@ class APITest extends BaseTest
                     'bob' => 'bob',
                 ]
             ],
-            [
-                'method' => 'POST',
-                'path' => '/elements/',
-                'data' => [
-                    'label' => 'mah mah mah form',
-                    'bob' => 'bob',
-                ]
-            ],
         ];
 
         foreach ($requests as $request) {
