@@ -1,6 +1,8 @@
 before_script:
 - composer install
 - touch test.sqlite
+- (cd schema; ../vendor/bin/propel model:build; ../vendor/bin/propel migrate)
+- composer dump-autoload
 
 test:app:
   script:
