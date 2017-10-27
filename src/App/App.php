@@ -2,6 +2,7 @@
 namespace FormsAPI\App;
 
 require_once __DIR__ . '/../setup.php';
+
 use FormsAPI\Respondor\Respondor;
 
 class App

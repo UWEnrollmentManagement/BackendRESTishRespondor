@@ -2,13 +2,16 @@
 
 namespace FormsAPI\Test;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../src/setup.php';
 
-use FormsAPI\App\App;
+use Propel\Runtime\Propel;
+
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\Uri;
+
+use FormsAPI\App\App;
 
 
 
@@ -125,6 +128,17 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         parent::__construct($name, $data, $dataName);
 
         $this->faker = new FormsAPIFaker();
+    }
+
+    protected function setUp()
+    {
+        parent::setUp();
+
+        $con = Propel::getConnection();
+
+        // Run the "initial" Propel sql statement
+        $sql = file_get_contents(__DIR__ . '/../schema/generated-sql/default.sql');
+        $stmt = $con->exec($sql);
     }
 
     protected function doRequest($method, $path, $data = null)
