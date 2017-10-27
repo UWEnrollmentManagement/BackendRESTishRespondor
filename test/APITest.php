@@ -114,9 +114,16 @@ class APITest extends BaseTest
             // Assert that the id is an int
             $this->assertInternalType('int', $formData['id']);
 
+            // Note this form's id
+            $formId = $formData['id'];
+
             // Assert that the return object has the values we provided
-            foreach ($createResponseData[$formData['id']] as $key => $value) {
-                $this->assertEquals($value, $responseData['data'][$key]);
+            foreach ($createResponseData[$formId] as $key => $value) {
+                $this->assertEquals(
+                    $value,
+                    $formData[$key],
+                    "Comparing form {$formData['id']} on key $key"
+                );
             }
         }
 
