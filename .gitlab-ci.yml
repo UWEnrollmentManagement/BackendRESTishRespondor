@@ -6,7 +6,10 @@ before_script:
 test:app:
   script:
   - ./vendor/bin/phpunit test --coverage-html coverage --coverage-clover coverage/clover.xml --configuration phpunit.xml -v
+  
+  after_script:
   - ./vendor/bin/php-coverage-badger coverage/clover.xml coverage/coverage.svg
+
   artifacts:
     paths:
     - coverage
