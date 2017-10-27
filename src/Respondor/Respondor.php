@@ -64,7 +64,7 @@ class Respondor
             } else {
                 $status = 400;
                 $success = false;
-                $error = implode("; ", $this->mediator->error());
+                $error = ['message' => implode("; ", $this->mediator->error())];
             }
         }
 
