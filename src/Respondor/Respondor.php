@@ -39,19 +39,24 @@ class Respondor
         $routeInfo = $request->getAttribute('routeInfo')[2];
         $resourceType = $routeInfo['resourceType'];
         $resourceId = null;
-        if(array_key_exists('id', $routeInfo)) {
-            $resourceId = $routeInfo['id'];
-        }
 
-        // We assume that every request coming in is to create a form
-        // That means we're assuming that the method is POST and the path is /forms/
+        $resourceId = array_key_exists('id', $routeInfo) ? $routeInfo['id'] : null;
 
-        /** CREATE **/
-        if ($request->getMethod() === "POST") {
+        $validResourceType = $this->mediator->resourceTypeExists($resourceType);
 
+        $resource = $validResourceType && $resourceId ? $this->mediator->retrieve($resourceType, $resourceId) : null;
+
+        if ($validResourceType === false) {                                           // Invalid resource type
+            $status = 404;
+            $success = false;
+            $error = ['message' => "No such resource type '$resourceType'."];
+        } elseif ($resourceId && !$resource) {                                       // Invalid resource id
+            $status = 404;
+            $success = false;
+            $error = ['message' => "No such resource type '$resourceType'" . implode("; ", $this->mediator->error())];
+        } elseif ($request->getMethod() === "POST") {                                // CREATE
             $resource = $this->mediator->create($resourceType);
-            // If $parsedBody is not already an array, then we will need
-            // to make it one first
+
             $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($resource);
 
@@ -66,28 +71,13 @@ class Respondor
                 $success = false;
                 $error = ['message' => implode("; ", $this->mediator->error())];
             }
-        }
+        } elseif ($request->getMethod() === "GET" && $resource) {                  // RETRIEVE
+            $status = 200;
+            $success = true;
+            $error = null;
 
-        /** RETRIEVE **/
-        if ($request->getMethod() === "GET" && $resourceId) {
-
-            $resource = $this->mediator->retrieve($resourceType, $resourceId);
-
-            if ($resource) {
-                $status = 200;
-                $success = true;
-                $error = null;
-
-                $objectData = $this->mediator->getAttributes($resource);
-            } else {
-                $status = 404;
-                $success = false;
-                $error = implode("; ", $this->mediator->error());
-            }
-        }
-
-        /** LIST **/
-        if ($request->getMethod() === "GET" && !$resourceId) {
+            $objectData = $this->mediator->getAttributes($resource);
+        } elseif ($request->getMethod() === "GET" && !$resource) {                 // LIST
 
             // don't forget to consider pagination and x amount of results per page
             $collection = $this->mediator->retrieveList($resourceType);
@@ -108,54 +98,28 @@ class Respondor
                 $error = implode("; ", $this->mediator->error());
             }
 
-        }
+        } elseif ($request->getMethod() === "DELETE" && $resource) {               // DELETE
+            $deletion = $this->mediator->delete($resource);
 
-        if ($request->getMethod() === "DELETE" && $resourceId) {
-            // make a thing, get it to make sure it worked, delete it, try to get it again and assert 404
-
-            $resource = $this->mediator->create($resourceType);
-            $this->mediator->setAttributes($resource, $parsedBody);
+            if ($deletion) {
+                $status = 200;
+                $success = true;
+                $error = null;
+            } else {
+                $status = 500;
+                $success = true;
+                $error = ['message' => implode("; ", $this->mediator->error())];
+            }
+        } elseif ($request->getMethod() === "PATCH" && $resource) {                // UPDATE
+            $resource = $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($resource);
 
-            if ($resource) {
-                $status = 200;
-                $success = true;
-                $error = null;
+            $status = 200;
+            $success = true;
+            $error = null;
 
-                $objectData = $this->mediator->getAttributes($resource);
-                $deletion = $this->mediator->delete($resourceType, $objectData[$resourceId]);
-                if ($deletion) {
-                    $attempt = $this->mediator->retrieve($resourceType, $resourceId);
-                    if(!$attempt) {
-                        $status = 404;
-                    }
-                }
-            } else {
-                $status = 404;
-                $success = false;
-                $error = implode("; ", $this->mediator->error());
-            }
-        }
+            $objectData = $this->mediator->getAttributes($resource);
 
-        /** UPDATE **/
-        if ($request->getMethod() === "PATCH") {
-
-            // get it and save it again
-            $resource = $this->mediator->retrieve($resourceType, $resourceId);
-            $setResource = $this->mediator->setAttributes($resource, $parsedBody);
-            $resource = $this->mediator->save($setResource);
-
-            if ($resource) {
-                $status = 200;
-                $success = true;
-                $error = null;
-
-                $objectData = $this->mediator->getAttributes($resource);
-            } else {
-                $status = 400;
-                $success = false;
-                $error = implode("; ", $this->mediator->error());
-            }
         }
 
 

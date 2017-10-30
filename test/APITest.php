@@ -49,6 +49,87 @@ class APITest extends BaseTest
     }
 
     /**
+     * Trying to GET, PATCH, or DELETE a form that does not exist should return a 404 error
+     */
+    public function test404Form()
+    {
+        foreach (['GET', 'DELETE', 'PATCH'] as $method) {
+
+            // Hopefully, no form exists with this id.
+            $formId = 9999999387;
+
+            // {$method} form {$id}, which doesn't exist (I hope!)
+            $request = [
+                'method' => $method,
+                'path' => "/forms/$formId/"
+            ];
+            $response = $this->doRequest($request['method'], $request['path']);
+
+            // Assert that the return code is 404 and that the response is a valid error response
+            $responseData = $this->responseToArray($response, "Trying to $method form $formId.");
+            $this->assertEquals(404, $response->getStatusCode(), "Trying to $method form $formId.");
+            $this->assertHasRequiredResponseElements($responseData, "Trying to $method form $formId.");
+            $this->assertFalse($responseData['success'], "Trying to $method form $formId.");
+            $this->assertNull($responseData['data'], "Trying to $method form $formId.");
+            $this->assertInternalType('array', $responseData['error'], "Trying to $method form $formId.");
+            $this->assertArrayHasKey('message', $responseData['error'], "Trying to $method form $formId.");
+        }
+    }
+
+    /**
+     * Trying to POST resource type that does not exist or trying to GET, PATCH, or
+     * DELETE a specific resource with a type that does not exist should return a
+     * 404 error.
+     */
+    public function test404Resource()
+    {
+        // This server does not have resources of type {$resourceType}, so we should get
+        // 404 responses for all requests to this resource type.
+        $resourceType = 'foo';
+        
+        // Try to create a {$resourceType}
+        $request = [
+            'method' => 'POST',
+            'path' => "/$resourceType/"
+        ];
+        $response = $this->doRequest($request['method'], $request['path']);
+
+        // Assert that the return code is 404 and that the response is a valid error response
+        $responseData = $this->responseToArray($response);
+        $this->assertEquals(404, $response->getStatusCode(), "Trying to create a $resourceType.");
+        $this->assertHasRequiredResponseElements($responseData, "Trying to create a $resourceType.");
+        $this->assertFalse($responseData['success'], "Trying to create a $resourceType.");
+        $this->assertNull($responseData['data'], "Trying to create a $resourceType.");
+        $this->assertInternalType('array', $responseData['error']);
+        $this->assertArrayHasKey('message', $responseData['error'], "Trying to create a $resourceType.");
+
+        foreach (['GET', 'DELETE', 'PATCH'] as $method) {
+
+            // No {$resourceType} exists with this id because this server does not have
+            // resources of type {$resourceType}.
+            $resourceId = 1;
+
+            // {$method} {$resourceType} {$id}
+            $request = [
+                'method' => $method,
+                'path' => "/forms/$resourceId/"
+            ];
+            $response = $this->doRequest($request['method'], $request['path']);
+
+            // Assert that the return code is 404 and that the response is a valid error response
+            $responseData = $this->responseToArray($response);
+            $this->assertEquals(404, $response->getStatusCode(), "Trying to $method $resourceType $resourceId.");
+            $this->assertHasRequiredResponseElements($responseData, "Trying to $method $resourceType $resourceId.");
+            $this->assertFalse($responseData['success'], "Trying to $method $resourceType $resourceId.");
+            $this->assertNull($responseData['data'], "Trying to $method $resourceType $resourceId.");
+            $this->assertInternalType('array', $responseData['error']);
+            $this->assertArrayHasKey('message', $responseData['error'], "Trying to $method $resourceType $resourceId.");
+        }
+
+
+    }
+
+    /**
      * A client shall be able to create a form, providing all required parameters.
      */
     public function testCreateForm($requestData = [])
