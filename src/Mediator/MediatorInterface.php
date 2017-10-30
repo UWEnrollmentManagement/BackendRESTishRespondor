@@ -111,6 +111,15 @@ Interface MediatorInterface
     public function getAttributes($resource);
 
     /**
+     * A predicate which reports whether or not this mediator supports
+     * the given resource type.
+     *
+     * @param string $resourceType
+     * @return boolean
+     */
+    public function resourceTypeExists($resourceType);
+
+    /**
      * Returns errors
      *
      * @return string[]
