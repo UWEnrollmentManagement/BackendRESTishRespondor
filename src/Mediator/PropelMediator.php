@@ -144,6 +144,11 @@ class PropelMediator implements MediatorInterface
         return $resource->wasDeleted();
     }
 
+    public function resourceTypeExists($resourceType)
+    {
+        return array_key_exists($resourceType, static::$classMap);
+    }
+
     public function error()
     {
         return $this->errors;
