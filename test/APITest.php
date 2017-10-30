@@ -66,12 +66,12 @@ class APITest extends BaseTest
             $response = $this->doRequest($request['method'], $request['path']);
 
             // Assert that the return code is 404 and that the response is a valid error response
-            $responseData = $this->responseToArray($response);
+            $responseData = $this->responseToArray($response, "Trying to $method form $formId.");
             $this->assertEquals(404, $response->getStatusCode(), "Trying to $method form $formId.");
             $this->assertHasRequiredResponseElements($responseData, "Trying to $method form $formId.");
             $this->assertFalse($responseData['success'], "Trying to $method form $formId.");
             $this->assertNull($responseData['data'], "Trying to $method form $formId.");
-            $this->assertInternalType('array', $responseData['error']);
+            $this->assertInternalType('array', $responseData['error'], "Trying to $method form $formId.");
             $this->assertArrayHasKey('message', $responseData['error'], "Trying to $method form $formId.");
         }
     }
