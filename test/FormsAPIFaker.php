@@ -46,15 +46,15 @@ class FormsAPIFaker
         ],
         "elements" => [
             "required" => [
-                'type' => 'section-label',
-                'label' => 'extra spicy',
+                'type' => ["randomElement", ["information", "affirmation", "date", "text-field", "big-text-field", "choice-field", "secure-upload", "secure-upload-multiple", "choices-from-file"]],
+                'label' => 'catchPhrase',
             ],
             "optional" => [
-                'retired' => false,
-                'helpText' => 'help text',
-                'placeholderText' => 'placeholder text',
-                'required' => true,
-                'initial value' => 'initial value',
+                'retired' => "boolean",
+                'helpText' => 'catchPhrase',
+                'placeholderText' => 'catchPhrase',
+                'required' => "boolean",
+                'initial value' => 'catchPhrase',
             ],
         ]
     ];
@@ -84,7 +84,11 @@ class FormsAPIFaker
     {
         $result = [];
         foreach ($template as $key => $method) {
-            $result[$key] = $this->faker->$method;
+            if(gettype($method) === "string") {
+                $result[$key] = $this->faker->$method;
+            } else {
+                $result[$key] = $this->faker->{$method[0]}($method[1]);
+            }
         }
 
         return $result;

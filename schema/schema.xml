@@ -26,21 +26,21 @@
 
     <table name="element">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-
+        <column name="retired" type="boolean" required="true" default="false" />
         <column name="type" type="varchar" size="31" required="true"/>
         <column name="label" type="varchar" size="8191" required="true"/>
 
-        <column name="active" type="boolean" required="true" default="true" />
+        <!--<column name="active" type="boolean" required="true" default="true" />-->
 
-        <column name="administrative" type="boolean" required="true" default="false" />
+        <!--<column name="administrative" type="boolean" required="true" default="false" />-->
 
-        <column name="short_name" type="varchar" size="31" required="true"/>
+        <!--<column name="short_name" type="varchar" size="31" required="true"/>-->
         <column name="initial_value" type="varchar" size="127" required="false"/>
         <column name="help_text" type="varchar" size="4095" required="false"/>
         <column name="placeholder_text" type="varchar" size="127" required="false"/>
-        <column name="choices" type="varchar" size="4095" required="false"/>
+        <!--<column name="choices" type="varchar" size="4095" required="false"/>-->
 
-        <column name="dependent_upon" type="varchar" size="127" required="false" />
+        <!--<column name="dependent_upon" type="varchar" size="127" required="false" />-->
 
         <column name="required" type="boolean" required="true" default="true" />
 

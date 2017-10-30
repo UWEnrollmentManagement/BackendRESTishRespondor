@@ -82,6 +82,14 @@ abstract class Element implements ActiveRecordInterface
     protected $id;
 
     /**
+     * The value for the retired field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $retired;
+
+    /**
      * The value for the type field.
      *
      * @var        string
@@ -94,29 +102,6 @@ abstract class Element implements ActiveRecordInterface
      * @var        string
      */
     protected $label;
-
-    /**
-     * The value for the active field.
-     *
-     * Note: this column has a database default value of: true
-     * @var        boolean
-     */
-    protected $active;
-
-    /**
-     * The value for the administrative field.
-     *
-     * Note: this column has a database default value of: false
-     * @var        boolean
-     */
-    protected $administrative;
-
-    /**
-     * The value for the short_name field.
-     *
-     * @var        string
-     */
-    protected $short_name;
 
     /**
      * The value for the initial_value field.
@@ -138,20 +123,6 @@ abstract class Element implements ActiveRecordInterface
      * @var        string
      */
     protected $placeholder_text;
-
-    /**
-     * The value for the choices field.
-     *
-     * @var        string
-     */
-    protected $choices;
-
-    /**
-     * The value for the dependent_upon field.
-     *
-     * @var        string
-     */
-    protected $dependent_upon;
 
     /**
      * The value for the required field.
@@ -230,8 +201,7 @@ abstract class Element implements ActiveRecordInterface
      */
     public function applyDefaultValues()
     {
-        $this->active = true;
-        $this->administrative = false;
+        $this->retired = false;
         $this->required = true;
     }
 
@@ -473,6 +443,26 @@ abstract class Element implements ActiveRecordInterface
     }
 
     /**
+     * Get the [retired] column value.
+     *
+     * @return boolean
+     */
+    public function getRetired()
+    {
+        return $this->retired;
+    }
+
+    /**
+     * Get the [retired] column value.
+     *
+     * @return boolean
+     */
+    public function isRetired()
+    {
+        return $this->getRetired();
+    }
+
+    /**
      * Get the [type] column value.
      *
      * @return string
@@ -490,56 +480,6 @@ abstract class Element implements ActiveRecordInterface
     public function getLabel()
     {
         return $this->label;
-    }
-
-    /**
-     * Get the [active] column value.
-     *
-     * @return boolean
-     */
-    public function getActive()
-    {
-        return $this->active;
-    }
-
-    /**
-     * Get the [active] column value.
-     *
-     * @return boolean
-     */
-    public function isActive()
-    {
-        return $this->getActive();
-    }
-
-    /**
-     * Get the [administrative] column value.
-     *
-     * @return boolean
-     */
-    public function getAdministrative()
-    {
-        return $this->administrative;
-    }
-
-    /**
-     * Get the [administrative] column value.
-     *
-     * @return boolean
-     */
-    public function isAdministrative()
-    {
-        return $this->getAdministrative();
-    }
-
-    /**
-     * Get the [short_name] column value.
-     *
-     * @return string
-     */
-    public function getShortName()
-    {
-        return $this->short_name;
     }
 
     /**
@@ -570,26 +510,6 @@ abstract class Element implements ActiveRecordInterface
     public function getPlaceholderText()
     {
         return $this->placeholder_text;
-    }
-
-    /**
-     * Get the [choices] column value.
-     *
-     * @return string
-     */
-    public function getChoices()
-    {
-        return $this->choices;
-    }
-
-    /**
-     * Get the [dependent_upon] column value.
-     *
-     * @return string
-     */
-    public function getDependentUpon()
-    {
-        return $this->dependent_upon;
     }
 
     /**
@@ -643,6 +563,34 @@ abstract class Element implements ActiveRecordInterface
     } // setId()
 
     /**
+     * Sets the value of the [retired] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function setRetired($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->retired !== $v) {
+            $this->retired = $v;
+            $this->modifiedColumns[ElementTableMap::COL_RETIRED] = true;
+        }
+
+        return $this;
+    } // setRetired()
+
+    /**
      * Set the value of [type] column.
      *
      * @param string $v new value
@@ -681,82 +629,6 @@ abstract class Element implements ActiveRecordInterface
 
         return $this;
     } // setLabel()
-
-    /**
-     * Sets the value of the [active] column.
-     * Non-boolean arguments are converted using the following rules:
-     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
-     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
-     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     *
-     * @param  boolean|integer|string $v The new value
-     * @return $this|\FormsAPI\Element The current object (for fluent API support)
-     */
-    public function setActive($v)
-    {
-        if ($v !== null) {
-            if (is_string($v)) {
-                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
-            } else {
-                $v = (boolean) $v;
-            }
-        }
-
-        if ($this->active !== $v) {
-            $this->active = $v;
-            $this->modifiedColumns[ElementTableMap::COL_ACTIVE] = true;
-        }
-
-        return $this;
-    } // setActive()
-
-    /**
-     * Sets the value of the [administrative] column.
-     * Non-boolean arguments are converted using the following rules:
-     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
-     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
-     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     *
-     * @param  boolean|integer|string $v The new value
-     * @return $this|\FormsAPI\Element The current object (for fluent API support)
-     */
-    public function setAdministrative($v)
-    {
-        if ($v !== null) {
-            if (is_string($v)) {
-                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
-            } else {
-                $v = (boolean) $v;
-            }
-        }
-
-        if ($this->administrative !== $v) {
-            $this->administrative = $v;
-            $this->modifiedColumns[ElementTableMap::COL_ADMINISTRATIVE] = true;
-        }
-
-        return $this;
-    } // setAdministrative()
-
-    /**
-     * Set the value of [short_name] column.
-     *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Element The current object (for fluent API support)
-     */
-    public function setShortName($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->short_name !== $v) {
-            $this->short_name = $v;
-            $this->modifiedColumns[ElementTableMap::COL_SHORT_NAME] = true;
-        }
-
-        return $this;
-    } // setShortName()
 
     /**
      * Set the value of [initial_value] column.
@@ -817,46 +689,6 @@ abstract class Element implements ActiveRecordInterface
 
         return $this;
     } // setPlaceholderText()
-
-    /**
-     * Set the value of [choices] column.
-     *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Element The current object (for fluent API support)
-     */
-    public function setChoices($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->choices !== $v) {
-            $this->choices = $v;
-            $this->modifiedColumns[ElementTableMap::COL_CHOICES] = true;
-        }
-
-        return $this;
-    } // setChoices()
-
-    /**
-     * Set the value of [dependent_upon] column.
-     *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Element The current object (for fluent API support)
-     */
-    public function setDependentUpon($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->dependent_upon !== $v) {
-            $this->dependent_upon = $v;
-            $this->modifiedColumns[ElementTableMap::COL_DEPENDENT_UPON] = true;
-        }
-
-        return $this;
-    } // setDependentUpon()
 
     /**
      * Sets the value of the [required] column.
@@ -920,11 +752,7 @@ abstract class Element implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues()
     {
-            if ($this->active !== true) {
-                return false;
-            }
-
-            if ($this->administrative !== false) {
+            if ($this->retired !== false) {
                 return false;
             }
 
@@ -961,40 +789,28 @@ abstract class Element implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : ElementTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ElementTableMap::translateFieldName('Type', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ElementTableMap::translateFieldName('Retired', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->retired = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ElementTableMap::translateFieldName('Type', TableMap::TYPE_PHPNAME, $indexType)];
             $this->type = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ElementTableMap::translateFieldName('Label', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ElementTableMap::translateFieldName('Label', TableMap::TYPE_PHPNAME, $indexType)];
             $this->label = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ElementTableMap::translateFieldName('Active', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->active = (null !== $col) ? (boolean) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ElementTableMap::translateFieldName('Administrative', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->administrative = (null !== $col) ? (boolean) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ElementTableMap::translateFieldName('ShortName', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->short_name = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ElementTableMap::translateFieldName('InitialValue', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ElementTableMap::translateFieldName('InitialValue', TableMap::TYPE_PHPNAME, $indexType)];
             $this->initial_value = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ElementTableMap::translateFieldName('HelpText', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ElementTableMap::translateFieldName('HelpText', TableMap::TYPE_PHPNAME, $indexType)];
             $this->help_text = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ElementTableMap::translateFieldName('PlaceholderText', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ElementTableMap::translateFieldName('PlaceholderText', TableMap::TYPE_PHPNAME, $indexType)];
             $this->placeholder_text = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ElementTableMap::translateFieldName('Choices', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->choices = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ElementTableMap::translateFieldName('DependentUpon', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->dependent_upon = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ElementTableMap::translateFieldName('Required', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ElementTableMap::translateFieldName('Required', TableMap::TYPE_PHPNAME, $indexType)];
             $this->required = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ElementTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ElementTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->parent_id = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
@@ -1004,7 +820,7 @@ abstract class Element implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 13; // 13 = ElementTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 9; // 9 = ElementTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\Element'), 0, $e);
@@ -1264,20 +1080,14 @@ abstract class Element implements ActiveRecordInterface
         if ($this->isColumnModified(ElementTableMap::COL_ID)) {
             $modifiedColumns[':p' . $index++]  = 'id';
         }
+        if ($this->isColumnModified(ElementTableMap::COL_RETIRED)) {
+            $modifiedColumns[':p' . $index++]  = 'retired';
+        }
         if ($this->isColumnModified(ElementTableMap::COL_TYPE)) {
             $modifiedColumns[':p' . $index++]  = 'type';
         }
         if ($this->isColumnModified(ElementTableMap::COL_LABEL)) {
             $modifiedColumns[':p' . $index++]  = 'label';
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_ACTIVE)) {
-            $modifiedColumns[':p' . $index++]  = 'active';
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_ADMINISTRATIVE)) {
-            $modifiedColumns[':p' . $index++]  = 'administrative';
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_SHORT_NAME)) {
-            $modifiedColumns[':p' . $index++]  = 'short_name';
         }
         if ($this->isColumnModified(ElementTableMap::COL_INITIAL_VALUE)) {
             $modifiedColumns[':p' . $index++]  = 'initial_value';
@@ -1287,12 +1097,6 @@ abstract class Element implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ElementTableMap::COL_PLACEHOLDER_TEXT)) {
             $modifiedColumns[':p' . $index++]  = 'placeholder_text';
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_CHOICES)) {
-            $modifiedColumns[':p' . $index++]  = 'choices';
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_DEPENDENT_UPON)) {
-            $modifiedColumns[':p' . $index++]  = 'dependent_upon';
         }
         if ($this->isColumnModified(ElementTableMap::COL_REQUIRED)) {
             $modifiedColumns[':p' . $index++]  = 'required';
@@ -1314,20 +1118,14 @@ abstract class Element implements ActiveRecordInterface
                     case 'id':
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
+                    case 'retired':
+                        $stmt->bindValue($identifier, $this->retired, PDO::PARAM_BOOL);
+                        break;
                     case 'type':
                         $stmt->bindValue($identifier, $this->type, PDO::PARAM_STR);
                         break;
                     case 'label':
                         $stmt->bindValue($identifier, $this->label, PDO::PARAM_STR);
-                        break;
-                    case 'active':
-                        $stmt->bindValue($identifier, $this->active, PDO::PARAM_BOOL);
-                        break;
-                    case 'administrative':
-                        $stmt->bindValue($identifier, $this->administrative, PDO::PARAM_BOOL);
-                        break;
-                    case 'short_name':
-                        $stmt->bindValue($identifier, $this->short_name, PDO::PARAM_STR);
                         break;
                     case 'initial_value':
                         $stmt->bindValue($identifier, $this->initial_value, PDO::PARAM_STR);
@@ -1337,12 +1135,6 @@ abstract class Element implements ActiveRecordInterface
                         break;
                     case 'placeholder_text':
                         $stmt->bindValue($identifier, $this->placeholder_text, PDO::PARAM_STR);
-                        break;
-                    case 'choices':
-                        $stmt->bindValue($identifier, $this->choices, PDO::PARAM_STR);
-                        break;
-                    case 'dependent_upon':
-                        $stmt->bindValue($identifier, $this->dependent_upon, PDO::PARAM_STR);
                         break;
                     case 'required':
                         $stmt->bindValue($identifier, $this->required, PDO::PARAM_BOOL);
@@ -1416,39 +1208,27 @@ abstract class Element implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getType();
+                return $this->getRetired();
                 break;
             case 2:
-                return $this->getLabel();
+                return $this->getType();
                 break;
             case 3:
-                return $this->getActive();
+                return $this->getLabel();
                 break;
             case 4:
-                return $this->getAdministrative();
-                break;
-            case 5:
-                return $this->getShortName();
-                break;
-            case 6:
                 return $this->getInitialValue();
                 break;
-            case 7:
+            case 5:
                 return $this->getHelpText();
                 break;
-            case 8:
+            case 6:
                 return $this->getPlaceholderText();
                 break;
-            case 9:
-                return $this->getChoices();
-                break;
-            case 10:
-                return $this->getDependentUpon();
-                break;
-            case 11:
+            case 7:
                 return $this->getRequired();
                 break;
-            case 12:
+            case 8:
                 return $this->getParentId();
                 break;
             default:
@@ -1482,18 +1262,14 @@ abstract class Element implements ActiveRecordInterface
         $keys = ElementTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getType(),
-            $keys[2] => $this->getLabel(),
-            $keys[3] => $this->getActive(),
-            $keys[4] => $this->getAdministrative(),
-            $keys[5] => $this->getShortName(),
-            $keys[6] => $this->getInitialValue(),
-            $keys[7] => $this->getHelpText(),
-            $keys[8] => $this->getPlaceholderText(),
-            $keys[9] => $this->getChoices(),
-            $keys[10] => $this->getDependentUpon(),
-            $keys[11] => $this->getRequired(),
-            $keys[12] => $this->getParentId(),
+            $keys[1] => $this->getRetired(),
+            $keys[2] => $this->getType(),
+            $keys[3] => $this->getLabel(),
+            $keys[4] => $this->getInitialValue(),
+            $keys[5] => $this->getHelpText(),
+            $keys[6] => $this->getPlaceholderText(),
+            $keys[7] => $this->getRequired(),
+            $keys[8] => $this->getParentId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1584,39 +1360,27 @@ abstract class Element implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setType($value);
+                $this->setRetired($value);
                 break;
             case 2:
-                $this->setLabel($value);
+                $this->setType($value);
                 break;
             case 3:
-                $this->setActive($value);
+                $this->setLabel($value);
                 break;
             case 4:
-                $this->setAdministrative($value);
-                break;
-            case 5:
-                $this->setShortName($value);
-                break;
-            case 6:
                 $this->setInitialValue($value);
                 break;
-            case 7:
+            case 5:
                 $this->setHelpText($value);
                 break;
-            case 8:
+            case 6:
                 $this->setPlaceholderText($value);
                 break;
-            case 9:
-                $this->setChoices($value);
-                break;
-            case 10:
-                $this->setDependentUpon($value);
-                break;
-            case 11:
+            case 7:
                 $this->setRequired($value);
                 break;
-            case 12:
+            case 8:
                 $this->setParentId($value);
                 break;
         } // switch()
@@ -1649,40 +1413,28 @@ abstract class Element implements ActiveRecordInterface
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setType($arr[$keys[1]]);
+            $this->setRetired($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setLabel($arr[$keys[2]]);
+            $this->setType($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setActive($arr[$keys[3]]);
+            $this->setLabel($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setAdministrative($arr[$keys[4]]);
+            $this->setInitialValue($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setShortName($arr[$keys[5]]);
+            $this->setHelpText($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setInitialValue($arr[$keys[6]]);
+            $this->setPlaceholderText($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setHelpText($arr[$keys[7]]);
+            $this->setRequired($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setPlaceholderText($arr[$keys[8]]);
-        }
-        if (array_key_exists($keys[9], $arr)) {
-            $this->setChoices($arr[$keys[9]]);
-        }
-        if (array_key_exists($keys[10], $arr)) {
-            $this->setDependentUpon($arr[$keys[10]]);
-        }
-        if (array_key_exists($keys[11], $arr)) {
-            $this->setRequired($arr[$keys[11]]);
-        }
-        if (array_key_exists($keys[12], $arr)) {
-            $this->setParentId($arr[$keys[12]]);
+            $this->setParentId($arr[$keys[8]]);
         }
     }
 
@@ -1728,20 +1480,14 @@ abstract class Element implements ActiveRecordInterface
         if ($this->isColumnModified(ElementTableMap::COL_ID)) {
             $criteria->add(ElementTableMap::COL_ID, $this->id);
         }
+        if ($this->isColumnModified(ElementTableMap::COL_RETIRED)) {
+            $criteria->add(ElementTableMap::COL_RETIRED, $this->retired);
+        }
         if ($this->isColumnModified(ElementTableMap::COL_TYPE)) {
             $criteria->add(ElementTableMap::COL_TYPE, $this->type);
         }
         if ($this->isColumnModified(ElementTableMap::COL_LABEL)) {
             $criteria->add(ElementTableMap::COL_LABEL, $this->label);
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_ACTIVE)) {
-            $criteria->add(ElementTableMap::COL_ACTIVE, $this->active);
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_ADMINISTRATIVE)) {
-            $criteria->add(ElementTableMap::COL_ADMINISTRATIVE, $this->administrative);
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_SHORT_NAME)) {
-            $criteria->add(ElementTableMap::COL_SHORT_NAME, $this->short_name);
         }
         if ($this->isColumnModified(ElementTableMap::COL_INITIAL_VALUE)) {
             $criteria->add(ElementTableMap::COL_INITIAL_VALUE, $this->initial_value);
@@ -1751,12 +1497,6 @@ abstract class Element implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ElementTableMap::COL_PLACEHOLDER_TEXT)) {
             $criteria->add(ElementTableMap::COL_PLACEHOLDER_TEXT, $this->placeholder_text);
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_CHOICES)) {
-            $criteria->add(ElementTableMap::COL_CHOICES, $this->choices);
-        }
-        if ($this->isColumnModified(ElementTableMap::COL_DEPENDENT_UPON)) {
-            $criteria->add(ElementTableMap::COL_DEPENDENT_UPON, $this->dependent_upon);
         }
         if ($this->isColumnModified(ElementTableMap::COL_REQUIRED)) {
             $criteria->add(ElementTableMap::COL_REQUIRED, $this->required);
@@ -1850,16 +1590,12 @@ abstract class Element implements ActiveRecordInterface
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
+        $copyObj->setRetired($this->getRetired());
         $copyObj->setType($this->getType());
         $copyObj->setLabel($this->getLabel());
-        $copyObj->setActive($this->getActive());
-        $copyObj->setAdministrative($this->getAdministrative());
-        $copyObj->setShortName($this->getShortName());
         $copyObj->setInitialValue($this->getInitialValue());
         $copyObj->setHelpText($this->getHelpText());
         $copyObj->setPlaceholderText($this->getPlaceholderText());
-        $copyObj->setChoices($this->getChoices());
-        $copyObj->setDependentUpon($this->getDependentUpon());
         $copyObj->setRequired($this->getRequired());
         $copyObj->setParentId($this->getParentId());
 
@@ -2443,16 +2179,12 @@ abstract class Element implements ActiveRecordInterface
             $this->aElementRelatedByParentId->removeParent($this);
         }
         $this->id = null;
+        $this->retired = null;
         $this->type = null;
         $this->label = null;
-        $this->active = null;
-        $this->administrative = null;
-        $this->short_name = null;
         $this->initial_value = null;
         $this->help_text = null;
         $this->placeholder_text = null;
-        $this->choices = null;
-        $this->dependent_upon = null;
         $this->required = null;
         $this->parent_id = null;
         $this->alreadyInSave = false;
