@@ -127,7 +127,17 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     {
         parent::__construct($name, $data, $dataName);
 
-        $this->faker = new FormsAPIFaker();
+        $instance = $this;
+        $this->faker = new FormsAPIFaker(
+            [
+                'reference' => function($resourceType) use ($instance) {
+                    $response = $instance->doCreateRequiredOnly($resourceType);
+                    $responseData = $instance->responseToArray($response);
+
+                    return $responseData['data']['id'];
+                },
+            ]
+        );
     }
 
     protected function setUp()
@@ -166,6 +176,21 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     protected function doCreate($resourceType, $requestData = [])
     {
         $requestData = $this->faker->fake($resourceType, $requestData);
+
+        // Build the request
+        $request = [
+            'method' => 'POST',
+            'path' => "/$resourceType/",
+            'data' => $requestData,
+        ];
+
+        // Issue the request
+        return $this->doRequest($request['method'], $request['path'], $request['data']);
+    }
+
+    protected function doCreateRequiredOnly($resourceType, $requestData = [])
+    {
+        $requestData = $this->faker->fakeRequiredOnly($resourceType, $requestData);
 
         // Build the request
         $request = [
