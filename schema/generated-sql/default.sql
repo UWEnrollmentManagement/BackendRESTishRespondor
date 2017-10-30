@@ -39,3 +39,20 @@ CREATE TABLE [form]
     FOREIGN KEY ([root_element_id]) REFERENCES [element] ([id])
         ON DELETE SET NULL
 );
+
+-----------------------------------------------------------------------
+-- visitor
+-----------------------------------------------------------------------
+
+DROP TABLE IF EXISTS [visitor];
+
+CREATE TABLE [visitor]
+(
+    [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    [uw_student_number] MEDIUMBLOB,
+    [uw_net_id] MEDIUMBLOB NOT NULL,
+    [first_name] MEDIUMBLOB,
+    [middle_name] MEDIUMBLOB,
+    [last_name] MEDIUMBLOB,
+    UNIQUE ([id])
+);

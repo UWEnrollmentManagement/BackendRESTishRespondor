@@ -83,21 +83,17 @@ class PropelMediator implements MediatorInterface
         // if element, build reference to parentId
         // ex. /forms/{form_id}/
 
-        $hrefRoot = array_search(get_class($resource), static::$classMap);
+        $resourceType = array_search(get_class($resource), static::$classMap);
 
-        //forms
-        if(array_key_exists("rootElementId", $attributes)) {
-            $hrefRoot .= $attributes["rootElementId"]."/";
-            // form also needs to construct a reference to form elements
-        } else if(array_key_exists("parentId", $attributes)) {
-            //elements
-            $hrefRoot .= $attributes["parentId"]."/";
+        $attributes["href"] = "{$this->href}/$resourceType/{$attributes['id']}/";
+
+        if ($resourceType === 'forms') {
+            $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
+            $attributes["rootElement"] = "{$this->href}/elements/{$attributes['rootElementId']}/";
+
+        } elseif ($resourceType === 'elements') {
+            $attributes['parent'] = "{$this->href}/$resourceType/{$attributes['parentId']}/";
         }
-
-        // we'll make a test for these
-        $attributes["href"] = $hrefRoot;
-        $attributes['elements'] = "/";
-        $attributes['rootElement'] = "/";
 
         return $attributes;
 

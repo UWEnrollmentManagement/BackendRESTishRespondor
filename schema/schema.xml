@@ -30,17 +30,9 @@
         <column name="type" type="varchar" size="31" required="true"/>
         <column name="label" type="varchar" size="8191" required="true"/>
 
-        <!--<column name="active" type="boolean" required="true" default="true" />-->
-
-        <!--<column name="administrative" type="boolean" required="true" default="false" />-->
-
-        <!--<column name="short_name" type="varchar" size="31" required="true"/>-->
         <column name="initial_value" type="varchar" size="127" required="false"/>
         <column name="help_text" type="varchar" size="4095" required="false"/>
         <column name="placeholder_text" type="varchar" size="127" required="false"/>
-        <!--<column name="choices" type="varchar" size="4095" required="false"/>-->
-
-        <!--<column name="dependent_upon" type="varchar" size="127" required="false" />-->
 
         <column name="required" type="boolean" required="true" default="true" />
 
@@ -75,5 +67,18 @@
         </behavior>
 
     </table>
+
+
+    <table name="visitor">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
+        <column name="uw_student_number" type="varchar" size="7" required="false" phpName="UWStudentNumber"/>
+        <column name="uw_net_id" type="varchar" size="63" required="true" phpName="UWNetID" />
+        <column name="first_name" type="varchar" size="63" required="false" />
+        <column name="middle_name" type="varchar" size="63" required="false" />
+        <column name="last_name" type="varchar" size="63" required="false" />
+
+    </table>
+
 
 </database>
