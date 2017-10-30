@@ -56,6 +56,9 @@ class FormsAPIFaker
                 'required' => "boolean",
                 'initial value' => 'catchPhrase',
             ],
+        ],
+        "visitors" => [
+
         ]
     ];
 
