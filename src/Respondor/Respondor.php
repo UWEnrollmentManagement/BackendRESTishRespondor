@@ -40,9 +40,6 @@ class Respondor
 
         $routeInfo = $request->getAttribute('routeInfo')[2];
         $resourceType = $routeInfo['resourceType'];
-        if($resourceType == "visitors") {
-//            print_r($parsedBody);
-        }
         $resourceId = null;
 
         $resourceId = array_key_exists('id', $routeInfo) ? $routeInfo['id'] : null;

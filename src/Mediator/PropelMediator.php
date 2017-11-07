@@ -8,28 +8,30 @@
 
 namespace FormsAPI\Mediator;
 
+use Propel\Runtime\Map\TableMap;
 use FormsAPI\ChildFormRelationship;
-use FormsAPI\Choices;
-use FormsAPI\DashboardElements;
-use FormsAPI\DashboardForms;
-use FormsAPI\Dashboards;
-use FormsAPI\Dependencies;
-use FormsAPI\ElementChoices;
+use FormsAPI\ChoiceValue as Choice;
+use FormsAPI\DashboardElement;
+use FormsAPI\DashboardForm;
+use FormsAPI\Dashboard;
+use FormsAPI\Dependency;
+use FormsAPI\ElementChoice;
 use FormsAPI\Form;
 use FormsAPI\Element;
 use FormsAPI\FormQuery;
-use FormsAPI\FormReactions;
-use FormsAPI\FormTags;
-use FormsAPI\Notes;
-use FormsAPI\Reactions;
-use FormsAPI\Recipients;
-use FormsAPI\Requirements;
-use FormsAPI\Settings;
-use FormsAPI\Stakeholders;
-use FormsAPI\Statuses;
-use FormsAPI\Submissions;
-use FormsAPI\SubmissionTags;
-use FormsAPI\Tags;
+use FormsAPI\Condition;
+use FormsAPI\FormReaction;
+use FormsAPI\FormTag;
+use FormsAPI\Note;
+use FormsAPI\Reaction;
+use FormsAPI\Recipient;
+use FormsAPI\Requirement;
+use FormsAPI\Setting;
+use FormsAPI\Stakeholder;
+use FormsAPI\Status;
+use FormsAPI\Submission;
+use FormsAPI\SubmissionTag;
+use FormsAPI\Tag;
 use FormsAPI\Visitor;
 
 
@@ -43,25 +45,26 @@ class PropelMediator implements MediatorInterface
         'forms' => Form::class,
         'elements' => Element::class,
         'visitors' => Visitor::class,
-        'choices' => Choices::class,
-        'dependencies' => Dependencies::class,
-        'requirements' => Requirements::class,
-        'submissions' => Submissions::class,
-        'statuses' => Statuses::class,
-        'tags' => Tags::class,
-        'notes' => Notes::class,
-        'recipients' => Recipients::class,
-        'stakeholders' => Stakeholders::class,
-        'reactions' => Reactions::class,
-        'settings' => Settings::class,
-        'dashboards' => Dashboards::class,
+        'choices' => Choice::class,
+        'conditions' => Condition::class,
+        'dependencies' => Dependency::class,
+        'requirements' => Requirement::class,
+        'submissions' => Submission::class,
+        'statuses' => Status::class,
+        'tags' => Tag::class,
+        'notes' => Note::class,
+        'recipients' => Recipient::class,
+        'stakeholders' => Stakeholder::class,
+        'reactions' => Reaction::class,
+        'settings' => Setting::class,
+        'dashboards' => Dashboard::class,
         'childformrelationships' => ChildFormRelationship::class,
-        'elementchoices' => ElementChoices::class,
-        'submissiontags' => SubmissionTags::class,
-        'formtags' => FormTags::class,
-        'formreactions' => FormReactions::class,
-        'dashboardelements' => DashboardElements::class,
-        'dashboardforms' => DashboardForms::class,
+        'elementchoices' => ElementChoice::class,
+        'submissiontags' => SubmissionTag::class,
+        'formtags' => FormTag::class,
+        'formreactions' => FormReaction::class,
+        'dashboardelements' => DashboardElement::class,
+        'dashboardforms' => DashboardForm::class,
     ];
 
     public function __construct($baseHref) {
@@ -101,32 +104,13 @@ class PropelMediator implements MediatorInterface
     }
 
     public function setAttributes($resource, $attributes) {
-        // proper capitalization
-        foreach($attributes as $key => $value) {
-//            unset($attributes[$key]);
-//            $attributes[ucfirst($key)] = $value;
-        }
-        if(array_key_exists("UwNetID", $attributes)) {
-            print_r($attributes);
-            echo "SDFDS";
-        }
-        $resource->fromArray($attributes);
+        $resource->fromArray($attributes, TableMap::TYPE_FIELDNAME);
         return $resource;
     }
 
     public function getAttributes($resource) {
 
-        $attributes = $resource->toArray();
-
-        foreach($attributes as $key => $value) {
-            unset($attributes[$key]);
-            $attributes[lcfirst($key)] = $value;
-        }
-        // attach href
-        // if form, build reference based off rootElementId
-
-        // if element, build reference to parentId
-        // ex. /forms/{form_id}/
+        $attributes = $resource->toArray(TableMap::TYPE_FIELDNAME);
 
         $resourceType = array_search(get_class($resource), static::$classMap);
 
@@ -134,10 +118,10 @@ class PropelMediator implements MediatorInterface
 
         if ($resourceType === 'forms') {
             $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
-            $attributes["rootElement"] = "{$this->href}/elements/{$attributes['rootElementId']}/";
+            $attributes["root_element"] = "{$this->href}/elements/{$attributes['root_element_id']}/";
 
         } elseif ($resourceType === 'elements') {
-            $attributes['parent'] = "{$this->href}/$resourceType/{$attributes['parentId']}/";
+            $attributes['parent'] = "{$this->href}/$resourceType/{$attributes['parent_id']}/";
         }
 
         return $attributes;

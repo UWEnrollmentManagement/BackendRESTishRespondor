@@ -324,11 +324,6 @@ class APITest extends BaseTest
             $response = $this->doCreate($resourceType, $requestData);
 
             // Assert that the return code is 200
-            if($response->getStatusCode() != "200") {
-                echo "hey";
-                print_r($this->responseToArray($response));
-            }
-
             $this->assertEquals(200, $response->getStatusCode());
 
             // Retrieve the response data, assert that it is valid
@@ -338,7 +333,7 @@ class APITest extends BaseTest
 
             // Assert that data is an array and has the necessary parameters
             $this->assertInternalType('array', $responseData['data']);
-            $this->assertArrayHasKeys($allParameters, $responseData['data']);
+            $this->assertArrayHasKeys($allParameters, $responseData['data'], "For resource type $resourceType.");
 
             // Assert that the return object has the values we provided
             foreach ($requestData as $key => $value) {

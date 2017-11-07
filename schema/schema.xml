@@ -71,8 +71,8 @@
 
     <table name="visitor">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="uw_student_number" type="varchar" size="7" required="false" phpName="uwStudentNumber"/>
-        <column name="uw_net_id" type="varchar" size="63" required="true" phpName="uwNetID" />
+        <column name="uw_student_number" type="varchar" size="7" required="false" phpName="UWStudentNumber"/>
+        <column name="uw_net_id" type="varchar" size="63" required="true" phpName="UWNetID" />
         <column name="first_name" type="varchar" size="63" required="false" />
         <column name="middle_name" type="varchar" size="63" required="false" />
         <column name="last_name" type="varchar" size="63" required="false" />
@@ -88,122 +88,233 @@
         <column name="child_id" type="integer" required="true"/>
         <column name="tag_id" type="integer" required="false"/>
         <column name="reaction_id" type="integer" required="false"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: parent_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: child_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="choices">
+    <table name="choice_value">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="value" type="varchar" size="127" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: value, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="dependencies">
+    <table name="condition">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="operator" type="varchar" size="127" required="true"/>
+        <column name="value" type="varchar" size="127" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: operator, validator: Choice, options: {choices: [is, is not, less than, greater than, less than or equal to, greater than or equal to, maximum length, minimum length, exact length, regex]}}" />
+            <parameter name="rule2" value="{column: operator, validator: NotNull}" />
+            <parameter name="rule3" value="{column: value, validator: NotNull}" />
+        </behavior>
+    </table>
+
+    <table name="dependency">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="element_id" type="integer" required="true" />
         <column name="slave_id" type="integer" required="true"/>
         <column name="condition_id" type="integer" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: slave_id, validator: NotNull}" />
+            <parameter name="rule3" value="{column: condition_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="requirements">
+    <table name="requirement">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="element_id" type="integer" required="true" />
         <column name="condition_id" type="integer" required="true"/>
-        <column name="failure_message" type="varchar" required="true"/>
+        <column name="failure_message" type="varchar" required="false"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: condition_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="submissions">
+    <table name="submission">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="visitor_id" type="integer" required="true" />
         <column name="form_id" type="integer" required="true"/>
-        <column name="status_id" type="integer" required="true"/>
-        <column name="assignee_id" type="integer" required="true"/>
-        <column name="parent_id" type="integer" required="true"/>
+        <column name="status_id" type="integer" required="false"/>
+        <column name="assignee_id" type="integer" required="false"/>
+        <column name="parent_id" type="integer" required="false"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: visitor_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="statuses">
+    <table name="status">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="name" type="varchar" size="63" required="true" />
-        <column name="default_message" type="varchar" size="1683" required="true" />
+        <column name="default_message" type="varchar" size="1683" required="false" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: name, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="tags">
+    <table name="tag">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="name" type="varchar" size="63" required="true" />
-        <column name="default_message" type="varchar" size="1683" required="true" />
+        <column name="default_message" type="varchar" size="1683" required="false" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: name, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="notes">
+    <table name="note">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="content" type="varchar" required="true" size="1683"/>
         <column name="subject" type="varchar" required="true" size="127" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: content, validator: NotNull}" />
+            <parameter name="rule2" value="{column: subject, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="recipients">
+    <table name="recipient">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="address" type="integer" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: address, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="stakeholders">
+    <table name="stakeholder">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="label" type="varchar" required="true" size="127" />
         <column name="address" type="varchar" required="true" size="127" />
         <column name="formId" type="integer" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: label, validator: NotNull}" />
+            <parameter name="rule2" value="{column: address, validator: NotNull}" />
+            <parameter name="rule3" value="{column: formId, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="reactions">
+    <table name="reaction">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="subject" type="varchar" required="true" size="127" />
         <column name="recipient" type="varchar" required="true" size="63"/>
         <column name="sender" type="varchar" required="true" size="63"/>
-        <column name="replyTo" type="varchar" required="true" size="63"/>
-        <column name="cc" type="varchar" required="true" size="63"/>
-        <column name="bcc" type="varchar" required="true" size="63"/>
+        <column name="replyTo" type="varchar" required="false" size="63"/>
+        <column name="cc" type="varchar" required="false" size="63"/>
+        <column name="bcc" type="varchar" required="false" size="63"/>
         <column name="template" type="varchar" required="true" size="127"/>
         <column name="content" type="varchar" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: subject, validator: NotNull}" />
+            <parameter name="rule2" value="{column: recipient, validator: NotNull}" />
+            <parameter name="rule3" value="{column: sender, validator: NotNull}" />
+            <parameter name="rule4" value="{column: template, validator: NotNull}" />
+            <parameter name="rule5" value="{column: content, validator: NotNull}" />
+        </behavior>
     </table>
 
     <!-- double check sizes for value? -->
-    <table name="settings">
+    <table name="setting">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="key" type="varchar" required="true" />
         <column name="value" type="varchar" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: key, validator: NotNull}" />
+            <parameter name="rule2" value="{column: value, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="dashboards">
+    <table name="dashboard">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="name" type="varchar" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: name, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="element_choices">
+    <table name="element_choice">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="element_id" type="integer" required="true" />
         <column name="choice_id" type="integer" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: choice_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="submission_tags">
+    <table name="submission_tag">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="submission_id" type="integer" required="true" />
         <column name="tag_id" type="integer" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: submission_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: tag_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="form_tags">
+    <table name="form_tag">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="form_id" type="integer" required="true"/>
         <column name="tag_id" type="integer" required="true"/>
-        <column name="message" type="varchar" size="63" required="true"/>
+        <column name="message" type="varchar" size="63" required="false"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: tag_id, validator: NotNull}" />
+        </behavior>
     </table>
     <!-- Liz left off here -->
-    <table name="form_reactions">
+    <table name="form_reaction">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="reaction_id" type="integer" required="true" />
         <column name="form_id" type="integer" required="true"/>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: reaction_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: form_id, validator: NotNull}" />
+        </behavior>
     </table>
 
     <!-- The rest of the columns get added in generation - href, dashboard, element -->
-    <table name="dashboard_elements">
+    <table name="dashboard_element">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="dashboard_id" type="integer" required="true" />
+        <column name="element_id" type="integer" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: dashboard_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: element_id, validator: NotNull}" />
+        </behavior>
     </table>
 
-    <table name="dashboard_forms">
+    <table name="dashboard_form">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="dashboard_id" type="integer" required="true" />
+        <column name="form_id" type="integer" required="true" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: dashboard_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: form_id, validator: NotNull}" />
+        </behavior>
     </table>
 
 </database>

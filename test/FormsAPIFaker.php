@@ -41,11 +41,11 @@ class FormsAPIFaker
             "required" => [
                 "name" => "catchPhrase",
                 "slug" => "slug",
-                "successMessage" => "paragraph",
+                "success_message" => "paragraph",
             ],
             "optional" => [
                 "retired" => "boolean",
-                'rootElementId' => ['reference', 'elements'],
+                'root_element_id' => ['reference', 'elements'],
             ],
         ],
         'elements' => [
@@ -55,22 +55,22 @@ class FormsAPIFaker
             ],
             "optional" => [
                 'retired' => "boolean",
-                'helpText' => 'catchPhrase',
-                'placeholderText' => 'catchPhrase',
+                'help_text' => 'catchPhrase',
+                'placeholder_text' => 'catchPhrase',
                 'required' => "boolean",
                 'initial value' => 'catchPhrase',
-                'parentId' => ['reference', 'elements']
+                'parent_id' => ['reference', 'elements']
             ],
         ],
         'visitors' => [
             'required' => [
-                'uwNetID' => 'userName',
+                'uw_net_id' => 'userName',
             ],
             'optional' => [
-                'uwStudentNumber' => 'creditCardNumber',
-                'firstName' => 'firstName',
-                'middleName' => 'firstName',
-                'lastName' => 'lastName',
+                'uw_student_number' => 'creditCardNumber',
+                'first_name' => 'firstName',
+                'middle_name' => 'firstName',
+                'last_name' => 'lastName',
             ],
         ],
         'choices' => [
@@ -83,36 +83,36 @@ class FormsAPIFaker
         'conditions' => [
             'required' => [
                 'operator' => ['randomElement', ['is', 'is not', 'less than', 'greater than', 'less than or equal to', 'greater than or equal to', 'maximum length', 'minimum length', 'exact length', 'regex']],
-                'value' => ['reference', 'submissions'],
+                'value' => 'randomNumber',
             ],
             'optional' => [
             ],
         ],
         'dependencies' => [
             'required' => [
-                'elementId' => 'catchPhrase',
-                'slaveId' => ['reference', 'elements'],
-                'conditionId' => ['reference', 'conditions'],
+                'element_id' => 'catchPhrase',
+                'slave_id' => ['reference', 'elements'],
+                'condition_id' => ['reference', 'conditions'],
             ],
             'optional' => [
             ],
         ],
         'requirements' => [
             'required' => [
-                'elementId' => ['reference', 'elements'],
-                'conditionId' => ['reference', 'submissions'],
-                'failureMessage' => 'sentence',
+                'element_id' => ['reference', 'elements'],
+                'condition_id' => ['reference', 'conditions'],
+                'failure_message' => 'sentence',
             ],
             'optional' => [
             ],
         ],
         'submissions' => [
             'required' => [
-                'visitorId' => ['reference', 'visitors'],
-                'formId' => ['reference', 'forms'],
-                'statusId' => ['reference', 'statuses'],
-                'assigneeId' => ['reference', 'visitors'],
-                'parentId' => ['reference', 'submissions'],
+                'visitor_id' => ['reference', 'visitors'],
+                'form_id' => ['reference', 'forms'],
+                'status_id' => ['reference', 'statuses'],
+                'assignee_id' => ['reference', 'visitors'],
+                'parent_id' => ['reference', 'submissions'],
                 'submitted' => 'datetime',
             ],
             'optional' => [
@@ -121,7 +121,7 @@ class FormsAPIFaker
         'statuses' => [
             'required' => [
                 'name' => 'word',
-                'defaultMessage' => 'sentence'
+                'default_message' => 'sentence'
             ],
             'optional' => [
             ],
@@ -129,7 +129,7 @@ class FormsAPIFaker
         'tags' => [
             'required' => [
                 'name' => 'word',
-                'defaultMessage' => 'sentence'
+                'default_message' => 'sentence'
             ],
             'optional' => [
             ],
@@ -153,7 +153,7 @@ class FormsAPIFaker
             'required' => [
                 'label' => 'catchPhrase',
                 'address' => 'email',
-                'formId' => ['reference', 'forms'],
+                'form_id' => ['reference', 'forms'],
             ],
             'optional' => [
             ],
@@ -189,58 +189,58 @@ class FormsAPIFaker
         ],
         'childformrelationships' => [
             'required' => [
-                'parentId' => ['reference', 'forms'],
-                'childId' => ['reference', 'forms'],
-                'tagId' => ['reference', 'tags'],
-                'reactionId' => ['reference', 'reactions'],
+                'parent_id' => ['reference', 'forms'],
+                'child_id' => ['reference', 'forms'],
+                'tag_id' => ['reference', 'tags'],
+                'reaction_id' => ['reference', 'reactions'],
             ],
             'optional' => [
             ],
         ],
         'elementchoices' => [
             'required' => [
-                'elementId' => ['reference', 'elements'],
-                'choiceId' => ['reference', 'choices'],
+                'element_id' => ['reference', 'elements'],
+                'choice_id' => ['reference', 'choices'],
             ],
             'optional' => [
             ],
         ],
         'submissiontags' => [
             'required' => [
-                'submissionId' => ['reference', 'submissions'],
-                'tagId' => ['reference', 'tags'],
+                'submission_id' => ['reference', 'submissions'],
+                'tag_id' => ['reference', 'tags'],
             ],
             'optional' => [
             ],
         ],
         'formtags' => [
             'required' => [
-                'formId' => ['reference', 'form'],
-                'tagId' => ['reference', 'tags'],
+                'form_id' => ['reference', 'forms'],
+                'tag_id' => ['reference', 'tags'],
             ],
             'optional' => [
             ],
         ],
         'formreactions' => [
             'required' => [
-                'formId' => ['reference', 'forms'],
-                'reactionId' => ['reference', 'reactions'],
+                'form_id' => ['reference', 'forms'],
+                'reaction_id' => ['reference', 'reactions'],
             ],
             'optional' => [
             ],
         ],
         'dashboardelements' => [
             'required' => [
-                'dashboardId' => ['reference', 'dashboard'],
-                'elementId' => ['reference', 'elements'],
+                'dashboard_id' => ['reference', 'dashboard'],
+                'element_id' => ['reference', 'elements'],
             ],
             'optional' => [
             ],
         ],
         'dashboardforms' => [
             'required' => [
-                'dashboardId' => ['reference', 'dashboards'],
-                'formId' => ['reference', 'forms'],
+                'dashboard_id' => ['reference', 'dashboards'],
+                'form_id' => ['reference', 'forms'],
             ],
             'optional' => [
             ],
