@@ -71,11 +71,15 @@
 
     <table name="visitor">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="uw_student_number" type="varchar" size="7" required="false" phpName="UWStudentNumber"/>
-        <column name="uw_net_id" type="varchar" size="63" required="true" phpName="UWNetID" />
+        <column name="uw_student_number" type="varchar" size="7" required="false" phpName="uwStudentNumber"/>
+        <column name="uw_net_id" type="varchar" size="63" required="true" phpName="uwNetID" />
         <column name="first_name" type="varchar" size="63" required="false" />
         <column name="middle_name" type="varchar" size="63" required="false" />
         <column name="last_name" type="varchar" size="63" required="false" />
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: uw_net_id, validator: NotNull}" />
+        </behavior>
     </table>
 
     <table name="child_form_relationship">

@@ -17,6 +17,16 @@ use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
+use Symfony\Component\Translation\IdentityTranslator;
+use Symfony\Component\Validator\ConstraintValidatorFactory;
+use Symfony\Component\Validator\ConstraintViolationList;
+use Symfony\Component\Validator\Constraints\NotNull;
+use Symfony\Component\Validator\Context\ExecutionContextFactory;
+use Symfony\Component\Validator\Mapping\ClassMetadata;
+use Symfony\Component\Validator\Mapping\Factory\LazyLoadingMetadataFactory;
+use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
+use Symfony\Component\Validator\Validator\RecursiveValidator;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Base class that represents a row from the 'visitor' table.
@@ -108,6 +118,23 @@ abstract class Visitor implements ActiveRecordInterface
      * @var boolean
      */
     protected $alreadyInSave = false;
+
+    // validate behavior
+
+    /**
+     * Flag to prevent endless validation loop, if this object is referenced
+     * by another object which falls in this transaction.
+     * @var        boolean
+     */
+    protected $alreadyInValidation = false;
+
+    /**
+     * ConstraintViolationList object
+     *
+     * @see     http://api.symfony.com/2.0/Symfony/Component/Validator/ConstraintViolationList.html
+     * @var     ConstraintViolationList
+     */
+    protected $validationFailures;
 
     /**
      * Initializes internal state of FormsAPI\Base\Visitor object.
@@ -349,7 +376,7 @@ abstract class Visitor implements ActiveRecordInterface
      *
      * @return string
      */
-    public function getUWStudentNumber()
+    public function getuwStudentNumber()
     {
         return $this->uw_student_number;
     }
@@ -359,7 +386,7 @@ abstract class Visitor implements ActiveRecordInterface
      *
      * @return string
      */
-    public function getUWNetID()
+    public function getuwNetID()
     {
         return $this->uw_net_id;
     }
@@ -420,7 +447,7 @@ abstract class Visitor implements ActiveRecordInterface
      * @param string $v new value
      * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
      */
-    public function setUWStudentNumber($v)
+    public function setuwStudentNumber($v)
     {
         if ($v !== null) {
             $v = (string) $v;
@@ -432,7 +459,7 @@ abstract class Visitor implements ActiveRecordInterface
         }
 
         return $this;
-    } // setUWStudentNumber()
+    } // setuwStudentNumber()
 
     /**
      * Set the value of [uw_net_id] column.
@@ -440,7 +467,7 @@ abstract class Visitor implements ActiveRecordInterface
      * @param string $v new value
      * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
      */
-    public function setUWNetID($v)
+    public function setuwNetID($v)
     {
         if ($v !== null) {
             $v = (string) $v;
@@ -452,7 +479,7 @@ abstract class Visitor implements ActiveRecordInterface
         }
 
         return $this;
-    } // setUWNetID()
+    } // setuwNetID()
 
     /**
      * Set the value of [first_name] column.
@@ -553,10 +580,10 @@ abstract class Visitor implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : VisitorTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : VisitorTableMap::translateFieldName('UWStudentNumber', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : VisitorTableMap::translateFieldName('uwStudentNumber', TableMap::TYPE_PHPNAME, $indexType)];
             $this->uw_student_number = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : VisitorTableMap::translateFieldName('UWNetID', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : VisitorTableMap::translateFieldName('uwNetID', TableMap::TYPE_PHPNAME, $indexType)];
             $this->uw_net_id = (null !== $col) ? (string) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : VisitorTableMap::translateFieldName('FirstName', TableMap::TYPE_PHPNAME, $indexType)];
@@ -889,10 +916,10 @@ abstract class Visitor implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getUWStudentNumber();
+                return $this->getuwStudentNumber();
                 break;
             case 2:
-                return $this->getUWNetID();
+                return $this->getuwNetID();
                 break;
             case 3:
                 return $this->getFirstName();
@@ -933,8 +960,8 @@ abstract class Visitor implements ActiveRecordInterface
         $keys = VisitorTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getUWStudentNumber(),
-            $keys[2] => $this->getUWNetID(),
+            $keys[1] => $this->getuwStudentNumber(),
+            $keys[2] => $this->getuwNetID(),
             $keys[3] => $this->getFirstName(),
             $keys[4] => $this->getMiddleName(),
             $keys[5] => $this->getLastName(),
@@ -981,10 +1008,10 @@ abstract class Visitor implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setUWStudentNumber($value);
+                $this->setuwStudentNumber($value);
                 break;
             case 2:
-                $this->setUWNetID($value);
+                $this->setuwNetID($value);
                 break;
             case 3:
                 $this->setFirstName($value);
@@ -1025,10 +1052,10 @@ abstract class Visitor implements ActiveRecordInterface
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setUWStudentNumber($arr[$keys[1]]);
+            $this->setuwStudentNumber($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setUWNetID($arr[$keys[2]]);
+            $this->setuwNetID($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
             $this->setFirstName($arr[$keys[3]]);
@@ -1184,8 +1211,8 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setUWStudentNumber($this->getUWStudentNumber());
-        $copyObj->setUWNetID($this->getUWNetID());
+        $copyObj->setuwStudentNumber($this->getuwStudentNumber());
+        $copyObj->setuwNetID($this->getuwNetID());
         $copyObj->setFirstName($this->getFirstName());
         $copyObj->setMiddleName($this->getMiddleName());
         $copyObj->setLastName($this->getLastName());
@@ -1260,6 +1287,70 @@ abstract class Visitor implements ActiveRecordInterface
     public function __toString()
     {
         return (string) $this->exportTo(VisitorTableMap::DEFAULT_STRING_FORMAT);
+    }
+
+    // validate behavior
+
+    /**
+     * Configure validators constraints. The Validator object uses this method
+     * to perform object validation.
+     *
+     * @param ClassMetadata $metadata
+     */
+    static public function loadValidatorMetadata(ClassMetadata $metadata)
+    {
+        $metadata->addPropertyConstraint('uw_net_id', new NotNull());
+    }
+
+    /**
+     * Validates the object and all objects related to this table.
+     *
+     * @see        getValidationFailures()
+     * @param      ValidatorInterface|null $validator A Validator class instance
+     * @return     boolean Whether all objects pass validation.
+     */
+    public function validate(ValidatorInterface $validator = null)
+    {
+        if (null === $validator) {
+            $validator = new RecursiveValidator(
+                new ExecutionContextFactory(new IdentityTranslator()),
+                new LazyLoadingMetadataFactory(new StaticMethodLoader()),
+                new ConstraintValidatorFactory()
+            );
+        }
+
+        $failureMap = new ConstraintViolationList();
+
+        if (!$this->alreadyInValidation) {
+            $this->alreadyInValidation = true;
+            $retval = null;
+
+
+            $retval = $validator->validate($this);
+            if (count($retval) > 0) {
+                $failureMap->addAll($retval);
+            }
+
+
+            $this->alreadyInValidation = false;
+        }
+
+        $this->validationFailures = $failureMap;
+
+        return (Boolean) (!(count($this->validationFailures) > 0));
+
+    }
+
+    /**
+     * Gets any ConstraintViolation objects that resulted from last call to validate().
+     *
+     *
+     * @return     object ConstraintViolationList
+     * @see        validate()
+     */
+    public function getValidationFailures()
+    {
+        return $this->validationFailures;
     }
 
     /**

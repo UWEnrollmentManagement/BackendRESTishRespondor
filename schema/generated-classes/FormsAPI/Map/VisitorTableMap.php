@@ -113,8 +113,8 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'UWStudentNumber', 'UWNetID', 'FirstName', 'MiddleName', 'LastName', ),
-        self::TYPE_CAMELNAME     => array('id', 'uWStudentNumber', 'uWNetID', 'firstName', 'middleName', 'lastName', ),
+        self::TYPE_PHPNAME       => array('Id', 'uwStudentNumber', 'uwNetID', 'FirstName', 'MiddleName', 'LastName', ),
+        self::TYPE_CAMELNAME     => array('id', 'uwStudentNumber', 'uwNetID', 'firstName', 'middleName', 'lastName', ),
         self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID, VisitorTableMap::COL_UW_STUDENT_NUMBER, VisitorTableMap::COL_UW_NET_ID, VisitorTableMap::COL_FIRST_NAME, VisitorTableMap::COL_MIDDLE_NAME, VisitorTableMap::COL_LAST_NAME, ),
         self::TYPE_FIELDNAME     => array('id', 'uw_student_number', 'uw_net_id', 'first_name', 'middle_name', 'last_name', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
@@ -127,8 +127,8 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'UWStudentNumber' => 1, 'UWNetID' => 2, 'FirstName' => 3, 'MiddleName' => 4, 'LastName' => 5, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'uWStudentNumber' => 1, 'uWNetID' => 2, 'firstName' => 3, 'middleName' => 4, 'lastName' => 5, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'uwStudentNumber' => 1, 'uwNetID' => 2, 'FirstName' => 3, 'MiddleName' => 4, 'LastName' => 5, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'uwStudentNumber' => 1, 'uwNetID' => 2, 'firstName' => 3, 'middleName' => 4, 'lastName' => 5, ),
         self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID => 0, VisitorTableMap::COL_UW_STUDENT_NUMBER => 1, VisitorTableMap::COL_UW_NET_ID => 2, VisitorTableMap::COL_FIRST_NAME => 3, VisitorTableMap::COL_MIDDLE_NAME => 4, VisitorTableMap::COL_LAST_NAME => 5, ),
         self::TYPE_FIELDNAME     => array('id' => 0, 'uw_student_number' => 1, 'uw_net_id' => 2, 'first_name' => 3, 'middle_name' => 4, 'last_name' => 5, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
@@ -152,8 +152,8 @@ class VisitorTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('uw_student_number', 'UWStudentNumber', 'VARCHAR', false, 7, null);
-        $this->addColumn('uw_net_id', 'UWNetID', 'VARCHAR', true, 63, null);
+        $this->addColumn('uw_student_number', 'uwStudentNumber', 'VARCHAR', false, 7, null);
+        $this->addColumn('uw_net_id', 'uwNetID', 'VARCHAR', true, 63, null);
         $this->addColumn('first_name', 'FirstName', 'VARCHAR', false, 63, null);
         $this->addColumn('middle_name', 'MiddleName', 'VARCHAR', false, 63, null);
         $this->addColumn('last_name', 'LastName', 'VARCHAR', false, 63, null);
@@ -165,6 +165,19 @@ class VisitorTableMap extends TableMap
     public function buildRelations()
     {
     } // buildRelations()
+
+    /**
+     *
+     * Gets the list of behaviors registered for this table
+     *
+     * @return array Associative array (name => parameters) of behaviors
+     */
+    public function getBehaviors()
+    {
+        return array(
+            'validate' => array('rule1' => array ('column' => 'uw_net_id','validator' => 'NotNull',), ),
+        );
+    } // getBehaviors()
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

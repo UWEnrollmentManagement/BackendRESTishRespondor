@@ -64,10 +64,10 @@ class FormsAPIFaker
         ],
         'visitors' => [
             'required' => [
-                'UWNetID' => 'slug',
+                'uwNetID' => 'userName',
             ],
             'optional' => [
-                'UWStudentNumber' => 'creditCardNumber',
+                'uwStudentNumber' => 'creditCardNumber',
                 'firstName' => 'firstName',
                 'middleName' => 'firstName',
                 'lastName' => 'lastName',

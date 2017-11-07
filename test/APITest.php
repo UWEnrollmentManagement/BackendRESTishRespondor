@@ -325,13 +325,15 @@ class APITest extends BaseTest
 
             // Assert that the return code is 200
             if($response->getStatusCode() != "200") {
-                var_dump($response);
-                var_dump($resourceType);
+                echo "hey";
+                print_r($this->responseToArray($response));
             }
+
             $this->assertEquals(200, $response->getStatusCode());
 
             // Retrieve the response data, assert that it is valid
             $responseData = $this->responseToArray($response);
+
             $this->assertHasRequiredResponseElements($responseData);
 
             // Assert that data is an array and has the necessary parameters

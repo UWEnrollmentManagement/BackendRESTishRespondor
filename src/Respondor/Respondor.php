@@ -35,9 +35,14 @@ class Respondor
         $success = false;
         $error = null;
         $status = 500;
+        // default in case we never set this
+        $reasonPhrase = "Internal Server Error";
 
         $routeInfo = $request->getAttribute('routeInfo')[2];
         $resourceType = $routeInfo['resourceType'];
+        if($resourceType == "visitors") {
+//            print_r($parsedBody);
+        }
         $resourceId = null;
 
         $resourceId = array_key_exists('id', $routeInfo) ? $routeInfo['id'] : null;
@@ -64,7 +69,6 @@ class Respondor
                 $status = 200;
                 $success = true;
                 $error = null;
-
                 $objectData = $this->mediator->getAttributes($resource);
             } else {
                 $status = 400;
@@ -132,8 +136,16 @@ class Respondor
             "error" => $error
         ];
 
+        $statusMap = [
+            200 => "OK",
+            400 => "Bad Request",
+            404 => "Not Found",
+            500 => "Internal Server Error"
+        ];
+
+        $reasonPhrase = $statusMap[$status];
         $responseContents = json_encode($responseContents);
         $response->getBody()->write($responseContents);
-        return $response->withStatus($status, 'OK');
+        return $response->withStatus($status, $reasonPhrase);
     }
 }

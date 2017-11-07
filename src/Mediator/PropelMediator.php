@@ -83,6 +83,7 @@ class PropelMediator implements MediatorInterface
         } catch (\Exception $e) {
 
             $this->errors[] = 'Our database encountered an error fulfilling your request.';
+            $this->errors[] = $e->getMessage();
 
             return false;
         }
@@ -102,8 +103,12 @@ class PropelMediator implements MediatorInterface
     public function setAttributes($resource, $attributes) {
         // proper capitalization
         foreach($attributes as $key => $value) {
-            unset($attributes[$key]);
-            $attributes[ucfirst($key)] = $value;
+//            unset($attributes[$key]);
+//            $attributes[ucfirst($key)] = $value;
+        }
+        if(array_key_exists("UwNetID", $attributes)) {
+            print_r($attributes);
+            echo "SDFDS";
         }
         $resource->fromArray($attributes);
         return $resource;

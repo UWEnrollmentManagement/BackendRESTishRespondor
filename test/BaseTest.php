@@ -36,7 +36,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ],
         'visitors' =>
             [
-                'id', 'href', 'UWStudentNumber', 'UWNetID', 'firstName',
+                'id', 'href', 'uwStudentNumber', 'uwNetID', 'firstName',
                 'middleName', 'lastName',
             ],
         'choices' =>

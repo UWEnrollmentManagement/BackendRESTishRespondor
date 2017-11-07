@@ -20,15 +20,15 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  * @method     ChildVisitorQuery orderById($order = Criteria::ASC) Order by the id column
- * @method     ChildVisitorQuery orderByUWStudentNumber($order = Criteria::ASC) Order by the uw_student_number column
- * @method     ChildVisitorQuery orderByUWNetID($order = Criteria::ASC) Order by the uw_net_id column
+ * @method     ChildVisitorQuery orderByuwStudentNumber($order = Criteria::ASC) Order by the uw_student_number column
+ * @method     ChildVisitorQuery orderByuwNetID($order = Criteria::ASC) Order by the uw_net_id column
  * @method     ChildVisitorQuery orderByFirstName($order = Criteria::ASC) Order by the first_name column
  * @method     ChildVisitorQuery orderByMiddleName($order = Criteria::ASC) Order by the middle_name column
  * @method     ChildVisitorQuery orderByLastName($order = Criteria::ASC) Order by the last_name column
  *
  * @method     ChildVisitorQuery groupById() Group by the id column
- * @method     ChildVisitorQuery groupByUWStudentNumber() Group by the uw_student_number column
- * @method     ChildVisitorQuery groupByUWNetID() Group by the uw_net_id column
+ * @method     ChildVisitorQuery groupByuwStudentNumber() Group by the uw_student_number column
+ * @method     ChildVisitorQuery groupByuwNetID() Group by the uw_net_id column
  * @method     ChildVisitorQuery groupByFirstName() Group by the first_name column
  * @method     ChildVisitorQuery groupByMiddleName() Group by the middle_name column
  * @method     ChildVisitorQuery groupByLastName() Group by the last_name column
@@ -45,8 +45,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildVisitor findOneOrCreate(ConnectionInterface $con = null) Return the first ChildVisitor matching the query, or a new ChildVisitor object populated from the query conditions when no match is found
  *
  * @method     ChildVisitor findOneById(int $id) Return the first ChildVisitor filtered by the id column
- * @method     ChildVisitor findOneByUWStudentNumber(string $uw_student_number) Return the first ChildVisitor filtered by the uw_student_number column
- * @method     ChildVisitor findOneByUWNetID(string $uw_net_id) Return the first ChildVisitor filtered by the uw_net_id column
+ * @method     ChildVisitor findOneByuwStudentNumber(string $uw_student_number) Return the first ChildVisitor filtered by the uw_student_number column
+ * @method     ChildVisitor findOneByuwNetID(string $uw_net_id) Return the first ChildVisitor filtered by the uw_net_id column
  * @method     ChildVisitor findOneByFirstName(string $first_name) Return the first ChildVisitor filtered by the first_name column
  * @method     ChildVisitor findOneByMiddleName(string $middle_name) Return the first ChildVisitor filtered by the middle_name column
  * @method     ChildVisitor findOneByLastName(string $last_name) Return the first ChildVisitor filtered by the last_name column *
@@ -55,16 +55,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildVisitor requireOne(ConnectionInterface $con = null) Return the first ChildVisitor matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildVisitor requireOneById(int $id) Return the first ChildVisitor filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildVisitor requireOneByUWStudentNumber(string $uw_student_number) Return the first ChildVisitor filtered by the uw_student_number column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildVisitor requireOneByUWNetID(string $uw_net_id) Return the first ChildVisitor filtered by the uw_net_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildVisitor requireOneByuwStudentNumber(string $uw_student_number) Return the first ChildVisitor filtered by the uw_student_number column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildVisitor requireOneByuwNetID(string $uw_net_id) Return the first ChildVisitor filtered by the uw_net_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVisitor requireOneByFirstName(string $first_name) Return the first ChildVisitor filtered by the first_name column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVisitor requireOneByMiddleName(string $middle_name) Return the first ChildVisitor filtered by the middle_name column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVisitor requireOneByLastName(string $last_name) Return the first ChildVisitor filtered by the last_name column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildVisitor[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildVisitor objects based on current ModelCriteria
  * @method     ChildVisitor[]|ObjectCollection findById(int $id) Return ChildVisitor objects filtered by the id column
- * @method     ChildVisitor[]|ObjectCollection findByUWStudentNumber(string $uw_student_number) Return ChildVisitor objects filtered by the uw_student_number column
- * @method     ChildVisitor[]|ObjectCollection findByUWNetID(string $uw_net_id) Return ChildVisitor objects filtered by the uw_net_id column
+ * @method     ChildVisitor[]|ObjectCollection findByuwStudentNumber(string $uw_student_number) Return ChildVisitor objects filtered by the uw_student_number column
+ * @method     ChildVisitor[]|ObjectCollection findByuwNetID(string $uw_net_id) Return ChildVisitor objects filtered by the uw_net_id column
  * @method     ChildVisitor[]|ObjectCollection findByFirstName(string $first_name) Return ChildVisitor objects filtered by the first_name column
  * @method     ChildVisitor[]|ObjectCollection findByMiddleName(string $middle_name) Return ChildVisitor objects filtered by the middle_name column
  * @method     ChildVisitor[]|ObjectCollection findByLastName(string $last_name) Return ChildVisitor objects filtered by the last_name column
@@ -302,24 +302,24 @@ abstract class VisitorQuery extends ModelCriteria
      *
      * Example usage:
      * <code>
-     * $query->filterByUWStudentNumber('fooValue');   // WHERE uw_student_number = 'fooValue'
-     * $query->filterByUWStudentNumber('%fooValue%', Criteria::LIKE); // WHERE uw_student_number LIKE '%fooValue%'
+     * $query->filterByuwStudentNumber('fooValue');   // WHERE uw_student_number = 'fooValue'
+     * $query->filterByuwStudentNumber('%fooValue%', Criteria::LIKE); // WHERE uw_student_number LIKE '%fooValue%'
      * </code>
      *
-     * @param     string $uWStudentNumber The value to use as filter.
+     * @param     string $uwStudentNumber The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
-    public function filterByUWStudentNumber($uWStudentNumber = null, $comparison = null)
+    public function filterByuwStudentNumber($uwStudentNumber = null, $comparison = null)
     {
         if (null === $comparison) {
-            if (is_array($uWStudentNumber)) {
+            if (is_array($uwStudentNumber)) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(VisitorTableMap::COL_UW_STUDENT_NUMBER, $uWStudentNumber, $comparison);
+        return $this->addUsingAlias(VisitorTableMap::COL_UW_STUDENT_NUMBER, $uwStudentNumber, $comparison);
     }
 
     /**
@@ -327,24 +327,24 @@ abstract class VisitorQuery extends ModelCriteria
      *
      * Example usage:
      * <code>
-     * $query->filterByUWNetID('fooValue');   // WHERE uw_net_id = 'fooValue'
-     * $query->filterByUWNetID('%fooValue%', Criteria::LIKE); // WHERE uw_net_id LIKE '%fooValue%'
+     * $query->filterByuwNetID('fooValue');   // WHERE uw_net_id = 'fooValue'
+     * $query->filterByuwNetID('%fooValue%', Criteria::LIKE); // WHERE uw_net_id LIKE '%fooValue%'
      * </code>
      *
-     * @param     string $uWNetID The value to use as filter.
+     * @param     string $uwNetID The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
-    public function filterByUWNetID($uWNetID = null, $comparison = null)
+    public function filterByuwNetID($uwNetID = null, $comparison = null)
     {
         if (null === $comparison) {
-            if (is_array($uWNetID)) {
+            if (is_array($uwNetID)) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(VisitorTableMap::COL_UW_NET_ID, $uWNetID, $comparison);
+        return $this->addUsingAlias(VisitorTableMap::COL_UW_NET_ID, $uwNetID, $comparison);
     }
 
     /**
