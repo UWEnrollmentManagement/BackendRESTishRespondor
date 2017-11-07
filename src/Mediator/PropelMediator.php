@@ -8,9 +8,29 @@
 
 namespace FormsAPI\Mediator;
 
+use FormsAPI\ChildFormRelationship;
+use FormsAPI\Choices;
+use FormsAPI\DashboardElements;
+use FormsAPI\DashboardForms;
+use FormsAPI\Dashboards;
+use FormsAPI\Dependencies;
+use FormsAPI\ElementChoices;
 use FormsAPI\Form;
 use FormsAPI\Element;
 use FormsAPI\FormQuery;
+use FormsAPI\FormReactions;
+use FormsAPI\FormTags;
+use FormsAPI\Notes;
+use FormsAPI\Reactions;
+use FormsAPI\Recipients;
+use FormsAPI\Requirements;
+use FormsAPI\Settings;
+use FormsAPI\Stakeholders;
+use FormsAPI\Statuses;
+use FormsAPI\Submissions;
+use FormsAPI\SubmissionTags;
+use FormsAPI\Tags;
+use FormsAPI\Visitor;
 
 
 class PropelMediator implements MediatorInterface
@@ -22,6 +42,26 @@ class PropelMediator implements MediatorInterface
     protected static $classMap = [
         'forms' => Form::class,
         'elements' => Element::class,
+        'visitors' => Visitor::class,
+        'choices' => Choices::class,
+        'dependencies' => Dependencies::class,
+        'requirements' => Requirements::class,
+        'submissions' => Submissions::class,
+        'statuses' => Statuses::class,
+        'tags' => Tags::class,
+        'notes' => Notes::class,
+        'recipients' => Recipients::class,
+        'stakeholders' => Stakeholders::class,
+        'reactions' => Reactions::class,
+        'settings' => Settings::class,
+        'dashboards' => Dashboards::class,
+        'childformrelationships' => ChildFormRelationship::class,
+        'elementchoices' => ElementChoices::class,
+        'submissiontags' => SubmissionTags::class,
+        'formtags' => FormTags::class,
+        'formreactions' => FormReactions::class,
+        'dashboardelements' => DashboardElements::class,
+        'dashboardforms' => DashboardForms::class,
     ];
 
     public function __construct($baseHref) {

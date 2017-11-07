@@ -58,8 +58,118 @@ class FormsAPIFaker
             ],
         ],
         "visitors" => [
+            "required" => [
+                'label' => 'catchPhrase',
+                'UWStudentNumber' => 'ean8',
+                'UWNetID' => ["regexify", ["^[A-Za-z0-9]{5,10}"]],
+                'firstName' => 'firstName',
+                'lastName' => 'lastName',
 
+            ],
+            "optional" => [
+                'middleName' => "firstName"
+            ],
+        ],
+        "choices" => [
+            "required" => [
+                "value" => "catchPhrase"
+            ]
+        ],
+        "dependencies" => [
+            "required" => [
+            ]
+        ],
+        "requirements" => [
+            "required" => [
+                "failureMessage" => "catchPhrase"
+            ]
+        ],
+        "submissions" => [
+            "required" => [
+                "submitted" => ["dateTime", ["now", "date_default_timezone_get"]]
+            ]
+        ],
+        "statuses" => [
+            "required" => [
+                "name" => "catchPhrase",
+                "defaultMessage" => "paragraph"
+            ]
+        ],
+        "tags" => [
+            "required" => [
+                "name" => "catchPhrase",
+                "defaultMessage" => "paragraph"
+            ]
+        ],
+        "notes" => [
+            "required" => [
+                "content" => "paragraph",
+                "subject" => "catchPhrase"
+            ]
+        ],
+        "recipients" => [
+            "required" => [
+                "address" => "email"
+            ]
+        ],
+        "stakeholders" => [
+            "required" => [
+                "label" => "catchPhrase",
+                "address" => "email"
+            ]
+        ],
+        "reactions" => [
+            "required" => [
+                "subject" => "catchPhrase",
+                "recipient" => "email",
+                "sender" => "email",
+                "content" => "paragraph"
+            ],
+            "optional" => [
+                "cc" => "email",
+                "bcc" => "email",
+                "replyTo" => "email",
+                "template" => ""
+            ]
+        ],
+        "settings" => [
+            "required" => [
+                "key" => "",
+                "value" => ""
+            ]
+        ],
+        "dashboards" => [
+            "required" => [
+                "name" => "catchPhrase"
+            ]
+        ],
+        "childFormRelationships" => [
+            "required" => [
+            ]
+        ],
+        "elementChoices" => [
+            "required" => [
+            ]
+        ],
+        "submissionTags" => [
+            "required" => [
+            ]
+        ],
+        "formTags" => [
+            "required" => [
+                "message" => "catchPhrase"
+            ]
+        ],
+        "formReactions" => [
+            "required" => []
+        ],
+        "dashboardElements" => [
+            "required" => []
+        ],
+        "dashboardForms" => [
+            "required" => []
         ]
+
     ];
 
     /**

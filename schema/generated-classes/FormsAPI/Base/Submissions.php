@@ -4,8 +4,8 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
-use FormsAPI\VisitorQuery as ChildVisitorQuery;
-use FormsAPI\Map\VisitorTableMap;
+use FormsAPI\SubmissionsQuery as ChildSubmissionsQuery;
+use FormsAPI\Map\SubmissionsTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -19,18 +19,18 @@ use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
 
 /**
- * Base class that represents a row from the 'visitor' table.
+ * Base class that represents a row from the 'submissions' table.
  *
  *
  *
  * @package    propel.generator.FormsAPI.Base
  */
-abstract class Visitor implements ActiveRecordInterface
+abstract class Submissions implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      */
-    const TABLE_MAP = '\\FormsAPI\\Map\\VisitorTableMap';
+    const TABLE_MAP = '\\FormsAPI\\Map\\SubmissionsTableMap';
 
 
     /**
@@ -67,39 +67,39 @@ abstract class Visitor implements ActiveRecordInterface
     protected $id;
 
     /**
-     * The value for the uw_student_number field.
+     * The value for the visitor_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $uw_student_number;
+    protected $visitor_id;
 
     /**
-     * The value for the uw_net_id field.
+     * The value for the form_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $uw_net_id;
+    protected $form_id;
 
     /**
-     * The value for the first_name field.
+     * The value for the status_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $first_name;
+    protected $status_id;
 
     /**
-     * The value for the middle_name field.
+     * The value for the assignee_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $middle_name;
+    protected $assignee_id;
 
     /**
-     * The value for the last_name field.
+     * The value for the parent_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $last_name;
+    protected $parent_id;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -110,7 +110,7 @@ abstract class Visitor implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
-     * Initializes internal state of FormsAPI\Base\Visitor object.
+     * Initializes internal state of FormsAPI\Base\Submissions object.
      */
     public function __construct()
     {
@@ -205,9 +205,9 @@ abstract class Visitor implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>Visitor</code> instance.  If
-     * <code>obj</code> is an instance of <code>Visitor</code>, delegates to
-     * <code>equals(Visitor)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>Submissions</code> instance.  If
+     * <code>obj</code> is an instance of <code>Submissions</code>, delegates to
+     * <code>equals(Submissions)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param  mixed   $obj The object to compare to.
      * @return boolean Whether equal to the object specified.
@@ -273,7 +273,7 @@ abstract class Visitor implements ActiveRecordInterface
      * @param string $name  The virtual column name
      * @param mixed  $value The value to give to the virtual column
      *
-     * @return $this|Visitor The current object, for fluid interface
+     * @return $this|Submissions The current object, for fluid interface
      */
     public function setVirtualColumn($name, $value)
     {
@@ -345,60 +345,60 @@ abstract class Visitor implements ActiveRecordInterface
     }
 
     /**
-     * Get the [uw_student_number] column value.
+     * Get the [visitor_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getUWStudentNumber()
+    public function getVisitorId()
     {
-        return $this->uw_student_number;
+        return $this->visitor_id;
     }
 
     /**
-     * Get the [uw_net_id] column value.
+     * Get the [form_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getUWNetID()
+    public function getFormId()
     {
-        return $this->uw_net_id;
+        return $this->form_id;
     }
 
     /**
-     * Get the [first_name] column value.
+     * Get the [status_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getFirstName()
+    public function getStatusId()
     {
-        return $this->first_name;
+        return $this->status_id;
     }
 
     /**
-     * Get the [middle_name] column value.
+     * Get the [assignee_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getMiddleName()
+    public function getAssigneeId()
     {
-        return $this->middle_name;
+        return $this->assignee_id;
     }
 
     /**
-     * Get the [last_name] column value.
+     * Get the [parent_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getLastName()
+    public function getParentId()
     {
-        return $this->last_name;
+        return $this->parent_id;
     }
 
     /**
      * Set the value of [id] column.
      *
      * @param int $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
     public function setId($v)
     {
@@ -408,111 +408,111 @@ abstract class Visitor implements ActiveRecordInterface
 
         if ($this->id !== $v) {
             $this->id = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_ID] = true;
+            $this->modifiedColumns[SubmissionsTableMap::COL_ID] = true;
         }
 
         return $this;
     } // setId()
 
     /**
-     * Set the value of [uw_student_number] column.
+     * Set the value of [visitor_id] column.
      *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @param int $v new value
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
-    public function setUWStudentNumber($v)
+    public function setVisitorId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->uw_student_number !== $v) {
-            $this->uw_student_number = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_UW_STUDENT_NUMBER] = true;
+        if ($this->visitor_id !== $v) {
+            $this->visitor_id = $v;
+            $this->modifiedColumns[SubmissionsTableMap::COL_VISITOR_ID] = true;
         }
 
         return $this;
-    } // setUWStudentNumber()
+    } // setVisitorId()
 
     /**
-     * Set the value of [uw_net_id] column.
+     * Set the value of [form_id] column.
      *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @param int $v new value
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
-    public function setUWNetID($v)
+    public function setFormId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->uw_net_id !== $v) {
-            $this->uw_net_id = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_UW_NET_ID] = true;
+        if ($this->form_id !== $v) {
+            $this->form_id = $v;
+            $this->modifiedColumns[SubmissionsTableMap::COL_FORM_ID] = true;
         }
 
         return $this;
-    } // setUWNetID()
+    } // setFormId()
 
     /**
-     * Set the value of [first_name] column.
+     * Set the value of [status_id] column.
      *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @param int $v new value
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
-    public function setFirstName($v)
+    public function setStatusId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->first_name !== $v) {
-            $this->first_name = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_FIRST_NAME] = true;
+        if ($this->status_id !== $v) {
+            $this->status_id = $v;
+            $this->modifiedColumns[SubmissionsTableMap::COL_STATUS_ID] = true;
         }
 
         return $this;
-    } // setFirstName()
+    } // setStatusId()
 
     /**
-     * Set the value of [middle_name] column.
+     * Set the value of [assignee_id] column.
      *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @param int $v new value
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
-    public function setMiddleName($v)
+    public function setAssigneeId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->middle_name !== $v) {
-            $this->middle_name = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_MIDDLE_NAME] = true;
+        if ($this->assignee_id !== $v) {
+            $this->assignee_id = $v;
+            $this->modifiedColumns[SubmissionsTableMap::COL_ASSIGNEE_ID] = true;
         }
 
         return $this;
-    } // setMiddleName()
+    } // setAssigneeId()
 
     /**
-     * Set the value of [last_name] column.
+     * Set the value of [parent_id] column.
      *
-     * @param string $v new value
-     * @return $this|\FormsAPI\Visitor The current object (for fluent API support)
+     * @param int $v new value
+     * @return $this|\FormsAPI\Submissions The current object (for fluent API support)
      */
-    public function setLastName($v)
+    public function setParentId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->last_name !== $v) {
-            $this->last_name = $v;
-            $this->modifiedColumns[VisitorTableMap::COL_LAST_NAME] = true;
+        if ($this->parent_id !== $v) {
+            $this->parent_id = $v;
+            $this->modifiedColumns[SubmissionsTableMap::COL_PARENT_ID] = true;
         }
 
         return $this;
-    } // setLastName()
+    } // setParentId()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -550,23 +550,23 @@ abstract class Visitor implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : VisitorTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : SubmissionsTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : VisitorTableMap::translateFieldName('UWStudentNumber', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->uw_student_number = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SubmissionsTableMap::translateFieldName('VisitorId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->visitor_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : VisitorTableMap::translateFieldName('UWNetID', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->uw_net_id = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SubmissionsTableMap::translateFieldName('FormId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->form_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : VisitorTableMap::translateFieldName('FirstName', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->first_name = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SubmissionsTableMap::translateFieldName('StatusId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->status_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : VisitorTableMap::translateFieldName('MiddleName', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->middle_name = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SubmissionsTableMap::translateFieldName('AssigneeId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->assignee_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : VisitorTableMap::translateFieldName('LastName', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->last_name = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SubmissionsTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->parent_id = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -575,10 +575,10 @@ abstract class Visitor implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 6; // 6 = VisitorTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 6; // 6 = SubmissionsTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\Visitor'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\Submissions'), 0, $e);
         }
     }
 
@@ -620,13 +620,13 @@ abstract class Visitor implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(SubmissionsTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildVisitorQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildSubmissionsQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -645,8 +645,8 @@ abstract class Visitor implements ActiveRecordInterface
      * @param      ConnectionInterface $con
      * @return void
      * @throws PropelException
-     * @see Visitor::setDeleted()
-     * @see Visitor::isDeleted()
+     * @see Submissions::setDeleted()
+     * @see Submissions::isDeleted()
      */
     public function delete(ConnectionInterface $con = null)
     {
@@ -655,11 +655,11 @@ abstract class Visitor implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SubmissionsTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildVisitorQuery::create()
+            $deleteQuery = ChildSubmissionsQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -694,7 +694,7 @@ abstract class Visitor implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SubmissionsTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -713,7 +713,7 @@ abstract class Visitor implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                VisitorTableMap::addInstanceToPool($this);
+                SubmissionsTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -770,33 +770,33 @@ abstract class Visitor implements ActiveRecordInterface
         $modifiedColumns = array();
         $index = 0;
 
-        $this->modifiedColumns[VisitorTableMap::COL_ID] = true;
+        $this->modifiedColumns[SubmissionsTableMap::COL_ID] = true;
         if (null !== $this->id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . VisitorTableMap::COL_ID . ')');
+            throw new PropelException('Cannot insert a value for auto-increment primary key (' . SubmissionsTableMap::COL_ID . ')');
         }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(VisitorTableMap::COL_ID)) {
+        if ($this->isColumnModified(SubmissionsTableMap::COL_ID)) {
             $modifiedColumns[':p' . $index++]  = 'id';
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_UW_STUDENT_NUMBER)) {
-            $modifiedColumns[':p' . $index++]  = 'uw_student_number';
+        if ($this->isColumnModified(SubmissionsTableMap::COL_VISITOR_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'visitor_id';
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_UW_NET_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'uw_net_id';
+        if ($this->isColumnModified(SubmissionsTableMap::COL_FORM_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'form_id';
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_FIRST_NAME)) {
-            $modifiedColumns[':p' . $index++]  = 'first_name';
+        if ($this->isColumnModified(SubmissionsTableMap::COL_STATUS_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'status_id';
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_MIDDLE_NAME)) {
-            $modifiedColumns[':p' . $index++]  = 'middle_name';
+        if ($this->isColumnModified(SubmissionsTableMap::COL_ASSIGNEE_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'assignee_id';
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_LAST_NAME)) {
-            $modifiedColumns[':p' . $index++]  = 'last_name';
+        if ($this->isColumnModified(SubmissionsTableMap::COL_PARENT_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'parent_id';
         }
 
         $sql = sprintf(
-            'INSERT INTO visitor (%s) VALUES (%s)',
+            'INSERT INTO submissions (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -808,20 +808,20 @@ abstract class Visitor implements ActiveRecordInterface
                     case 'id':
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
-                    case 'uw_student_number':
-                        $stmt->bindValue($identifier, $this->uw_student_number, PDO::PARAM_STR);
+                    case 'visitor_id':
+                        $stmt->bindValue($identifier, $this->visitor_id, PDO::PARAM_INT);
                         break;
-                    case 'uw_net_id':
-                        $stmt->bindValue($identifier, $this->uw_net_id, PDO::PARAM_STR);
+                    case 'form_id':
+                        $stmt->bindValue($identifier, $this->form_id, PDO::PARAM_INT);
                         break;
-                    case 'first_name':
-                        $stmt->bindValue($identifier, $this->first_name, PDO::PARAM_STR);
+                    case 'status_id':
+                        $stmt->bindValue($identifier, $this->status_id, PDO::PARAM_INT);
                         break;
-                    case 'middle_name':
-                        $stmt->bindValue($identifier, $this->middle_name, PDO::PARAM_STR);
+                    case 'assignee_id':
+                        $stmt->bindValue($identifier, $this->assignee_id, PDO::PARAM_INT);
                         break;
-                    case 'last_name':
-                        $stmt->bindValue($identifier, $this->last_name, PDO::PARAM_STR);
+                    case 'parent_id':
+                        $stmt->bindValue($identifier, $this->parent_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -869,7 +869,7 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function getByName($name, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = VisitorTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = SubmissionsTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -889,19 +889,19 @@ abstract class Visitor implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getUWStudentNumber();
+                return $this->getVisitorId();
                 break;
             case 2:
-                return $this->getUWNetID();
+                return $this->getFormId();
                 break;
             case 3:
-                return $this->getFirstName();
+                return $this->getStatusId();
                 break;
             case 4:
-                return $this->getMiddleName();
+                return $this->getAssigneeId();
                 break;
             case 5:
-                return $this->getLastName();
+                return $this->getParentId();
                 break;
             default:
                 return null;
@@ -926,18 +926,18 @@ abstract class Visitor implements ActiveRecordInterface
     public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
     {
 
-        if (isset($alreadyDumpedObjects['Visitor'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['Submissions'][$this->hashCode()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['Visitor'][$this->hashCode()] = true;
-        $keys = VisitorTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['Submissions'][$this->hashCode()] = true;
+        $keys = SubmissionsTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getUWStudentNumber(),
-            $keys[2] => $this->getUWNetID(),
-            $keys[3] => $this->getFirstName(),
-            $keys[4] => $this->getMiddleName(),
-            $keys[5] => $this->getLastName(),
+            $keys[1] => $this->getVisitorId(),
+            $keys[2] => $this->getFormId(),
+            $keys[3] => $this->getStatusId(),
+            $keys[4] => $this->getAssigneeId(),
+            $keys[5] => $this->getParentId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -957,11 +957,11 @@ abstract class Visitor implements ActiveRecordInterface
      *                one of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                Defaults to TableMap::TYPE_PHPNAME.
-     * @return $this|\FormsAPI\Visitor
+     * @return $this|\FormsAPI\Submissions
      */
     public function setByName($name, $value, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = VisitorTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = SubmissionsTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         return $this->setByPosition($pos, $value);
     }
@@ -972,7 +972,7 @@ abstract class Visitor implements ActiveRecordInterface
      *
      * @param  int $pos position in xml schema
      * @param  mixed $value field value
-     * @return $this|\FormsAPI\Visitor
+     * @return $this|\FormsAPI\Submissions
      */
     public function setByPosition($pos, $value)
     {
@@ -981,19 +981,19 @@ abstract class Visitor implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setUWStudentNumber($value);
+                $this->setVisitorId($value);
                 break;
             case 2:
-                $this->setUWNetID($value);
+                $this->setFormId($value);
                 break;
             case 3:
-                $this->setFirstName($value);
+                $this->setStatusId($value);
                 break;
             case 4:
-                $this->setMiddleName($value);
+                $this->setAssigneeId($value);
                 break;
             case 5:
-                $this->setLastName($value);
+                $this->setParentId($value);
                 break;
         } // switch()
 
@@ -1019,25 +1019,25 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = VisitorTableMap::getFieldNames($keyType);
+        $keys = SubmissionsTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setUWStudentNumber($arr[$keys[1]]);
+            $this->setVisitorId($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setUWNetID($arr[$keys[2]]);
+            $this->setFormId($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setFirstName($arr[$keys[3]]);
+            $this->setStatusId($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setMiddleName($arr[$keys[4]]);
+            $this->setAssigneeId($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setLastName($arr[$keys[5]]);
+            $this->setParentId($arr[$keys[5]]);
         }
     }
 
@@ -1058,7 +1058,7 @@ abstract class Visitor implements ActiveRecordInterface
      * @param string $data The source data to import from
      * @param string $keyType The type of keys the array uses.
      *
-     * @return $this|\FormsAPI\Visitor The current object, for fluid interface
+     * @return $this|\FormsAPI\Submissions The current object, for fluid interface
      */
     public function importFrom($parser, $data, $keyType = TableMap::TYPE_PHPNAME)
     {
@@ -1078,25 +1078,25 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(VisitorTableMap::DATABASE_NAME);
+        $criteria = new Criteria(SubmissionsTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(VisitorTableMap::COL_ID)) {
-            $criteria->add(VisitorTableMap::COL_ID, $this->id);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_ID, $this->id);
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_UW_STUDENT_NUMBER)) {
-            $criteria->add(VisitorTableMap::COL_UW_STUDENT_NUMBER, $this->uw_student_number);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_VISITOR_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_VISITOR_ID, $this->visitor_id);
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_UW_NET_ID)) {
-            $criteria->add(VisitorTableMap::COL_UW_NET_ID, $this->uw_net_id);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_FORM_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_FORM_ID, $this->form_id);
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_FIRST_NAME)) {
-            $criteria->add(VisitorTableMap::COL_FIRST_NAME, $this->first_name);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_STATUS_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_STATUS_ID, $this->status_id);
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_MIDDLE_NAME)) {
-            $criteria->add(VisitorTableMap::COL_MIDDLE_NAME, $this->middle_name);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_ASSIGNEE_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_ASSIGNEE_ID, $this->assignee_id);
         }
-        if ($this->isColumnModified(VisitorTableMap::COL_LAST_NAME)) {
-            $criteria->add(VisitorTableMap::COL_LAST_NAME, $this->last_name);
+        if ($this->isColumnModified(SubmissionsTableMap::COL_PARENT_ID)) {
+            $criteria->add(SubmissionsTableMap::COL_PARENT_ID, $this->parent_id);
         }
 
         return $criteria;
@@ -1114,8 +1114,8 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function buildPkeyCriteria()
     {
-        $criteria = ChildVisitorQuery::create();
-        $criteria->add(VisitorTableMap::COL_ID, $this->id);
+        $criteria = ChildSubmissionsQuery::create();
+        $criteria->add(SubmissionsTableMap::COL_ID, $this->id);
 
         return $criteria;
     }
@@ -1177,18 +1177,18 @@ abstract class Visitor implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param      object $copyObj An object of \FormsAPI\Visitor (or compatible) type.
+     * @param      object $copyObj An object of \FormsAPI\Submissions (or compatible) type.
      * @param      boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param      boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setUWStudentNumber($this->getUWStudentNumber());
-        $copyObj->setUWNetID($this->getUWNetID());
-        $copyObj->setFirstName($this->getFirstName());
-        $copyObj->setMiddleName($this->getMiddleName());
-        $copyObj->setLastName($this->getLastName());
+        $copyObj->setVisitorId($this->getVisitorId());
+        $copyObj->setFormId($this->getFormId());
+        $copyObj->setStatusId($this->getStatusId());
+        $copyObj->setAssigneeId($this->getAssigneeId());
+        $copyObj->setParentId($this->getParentId());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1204,7 +1204,7 @@ abstract class Visitor implements ActiveRecordInterface
      * objects.
      *
      * @param  boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \FormsAPI\Visitor Clone of current object.
+     * @return \FormsAPI\Submissions Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1225,11 +1225,11 @@ abstract class Visitor implements ActiveRecordInterface
     public function clear()
     {
         $this->id = null;
-        $this->uw_student_number = null;
-        $this->uw_net_id = null;
-        $this->first_name = null;
-        $this->middle_name = null;
-        $this->last_name = null;
+        $this->visitor_id = null;
+        $this->form_id = null;
+        $this->status_id = null;
+        $this->assignee_id = null;
+        $this->parent_id = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1259,7 +1259,7 @@ abstract class Visitor implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(VisitorTableMap::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(SubmissionsTableMap::DEFAULT_STRING_FORMAT);
     }
 
     /**

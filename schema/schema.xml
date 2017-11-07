@@ -80,27 +80,10 @@
 
     <table name="child_form_relationship">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-
-        <column name="parent_id" type="integer" required="true"/>
-        <foreign-key foreignTable="form" phpName="ParentForm" refPhpName="RelationsAsParent" onDelete="cascade">
-            <reference local="parent_id" foreign="id"/>
-        </foreign-key>
-
+        <column name="parent_id" type="integer" required="true" phpName="parentName" />
         <column name="child_id" type="integer" required="true"/>
-        <foreign-key foreignTable="form" phpName="ChildForm" refPhpName="RelationsAsChild" onDelete="cascade">
-            <reference local="child_id" foreign="id"/>
-        </foreign-key>
-
         <column name="tag_id" type="integer" required="false"/>
-        <foreign-key foreignTable="tag">
-            <reference local="tag_id" foreign="id"/>
-        </foreign-key>
-
         <column name="reaction_id" type="integer" required="false"/>
-        <foreign-key foreignTable="reaction" onDelete="cascade">
-            <reference local="reaction_id" foreign="id"/>
-        </foreign-key>
-
     </table>
 
     <table name="choices">
@@ -108,5 +91,115 @@
         <column name="value" type="varchar" size="127" required="true"/>
     </table>
 
+    <table name="dependencies">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="element_id" type="integer" required="true" />
+        <column name="slave_id" type="integer" required="true"/>
+        <column name="condition_id" type="integer" required="true"/>
+    </table>
+
+    <table name="requirements">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="element_id" type="integer" required="true" />
+        <column name="condition_id" type="integer" required="true"/>
+        <column name="failure_message" type="varchar" required="true"/>
+    </table>
+
+    <table name="submissions">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="visitor_id" type="integer" required="true" />
+        <column name="form_id" type="integer" required="true"/>
+        <column name="status_id" type="integer" required="true"/>
+        <column name="assignee_id" type="integer" required="true"/>
+        <column name="parent_id" type="integer" required="true"/>
+    </table>
+
+    <table name="statuses">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="name" type="varchar" size="63" required="true" />
+        <column name="default_message" type="varchar" size="1683" required="true" />
+    </table>
+
+    <table name="tags">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="name" type="varchar" size="63" required="true" />
+        <column name="default_message" type="varchar" size="1683" required="true" />
+    </table>
+
+    <table name="notes">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="content" type="varchar" required="true" size="1683"/>
+        <column name="subject" type="varchar" required="true" size="127" />
+    </table>
+
+    <table name="recipients">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="address" type="integer" required="true" />
+    </table>
+
+    <table name="stakeholders">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="label" type="varchar" required="true" size="127" />
+        <column name="address" type="varchar" required="true" size="127" />
+        <column name="formId" type="integer" required="true" />
+    </table>
+
+    <table name="reactions">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="subject" type="varchar" required="true" size="127" />
+        <column name="recipient" type="varchar" required="true" size="63"/>
+        <column name="sender" type="varchar" required="true" size="63"/>
+        <column name="replyTo" type="varchar" required="true" size="63"/>
+        <column name="cc" type="varchar" required="true" size="63"/>
+        <column name="bcc" type="varchar" required="true" size="63"/>
+        <column name="template" type="varchar" required="true" size="127"/>
+        <column name="content" type="varchar" required="true" />
+    </table>
+
+    <!-- double check sizes for value? -->
+    <table name="settings">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="key" type="varchar" required="true" />
+        <column name="value" type="varchar" required="true"/>
+    </table>
+
+    <table name="dashboards">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="name" type="varchar" required="true" />
+    </table>
+
+    <table name="element_choices">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="element_id" type="integer" required="true" />
+        <column name="choice_id" type="integer" required="true"/>
+    </table>
+
+    <table name="submission_tags">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="submission_id" type="integer" required="true" />
+        <column name="tag_id" type="integer" required="true"/>
+    </table>
+
+    <table name="form_tags">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="form_id" type="integer" required="true"/>
+        <column name="tag_id" type="integer" required="true"/>
+        <column name="message" type="varchar" size="63" required="true"/>
+    </table>
+    <!-- Liz left off here -->
+    <table name="form_reactions">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="reaction_id" type="integer" required="true" />
+        <column name="form_id" type="integer" required="true"/>
+    </table>
+
+    <!-- The rest of the columns get added in generation - href, dashboard, element -->
+    <table name="dashboard_elements">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+    </table>
+
+    <table name="dashboard_forms">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+    </table>
 
 </database>

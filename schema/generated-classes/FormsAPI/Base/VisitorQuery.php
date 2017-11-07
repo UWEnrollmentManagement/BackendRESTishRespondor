@@ -300,13 +300,24 @@ abstract class VisitorQuery extends ModelCriteria
     /**
      * Filter the query on the uw_student_number column
      *
-     * @param     mixed $uWStudentNumber The value to use as filter
+     * Example usage:
+     * <code>
+     * $query->filterByUWStudentNumber('fooValue');   // WHERE uw_student_number = 'fooValue'
+     * $query->filterByUWStudentNumber('%fooValue%', Criteria::LIKE); // WHERE uw_student_number LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $uWStudentNumber The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
     public function filterByUWStudentNumber($uWStudentNumber = null, $comparison = null)
     {
+        if (null === $comparison) {
+            if (is_array($uWStudentNumber)) {
+                $comparison = Criteria::IN;
+            }
+        }
 
         return $this->addUsingAlias(VisitorTableMap::COL_UW_STUDENT_NUMBER, $uWStudentNumber, $comparison);
     }
@@ -314,13 +325,24 @@ abstract class VisitorQuery extends ModelCriteria
     /**
      * Filter the query on the uw_net_id column
      *
-     * @param     mixed $uWNetID The value to use as filter
+     * Example usage:
+     * <code>
+     * $query->filterByUWNetID('fooValue');   // WHERE uw_net_id = 'fooValue'
+     * $query->filterByUWNetID('%fooValue%', Criteria::LIKE); // WHERE uw_net_id LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $uWNetID The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
     public function filterByUWNetID($uWNetID = null, $comparison = null)
     {
+        if (null === $comparison) {
+            if (is_array($uWNetID)) {
+                $comparison = Criteria::IN;
+            }
+        }
 
         return $this->addUsingAlias(VisitorTableMap::COL_UW_NET_ID, $uWNetID, $comparison);
     }
@@ -328,13 +350,24 @@ abstract class VisitorQuery extends ModelCriteria
     /**
      * Filter the query on the first_name column
      *
-     * @param     mixed $firstName The value to use as filter
+     * Example usage:
+     * <code>
+     * $query->filterByFirstName('fooValue');   // WHERE first_name = 'fooValue'
+     * $query->filterByFirstName('%fooValue%', Criteria::LIKE); // WHERE first_name LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $firstName The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
     public function filterByFirstName($firstName = null, $comparison = null)
     {
+        if (null === $comparison) {
+            if (is_array($firstName)) {
+                $comparison = Criteria::IN;
+            }
+        }
 
         return $this->addUsingAlias(VisitorTableMap::COL_FIRST_NAME, $firstName, $comparison);
     }
@@ -342,13 +375,24 @@ abstract class VisitorQuery extends ModelCriteria
     /**
      * Filter the query on the middle_name column
      *
-     * @param     mixed $middleName The value to use as filter
+     * Example usage:
+     * <code>
+     * $query->filterByMiddleName('fooValue');   // WHERE middle_name = 'fooValue'
+     * $query->filterByMiddleName('%fooValue%', Criteria::LIKE); // WHERE middle_name LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $middleName The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
     public function filterByMiddleName($middleName = null, $comparison = null)
     {
+        if (null === $comparison) {
+            if (is_array($middleName)) {
+                $comparison = Criteria::IN;
+            }
+        }
 
         return $this->addUsingAlias(VisitorTableMap::COL_MIDDLE_NAME, $middleName, $comparison);
     }
@@ -356,13 +400,24 @@ abstract class VisitorQuery extends ModelCriteria
     /**
      * Filter the query on the last_name column
      *
-     * @param     mixed $lastName The value to use as filter
+     * Example usage:
+     * <code>
+     * $query->filterByLastName('fooValue');   // WHERE last_name = 'fooValue'
+     * $query->filterByLastName('%fooValue%', Criteria::LIKE); // WHERE last_name LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $lastName The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildVisitorQuery The current query, for fluid interface
      */
     public function filterByLastName($lastName = null, $comparison = null)
     {
+        if (null === $comparison) {
+            if (is_array($lastName)) {
+                $comparison = Criteria::IN;
+            }
+        }
 
         return $this->addUsingAlias(VisitorTableMap::COL_LAST_NAME, $lastName, $comparison);
     }

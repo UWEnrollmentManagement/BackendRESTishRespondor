@@ -2,8 +2,8 @@
 
 namespace FormsAPI\Map;
 
-use FormsAPI\Visitor;
-use FormsAPI\VisitorQuery;
+use FormsAPI\Choices;
+use FormsAPI\ChoicesQuery;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\InstancePoolTrait;
@@ -16,7 +16,7 @@ use Propel\Runtime\Map\TableMapTrait;
 
 
 /**
- * This class defines the structure of the 'visitor' table.
+ * This class defines the structure of the 'choices' table.
  *
  *
  *
@@ -26,7 +26,7 @@ use Propel\Runtime\Map\TableMapTrait;
  * (i.e. if it's a text column type).
  *
  */
-class VisitorTableMap extends TableMap
+class ChoicesTableMap extends TableMap
 {
     use InstancePoolTrait;
     use TableMapTrait;
@@ -34,7 +34,7 @@ class VisitorTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'FormsAPI.Map.VisitorTableMap';
+    const CLASS_NAME = 'FormsAPI.Map.ChoicesTableMap';
 
     /**
      * The default database name for this class
@@ -44,22 +44,22 @@ class VisitorTableMap extends TableMap
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'visitor';
+    const TABLE_NAME = 'choices';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\FormsAPI\\Visitor';
+    const OM_CLASS = '\\FormsAPI\\Choices';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'FormsAPI.Visitor';
+    const CLASS_DEFAULT = 'FormsAPI.Choices';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 6;
+    const NUM_COLUMNS = 2;
 
     /**
      * The number of lazy-loaded columns
@@ -69,37 +69,17 @@ class VisitorTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 6;
+    const NUM_HYDRATE_COLUMNS = 2;
 
     /**
      * the column name for the id field
      */
-    const COL_ID = 'visitor.id';
+    const COL_ID = 'choices.id';
 
     /**
-     * the column name for the uw_student_number field
+     * the column name for the value field
      */
-    const COL_UW_STUDENT_NUMBER = 'visitor.uw_student_number';
-
-    /**
-     * the column name for the uw_net_id field
-     */
-    const COL_UW_NET_ID = 'visitor.uw_net_id';
-
-    /**
-     * the column name for the first_name field
-     */
-    const COL_FIRST_NAME = 'visitor.first_name';
-
-    /**
-     * the column name for the middle_name field
-     */
-    const COL_MIDDLE_NAME = 'visitor.middle_name';
-
-    /**
-     * the column name for the last_name field
-     */
-    const COL_LAST_NAME = 'visitor.last_name';
+    const COL_VALUE = 'choices.value';
 
     /**
      * The default string format for model objects of the related table
@@ -113,11 +93,11 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'UWStudentNumber', 'UWNetID', 'FirstName', 'MiddleName', 'LastName', ),
-        self::TYPE_CAMELNAME     => array('id', 'uWStudentNumber', 'uWNetID', 'firstName', 'middleName', 'lastName', ),
-        self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID, VisitorTableMap::COL_UW_STUDENT_NUMBER, VisitorTableMap::COL_UW_NET_ID, VisitorTableMap::COL_FIRST_NAME, VisitorTableMap::COL_MIDDLE_NAME, VisitorTableMap::COL_LAST_NAME, ),
-        self::TYPE_FIELDNAME     => array('id', 'uw_student_number', 'uw_net_id', 'first_name', 'middle_name', 'last_name', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
+        self::TYPE_PHPNAME       => array('Id', 'Value', ),
+        self::TYPE_CAMELNAME     => array('id', 'value', ),
+        self::TYPE_COLNAME       => array(ChoicesTableMap::COL_ID, ChoicesTableMap::COL_VALUE, ),
+        self::TYPE_FIELDNAME     => array('id', 'value', ),
+        self::TYPE_NUM           => array(0, 1, )
     );
 
     /**
@@ -127,11 +107,11 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'UWStudentNumber' => 1, 'UWNetID' => 2, 'FirstName' => 3, 'MiddleName' => 4, 'LastName' => 5, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'uWStudentNumber' => 1, 'uWNetID' => 2, 'firstName' => 3, 'middleName' => 4, 'lastName' => 5, ),
-        self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID => 0, VisitorTableMap::COL_UW_STUDENT_NUMBER => 1, VisitorTableMap::COL_UW_NET_ID => 2, VisitorTableMap::COL_FIRST_NAME => 3, VisitorTableMap::COL_MIDDLE_NAME => 4, VisitorTableMap::COL_LAST_NAME => 5, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'uw_student_number' => 1, 'uw_net_id' => 2, 'first_name' => 3, 'middle_name' => 4, 'last_name' => 5, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Value' => 1, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'value' => 1, ),
+        self::TYPE_COLNAME       => array(ChoicesTableMap::COL_ID => 0, ChoicesTableMap::COL_VALUE => 1, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'value' => 1, ),
+        self::TYPE_NUM           => array(0, 1, )
     );
 
     /**
@@ -144,19 +124,15 @@ class VisitorTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('visitor');
-        $this->setPhpName('Visitor');
+        $this->setName('choices');
+        $this->setPhpName('Choices');
         $this->setIdentifierQuoting(false);
-        $this->setClassName('\\FormsAPI\\Visitor');
+        $this->setClassName('\\FormsAPI\\Choices');
         $this->setPackage('FormsAPI');
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('uw_student_number', 'UWStudentNumber', 'VARCHAR', false, 7, null);
-        $this->addColumn('uw_net_id', 'UWNetID', 'VARCHAR', true, 63, null);
-        $this->addColumn('first_name', 'FirstName', 'VARCHAR', false, 63, null);
-        $this->addColumn('middle_name', 'MiddleName', 'VARCHAR', false, 63, null);
-        $this->addColumn('last_name', 'LastName', 'VARCHAR', false, 63, null);
+        $this->addColumn('value', 'Value', 'VARCHAR', true, 127, null);
     } // initialize()
 
     /**
@@ -223,7 +199,7 @@ class VisitorTableMap extends TableMap
      */
     public static function getOMClass($withPrefix = true)
     {
-        return $withPrefix ? VisitorTableMap::CLASS_DEFAULT : VisitorTableMap::OM_CLASS;
+        return $withPrefix ? ChoicesTableMap::CLASS_DEFAULT : ChoicesTableMap::OM_CLASS;
     }
 
     /**
@@ -237,22 +213,22 @@ class VisitorTableMap extends TableMap
      *
      * @throws PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Visitor object, last column rank)
+     * @return array           (Choices object, last column rank)
      */
     public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        $key = VisitorTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
-        if (null !== ($obj = VisitorTableMap::getInstanceFromPool($key))) {
+        $key = ChoicesTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
+        if (null !== ($obj = ChoicesTableMap::getInstanceFromPool($key))) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // $obj->hydrate($row, $offset, true); // rehydrate
-            $col = $offset + VisitorTableMap::NUM_HYDRATE_COLUMNS;
+            $col = $offset + ChoicesTableMap::NUM_HYDRATE_COLUMNS;
         } else {
-            $cls = VisitorTableMap::OM_CLASS;
-            /** @var Visitor $obj */
+            $cls = ChoicesTableMap::OM_CLASS;
+            /** @var Choices $obj */
             $obj = new $cls();
             $col = $obj->hydrate($row, $offset, false, $indexType);
-            VisitorTableMap::addInstanceToPool($obj, $key);
+            ChoicesTableMap::addInstanceToPool($obj, $key);
         }
 
         return array($obj, $col);
@@ -275,18 +251,18 @@ class VisitorTableMap extends TableMap
         $cls = static::getOMClass(false);
         // populate the object(s)
         while ($row = $dataFetcher->fetch()) {
-            $key = VisitorTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
-            if (null !== ($obj = VisitorTableMap::getInstanceFromPool($key))) {
+            $key = ChoicesTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
+            if (null !== ($obj = ChoicesTableMap::getInstanceFromPool($key))) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // $obj->hydrate($row, 0, true); // rehydrate
                 $results[] = $obj;
             } else {
-                /** @var Visitor $obj */
+                /** @var Choices $obj */
                 $obj = new $cls();
                 $obj->hydrate($row);
                 $results[] = $obj;
-                VisitorTableMap::addInstanceToPool($obj, $key);
+                ChoicesTableMap::addInstanceToPool($obj, $key);
             } // if key exists
         }
 
@@ -307,19 +283,11 @@ class VisitorTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(VisitorTableMap::COL_ID);
-            $criteria->addSelectColumn(VisitorTableMap::COL_UW_STUDENT_NUMBER);
-            $criteria->addSelectColumn(VisitorTableMap::COL_UW_NET_ID);
-            $criteria->addSelectColumn(VisitorTableMap::COL_FIRST_NAME);
-            $criteria->addSelectColumn(VisitorTableMap::COL_MIDDLE_NAME);
-            $criteria->addSelectColumn(VisitorTableMap::COL_LAST_NAME);
+            $criteria->addSelectColumn(ChoicesTableMap::COL_ID);
+            $criteria->addSelectColumn(ChoicesTableMap::COL_VALUE);
         } else {
             $criteria->addSelectColumn($alias . '.id');
-            $criteria->addSelectColumn($alias . '.uw_student_number');
-            $criteria->addSelectColumn($alias . '.uw_net_id');
-            $criteria->addSelectColumn($alias . '.first_name');
-            $criteria->addSelectColumn($alias . '.middle_name');
-            $criteria->addSelectColumn($alias . '.last_name');
+            $criteria->addSelectColumn($alias . '.value');
         }
     }
 
@@ -332,7 +300,7 @@ class VisitorTableMap extends TableMap
      */
     public static function getTableMap()
     {
-        return Propel::getServiceContainer()->getDatabaseMap(VisitorTableMap::DATABASE_NAME)->getTable(VisitorTableMap::TABLE_NAME);
+        return Propel::getServiceContainer()->getDatabaseMap(ChoicesTableMap::DATABASE_NAME)->getTable(ChoicesTableMap::TABLE_NAME);
     }
 
     /**
@@ -340,16 +308,16 @@ class VisitorTableMap extends TableMap
      */
     public static function buildTableMap()
     {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(VisitorTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(VisitorTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new VisitorTableMap());
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap(ChoicesTableMap::DATABASE_NAME);
+        if (!$dbMap->hasTable(ChoicesTableMap::TABLE_NAME)) {
+            $dbMap->addTableObject(new ChoicesTableMap());
         }
     }
 
     /**
-     * Performs a DELETE on the database, given a Visitor or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a Choices or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Visitor object or primary key or array of primary keys
+     * @param mixed               $values Criteria or Choices object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param  ConnectionInterface $con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -360,27 +328,27 @@ class VisitorTableMap extends TableMap
      public static function doDelete($values, ConnectionInterface $con = null)
      {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ChoicesTableMap::DATABASE_NAME);
         }
 
         if ($values instanceof Criteria) {
             // rename for clarity
             $criteria = $values;
-        } elseif ($values instanceof \FormsAPI\Visitor) { // it's a model object
+        } elseif ($values instanceof \FormsAPI\Choices) { // it's a model object
             // create criteria based on pk values
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
-            $criteria = new Criteria(VisitorTableMap::DATABASE_NAME);
-            $criteria->add(VisitorTableMap::COL_ID, (array) $values, Criteria::IN);
+            $criteria = new Criteria(ChoicesTableMap::DATABASE_NAME);
+            $criteria->add(ChoicesTableMap::COL_ID, (array) $values, Criteria::IN);
         }
 
-        $query = VisitorQuery::create()->mergeWith($criteria);
+        $query = ChoicesQuery::create()->mergeWith($criteria);
 
         if ($values instanceof Criteria) {
-            VisitorTableMap::clearInstancePool();
+            ChoicesTableMap::clearInstancePool();
         } elseif (!is_object($values)) { // it's a primary key, or an array of pks
             foreach ((array) $values as $singleval) {
-                VisitorTableMap::removeInstanceFromPool($singleval);
+                ChoicesTableMap::removeInstanceFromPool($singleval);
             }
         }
 
@@ -388,20 +356,20 @@ class VisitorTableMap extends TableMap
     }
 
     /**
-     * Deletes all rows from the visitor table.
+     * Deletes all rows from the choices table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(ConnectionInterface $con = null)
     {
-        return VisitorQuery::create()->doDeleteAll($con);
+        return ChoicesQuery::create()->doDeleteAll($con);
     }
 
     /**
-     * Performs an INSERT on the database, given a Visitor or Criteria object.
+     * Performs an INSERT on the database, given a Choices or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Visitor object containing data that is used to create the INSERT statement.
+     * @param mixed               $criteria Criteria or Choices object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
      * @return mixed           The new primary key.
      * @throws PropelException Any exceptions caught during processing will be
@@ -410,22 +378,22 @@ class VisitorTableMap extends TableMap
     public static function doInsert($criteria, ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ChoicesTableMap::DATABASE_NAME);
         }
 
         if ($criteria instanceof Criteria) {
             $criteria = clone $criteria; // rename for clarity
         } else {
-            $criteria = $criteria->buildCriteria(); // build Criteria from Visitor object
+            $criteria = $criteria->buildCriteria(); // build Criteria from Choices object
         }
 
-        if ($criteria->containsKey(VisitorTableMap::COL_ID) && $criteria->keyContainsValue(VisitorTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.VisitorTableMap::COL_ID.')');
+        if ($criteria->containsKey(ChoicesTableMap::COL_ID) && $criteria->keyContainsValue(ChoicesTableMap::COL_ID) ) {
+            throw new PropelException('Cannot insert a value for auto-increment primary key ('.ChoicesTableMap::COL_ID.')');
         }
 
 
         // Set the correct dbName
-        $query = VisitorQuery::create()->mergeWith($criteria);
+        $query = ChoicesQuery::create()->mergeWith($criteria);
 
         // use transaction because $criteria could contain info
         // for more than one table (I guess, conceivably)
@@ -434,7 +402,7 @@ class VisitorTableMap extends TableMap
         });
     }
 
-} // VisitorTableMap
+} // ChoicesTableMap
 // This is the static code needed to register the TableMap for this table with the main Propel class.
 //
-VisitorTableMap::buildTableMap();
+ChoicesTableMap::buildTableMap();

@@ -2,8 +2,8 @@
 
 namespace FormsAPI\Map;
 
-use FormsAPI\Visitor;
-use FormsAPI\VisitorQuery;
+use FormsAPI\Submissions;
+use FormsAPI\SubmissionsQuery;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\InstancePoolTrait;
@@ -16,7 +16,7 @@ use Propel\Runtime\Map\TableMapTrait;
 
 
 /**
- * This class defines the structure of the 'visitor' table.
+ * This class defines the structure of the 'submissions' table.
  *
  *
  *
@@ -26,7 +26,7 @@ use Propel\Runtime\Map\TableMapTrait;
  * (i.e. if it's a text column type).
  *
  */
-class VisitorTableMap extends TableMap
+class SubmissionsTableMap extends TableMap
 {
     use InstancePoolTrait;
     use TableMapTrait;
@@ -34,7 +34,7 @@ class VisitorTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'FormsAPI.Map.VisitorTableMap';
+    const CLASS_NAME = 'FormsAPI.Map.SubmissionsTableMap';
 
     /**
      * The default database name for this class
@@ -44,17 +44,17 @@ class VisitorTableMap extends TableMap
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'visitor';
+    const TABLE_NAME = 'submissions';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\FormsAPI\\Visitor';
+    const OM_CLASS = '\\FormsAPI\\Submissions';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'FormsAPI.Visitor';
+    const CLASS_DEFAULT = 'FormsAPI.Submissions';
 
     /**
      * The total number of columns
@@ -74,32 +74,32 @@ class VisitorTableMap extends TableMap
     /**
      * the column name for the id field
      */
-    const COL_ID = 'visitor.id';
+    const COL_ID = 'submissions.id';
 
     /**
-     * the column name for the uw_student_number field
+     * the column name for the visitor_id field
      */
-    const COL_UW_STUDENT_NUMBER = 'visitor.uw_student_number';
+    const COL_VISITOR_ID = 'submissions.visitor_id';
 
     /**
-     * the column name for the uw_net_id field
+     * the column name for the form_id field
      */
-    const COL_UW_NET_ID = 'visitor.uw_net_id';
+    const COL_FORM_ID = 'submissions.form_id';
 
     /**
-     * the column name for the first_name field
+     * the column name for the status_id field
      */
-    const COL_FIRST_NAME = 'visitor.first_name';
+    const COL_STATUS_ID = 'submissions.status_id';
 
     /**
-     * the column name for the middle_name field
+     * the column name for the assignee_id field
      */
-    const COL_MIDDLE_NAME = 'visitor.middle_name';
+    const COL_ASSIGNEE_ID = 'submissions.assignee_id';
 
     /**
-     * the column name for the last_name field
+     * the column name for the parent_id field
      */
-    const COL_LAST_NAME = 'visitor.last_name';
+    const COL_PARENT_ID = 'submissions.parent_id';
 
     /**
      * The default string format for model objects of the related table
@@ -113,10 +113,10 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'UWStudentNumber', 'UWNetID', 'FirstName', 'MiddleName', 'LastName', ),
-        self::TYPE_CAMELNAME     => array('id', 'uWStudentNumber', 'uWNetID', 'firstName', 'middleName', 'lastName', ),
-        self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID, VisitorTableMap::COL_UW_STUDENT_NUMBER, VisitorTableMap::COL_UW_NET_ID, VisitorTableMap::COL_FIRST_NAME, VisitorTableMap::COL_MIDDLE_NAME, VisitorTableMap::COL_LAST_NAME, ),
-        self::TYPE_FIELDNAME     => array('id', 'uw_student_number', 'uw_net_id', 'first_name', 'middle_name', 'last_name', ),
+        self::TYPE_PHPNAME       => array('Id', 'VisitorId', 'FormId', 'StatusId', 'AssigneeId', 'ParentId', ),
+        self::TYPE_CAMELNAME     => array('id', 'visitorId', 'formId', 'statusId', 'assigneeId', 'parentId', ),
+        self::TYPE_COLNAME       => array(SubmissionsTableMap::COL_ID, SubmissionsTableMap::COL_VISITOR_ID, SubmissionsTableMap::COL_FORM_ID, SubmissionsTableMap::COL_STATUS_ID, SubmissionsTableMap::COL_ASSIGNEE_ID, SubmissionsTableMap::COL_PARENT_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'visitor_id', 'form_id', 'status_id', 'assignee_id', 'parent_id', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
@@ -127,10 +127,10 @@ class VisitorTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'UWStudentNumber' => 1, 'UWNetID' => 2, 'FirstName' => 3, 'MiddleName' => 4, 'LastName' => 5, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'uWStudentNumber' => 1, 'uWNetID' => 2, 'firstName' => 3, 'middleName' => 4, 'lastName' => 5, ),
-        self::TYPE_COLNAME       => array(VisitorTableMap::COL_ID => 0, VisitorTableMap::COL_UW_STUDENT_NUMBER => 1, VisitorTableMap::COL_UW_NET_ID => 2, VisitorTableMap::COL_FIRST_NAME => 3, VisitorTableMap::COL_MIDDLE_NAME => 4, VisitorTableMap::COL_LAST_NAME => 5, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'uw_student_number' => 1, 'uw_net_id' => 2, 'first_name' => 3, 'middle_name' => 4, 'last_name' => 5, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'VisitorId' => 1, 'FormId' => 2, 'StatusId' => 3, 'AssigneeId' => 4, 'ParentId' => 5, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'visitorId' => 1, 'formId' => 2, 'statusId' => 3, 'assigneeId' => 4, 'parentId' => 5, ),
+        self::TYPE_COLNAME       => array(SubmissionsTableMap::COL_ID => 0, SubmissionsTableMap::COL_VISITOR_ID => 1, SubmissionsTableMap::COL_FORM_ID => 2, SubmissionsTableMap::COL_STATUS_ID => 3, SubmissionsTableMap::COL_ASSIGNEE_ID => 4, SubmissionsTableMap::COL_PARENT_ID => 5, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'visitor_id' => 1, 'form_id' => 2, 'status_id' => 3, 'assignee_id' => 4, 'parent_id' => 5, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
@@ -144,19 +144,19 @@ class VisitorTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('visitor');
-        $this->setPhpName('Visitor');
+        $this->setName('submissions');
+        $this->setPhpName('Submissions');
         $this->setIdentifierQuoting(false);
-        $this->setClassName('\\FormsAPI\\Visitor');
+        $this->setClassName('\\FormsAPI\\Submissions');
         $this->setPackage('FormsAPI');
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('uw_student_number', 'UWStudentNumber', 'VARCHAR', false, 7, null);
-        $this->addColumn('uw_net_id', 'UWNetID', 'VARCHAR', true, 63, null);
-        $this->addColumn('first_name', 'FirstName', 'VARCHAR', false, 63, null);
-        $this->addColumn('middle_name', 'MiddleName', 'VARCHAR', false, 63, null);
-        $this->addColumn('last_name', 'LastName', 'VARCHAR', false, 63, null);
+        $this->addColumn('visitor_id', 'VisitorId', 'INTEGER', true, null, null);
+        $this->addColumn('form_id', 'FormId', 'INTEGER', true, null, null);
+        $this->addColumn('status_id', 'StatusId', 'INTEGER', true, null, null);
+        $this->addColumn('assignee_id', 'AssigneeId', 'INTEGER', true, null, null);
+        $this->addColumn('parent_id', 'ParentId', 'INTEGER', true, null, null);
     } // initialize()
 
     /**
@@ -223,7 +223,7 @@ class VisitorTableMap extends TableMap
      */
     public static function getOMClass($withPrefix = true)
     {
-        return $withPrefix ? VisitorTableMap::CLASS_DEFAULT : VisitorTableMap::OM_CLASS;
+        return $withPrefix ? SubmissionsTableMap::CLASS_DEFAULT : SubmissionsTableMap::OM_CLASS;
     }
 
     /**
@@ -237,22 +237,22 @@ class VisitorTableMap extends TableMap
      *
      * @throws PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Visitor object, last column rank)
+     * @return array           (Submissions object, last column rank)
      */
     public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        $key = VisitorTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
-        if (null !== ($obj = VisitorTableMap::getInstanceFromPool($key))) {
+        $key = SubmissionsTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
+        if (null !== ($obj = SubmissionsTableMap::getInstanceFromPool($key))) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // $obj->hydrate($row, $offset, true); // rehydrate
-            $col = $offset + VisitorTableMap::NUM_HYDRATE_COLUMNS;
+            $col = $offset + SubmissionsTableMap::NUM_HYDRATE_COLUMNS;
         } else {
-            $cls = VisitorTableMap::OM_CLASS;
-            /** @var Visitor $obj */
+            $cls = SubmissionsTableMap::OM_CLASS;
+            /** @var Submissions $obj */
             $obj = new $cls();
             $col = $obj->hydrate($row, $offset, false, $indexType);
-            VisitorTableMap::addInstanceToPool($obj, $key);
+            SubmissionsTableMap::addInstanceToPool($obj, $key);
         }
 
         return array($obj, $col);
@@ -275,18 +275,18 @@ class VisitorTableMap extends TableMap
         $cls = static::getOMClass(false);
         // populate the object(s)
         while ($row = $dataFetcher->fetch()) {
-            $key = VisitorTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
-            if (null !== ($obj = VisitorTableMap::getInstanceFromPool($key))) {
+            $key = SubmissionsTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
+            if (null !== ($obj = SubmissionsTableMap::getInstanceFromPool($key))) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // $obj->hydrate($row, 0, true); // rehydrate
                 $results[] = $obj;
             } else {
-                /** @var Visitor $obj */
+                /** @var Submissions $obj */
                 $obj = new $cls();
                 $obj->hydrate($row);
                 $results[] = $obj;
-                VisitorTableMap::addInstanceToPool($obj, $key);
+                SubmissionsTableMap::addInstanceToPool($obj, $key);
             } // if key exists
         }
 
@@ -307,19 +307,19 @@ class VisitorTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(VisitorTableMap::COL_ID);
-            $criteria->addSelectColumn(VisitorTableMap::COL_UW_STUDENT_NUMBER);
-            $criteria->addSelectColumn(VisitorTableMap::COL_UW_NET_ID);
-            $criteria->addSelectColumn(VisitorTableMap::COL_FIRST_NAME);
-            $criteria->addSelectColumn(VisitorTableMap::COL_MIDDLE_NAME);
-            $criteria->addSelectColumn(VisitorTableMap::COL_LAST_NAME);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_ID);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_VISITOR_ID);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_FORM_ID);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_STATUS_ID);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_ASSIGNEE_ID);
+            $criteria->addSelectColumn(SubmissionsTableMap::COL_PARENT_ID);
         } else {
             $criteria->addSelectColumn($alias . '.id');
-            $criteria->addSelectColumn($alias . '.uw_student_number');
-            $criteria->addSelectColumn($alias . '.uw_net_id');
-            $criteria->addSelectColumn($alias . '.first_name');
-            $criteria->addSelectColumn($alias . '.middle_name');
-            $criteria->addSelectColumn($alias . '.last_name');
+            $criteria->addSelectColumn($alias . '.visitor_id');
+            $criteria->addSelectColumn($alias . '.form_id');
+            $criteria->addSelectColumn($alias . '.status_id');
+            $criteria->addSelectColumn($alias . '.assignee_id');
+            $criteria->addSelectColumn($alias . '.parent_id');
         }
     }
 
@@ -332,7 +332,7 @@ class VisitorTableMap extends TableMap
      */
     public static function getTableMap()
     {
-        return Propel::getServiceContainer()->getDatabaseMap(VisitorTableMap::DATABASE_NAME)->getTable(VisitorTableMap::TABLE_NAME);
+        return Propel::getServiceContainer()->getDatabaseMap(SubmissionsTableMap::DATABASE_NAME)->getTable(SubmissionsTableMap::TABLE_NAME);
     }
 
     /**
@@ -340,16 +340,16 @@ class VisitorTableMap extends TableMap
      */
     public static function buildTableMap()
     {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(VisitorTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(VisitorTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new VisitorTableMap());
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap(SubmissionsTableMap::DATABASE_NAME);
+        if (!$dbMap->hasTable(SubmissionsTableMap::TABLE_NAME)) {
+            $dbMap->addTableObject(new SubmissionsTableMap());
         }
     }
 
     /**
-     * Performs a DELETE on the database, given a Visitor or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a Submissions or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Visitor object or primary key or array of primary keys
+     * @param mixed               $values Criteria or Submissions object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param  ConnectionInterface $con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -360,27 +360,27 @@ class VisitorTableMap extends TableMap
      public static function doDelete($values, ConnectionInterface $con = null)
      {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SubmissionsTableMap::DATABASE_NAME);
         }
 
         if ($values instanceof Criteria) {
             // rename for clarity
             $criteria = $values;
-        } elseif ($values instanceof \FormsAPI\Visitor) { // it's a model object
+        } elseif ($values instanceof \FormsAPI\Submissions) { // it's a model object
             // create criteria based on pk values
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
-            $criteria = new Criteria(VisitorTableMap::DATABASE_NAME);
-            $criteria->add(VisitorTableMap::COL_ID, (array) $values, Criteria::IN);
+            $criteria = new Criteria(SubmissionsTableMap::DATABASE_NAME);
+            $criteria->add(SubmissionsTableMap::COL_ID, (array) $values, Criteria::IN);
         }
 
-        $query = VisitorQuery::create()->mergeWith($criteria);
+        $query = SubmissionsQuery::create()->mergeWith($criteria);
 
         if ($values instanceof Criteria) {
-            VisitorTableMap::clearInstancePool();
+            SubmissionsTableMap::clearInstancePool();
         } elseif (!is_object($values)) { // it's a primary key, or an array of pks
             foreach ((array) $values as $singleval) {
-                VisitorTableMap::removeInstanceFromPool($singleval);
+                SubmissionsTableMap::removeInstanceFromPool($singleval);
             }
         }
 
@@ -388,20 +388,20 @@ class VisitorTableMap extends TableMap
     }
 
     /**
-     * Deletes all rows from the visitor table.
+     * Deletes all rows from the submissions table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(ConnectionInterface $con = null)
     {
-        return VisitorQuery::create()->doDeleteAll($con);
+        return SubmissionsQuery::create()->doDeleteAll($con);
     }
 
     /**
-     * Performs an INSERT on the database, given a Visitor or Criteria object.
+     * Performs an INSERT on the database, given a Submissions or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Visitor object containing data that is used to create the INSERT statement.
+     * @param mixed               $criteria Criteria or Submissions object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
      * @return mixed           The new primary key.
      * @throws PropelException Any exceptions caught during processing will be
@@ -410,22 +410,22 @@ class VisitorTableMap extends TableMap
     public static function doInsert($criteria, ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(VisitorTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(SubmissionsTableMap::DATABASE_NAME);
         }
 
         if ($criteria instanceof Criteria) {
             $criteria = clone $criteria; // rename for clarity
         } else {
-            $criteria = $criteria->buildCriteria(); // build Criteria from Visitor object
+            $criteria = $criteria->buildCriteria(); // build Criteria from Submissions object
         }
 
-        if ($criteria->containsKey(VisitorTableMap::COL_ID) && $criteria->keyContainsValue(VisitorTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.VisitorTableMap::COL_ID.')');
+        if ($criteria->containsKey(SubmissionsTableMap::COL_ID) && $criteria->keyContainsValue(SubmissionsTableMap::COL_ID) ) {
+            throw new PropelException('Cannot insert a value for auto-increment primary key ('.SubmissionsTableMap::COL_ID.')');
         }
 
 
         // Set the correct dbName
-        $query = VisitorQuery::create()->mergeWith($criteria);
+        $query = SubmissionsQuery::create()->mergeWith($criteria);
 
         // use transaction because $criteria could contain info
         // for more than one table (I guess, conceivably)
@@ -434,7 +434,7 @@ class VisitorTableMap extends TableMap
         });
     }
 
-} // VisitorTableMap
+} // SubmissionsTableMap
 // This is the static code needed to register the TableMap for this table with the main Propel class.
 //
-VisitorTableMap::buildTableMap();
+SubmissionsTableMap::buildTableMap();
