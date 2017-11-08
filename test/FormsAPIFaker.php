@@ -112,7 +112,7 @@ class FormsAPIFaker
                 'form_id' => ['reference', 'forms'],
                 'status_id' => ['reference', 'statuses'],
                 'assignee_id' => ['reference', 'visitors'],
-                'submitted' => ['date', "Y-m-d", "now"],
+                'submitted' => ['numberBetween', 1410165081, 1510165081],
             ],
             'optional' => [
                 'parent_id' => ['reference', 'submissions'],
