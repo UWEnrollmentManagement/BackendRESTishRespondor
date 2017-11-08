@@ -4,6 +4,7 @@ namespace FormsAPI\Respondor;
 
 require_once __DIR__ . '/../setup.php';
 
+use Faker\Provider\DateTime;
 use FormsAPI\Mediator\MediatorInterface;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
@@ -58,6 +59,14 @@ class Respondor
             $error = ['message' => "No such resource type '$resourceType'" . implode("; ", $this->mediator->error())];
         } elseif ($request->getMethod() === "POST") {                                // CREATE
             $resource = $this->mediator->create($resourceType);
+            if($resourceType == "submissions") {
+                // remove submitted
+//                unset($parsedBody["submitted"]);
+//                $parsedBody["submitted"] = "2017-12-25 08:15:35";
+//                $parsedBody["submitted"] = DateTime::date('2017-12-25');
+                // bandaid until we figure out datetime here
+                $parsedBody["submitted"] = null;
+            }
 
             $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($resource);

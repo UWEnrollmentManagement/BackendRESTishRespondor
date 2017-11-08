@@ -148,6 +148,7 @@
         <column name="status_id" type="integer" required="false"/>
         <column name="assignee_id" type="integer" required="false"/>
         <column name="parent_id" type="integer" required="false"/>
+        <column name="submitted" type="timestamp" required="false" />
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
@@ -189,6 +190,7 @@
     <table name="recipient">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="address" type="integer" required="true" />
+        <column name="note" type="varchar" required="true" />
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: address, validator: NotNull}" />

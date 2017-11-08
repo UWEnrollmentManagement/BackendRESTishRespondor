@@ -115,13 +115,34 @@ class PropelMediator implements MediatorInterface
         $resourceType = array_search(get_class($resource), static::$classMap);
 
         $attributes["href"] = "{$this->href}/$resourceType/{$attributes['id']}/";
-
+        var_dump($attributes);
         if ($resourceType === 'forms') {
             $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
             $attributes["root_element"] = "{$this->href}/elements/{$attributes['root_element_id']}/";
 
         } elseif ($resourceType === 'elements') {
             $attributes['parent'] = "{$this->href}/$resourceType/{$attributes['parent_id']}/";
+        } elseif ($resourceType === 'dependencies') {
+            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
+            $attributes['slave'] = "{$this->href}/elements/{$attributes['slave_id']}";
+            $attributes['condition'] = "{$this->href}/conditions/{$attributes['condition_id']}";
+        } elseif ($resourceType === "requirements") {
+            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
+            $attributes['condition'] = "{$this->href}/conditions/{$attributes['condition_id']}";
+        } elseif ($resourceType === "submissions") {
+            $attributes['visitor'] = "{$this->href}/visitors/{$attributes['visitor_id']}";
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
+            $attributes['status'] = "{$this->href}/statuses/{$attributes['status_id']}";
+            $attributes['assignee'] = "{$this->href}/visitors/{$attributes['assignee_id']}";
+            $attributes['submitted'] = "{$this->href}/visitors/{$attributes['assignee_id']}";
+            if (array_key_exists('parent', $attributes)) {
+                $attributes['parent'] = "{$this->href}/submissions/{$attributes['parent_id']}";
+            } else {
+                $attributes['parent'] = null;
+            }
+        } elseif ($resourceType === "recipients") {
+            $attributes["note"] = "{$this->href}/notes/{$attributes['note_id']}";
+
         }
 
         return $attributes;
