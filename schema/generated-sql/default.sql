@@ -144,6 +144,7 @@ CREATE TABLE [submission]
     [status_id] INTEGER,
     [assignee_id] INTEGER,
     [parent_id] INTEGER,
+    [submitted] TIMESTAMP,
     UNIQUE ([id])
 );
 
@@ -199,6 +200,7 @@ CREATE TABLE [recipient]
 (
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [address] INTEGER NOT NULL,
+    [note] VARCHAR(255) NOT NULL,
     UNIQUE ([id])
 );
 
