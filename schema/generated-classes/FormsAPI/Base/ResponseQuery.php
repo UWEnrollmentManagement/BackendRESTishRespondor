@@ -4,9 +4,9 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
-use FormsAPI\Requirement as ChildRequirement;
-use FormsAPI\RequirementQuery as ChildRequirementQuery;
-use FormsAPI\Map\RequirementTableMap;
+use FormsAPI\Response as ChildResponse;
+use FormsAPI\ResponseQuery as ChildResponseQuery;
+use FormsAPI\Map\ResponseTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -16,104 +16,104 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'requirement' table.
+ * Base class that represents a query for the 'response' table.
  *
  *
  *
- * @method     ChildRequirementQuery orderById($order = Criteria::ASC) Order by the id column
- * @method     ChildRequirementQuery orderByFailureMessage($order = Criteria::ASC) Order by the failure_message column
- * @method     ChildRequirementQuery orderByElementId($order = Criteria::ASC) Order by the element_id column
- * @method     ChildRequirementQuery orderByConditionId($order = Criteria::ASC) Order by the condition_id column
+ * @method     ChildResponseQuery orderById($order = Criteria::ASC) Order by the id column
+ * @method     ChildResponseQuery orderByContent($order = Criteria::ASC) Order by the content column
+ * @method     ChildResponseQuery orderByElementId($order = Criteria::ASC) Order by the element_id column
+ * @method     ChildResponseQuery orderBySubmissionId($order = Criteria::ASC) Order by the submission_id column
  *
- * @method     ChildRequirementQuery groupById() Group by the id column
- * @method     ChildRequirementQuery groupByFailureMessage() Group by the failure_message column
- * @method     ChildRequirementQuery groupByElementId() Group by the element_id column
- * @method     ChildRequirementQuery groupByConditionId() Group by the condition_id column
+ * @method     ChildResponseQuery groupById() Group by the id column
+ * @method     ChildResponseQuery groupByContent() Group by the content column
+ * @method     ChildResponseQuery groupByElementId() Group by the element_id column
+ * @method     ChildResponseQuery groupBySubmissionId() Group by the submission_id column
  *
- * @method     ChildRequirementQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
- * @method     ChildRequirementQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
- * @method     ChildRequirementQuery innerJoin($relation) Adds a INNER JOIN clause to the query
+ * @method     ChildResponseQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
+ * @method     ChildResponseQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
+ * @method     ChildResponseQuery innerJoin($relation) Adds a INNER JOIN clause to the query
  *
- * @method     ChildRequirementQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
- * @method     ChildRequirementQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
- * @method     ChildRequirementQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ * @method     ChildResponseQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
+ * @method     ChildResponseQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
+ * @method     ChildResponseQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
- * @method     ChildRequirementQuery leftJoinElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Element relation
- * @method     ChildRequirementQuery rightJoinElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Element relation
- * @method     ChildRequirementQuery innerJoinElement($relationAlias = null) Adds a INNER JOIN clause to the query using the Element relation
+ * @method     ChildResponseQuery leftJoinElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Element relation
+ * @method     ChildResponseQuery rightJoinElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Element relation
+ * @method     ChildResponseQuery innerJoinElement($relationAlias = null) Adds a INNER JOIN clause to the query using the Element relation
  *
- * @method     ChildRequirementQuery joinWithElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Element relation
+ * @method     ChildResponseQuery joinWithElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Element relation
  *
- * @method     ChildRequirementQuery leftJoinWithElement() Adds a LEFT JOIN clause and with to the query using the Element relation
- * @method     ChildRequirementQuery rightJoinWithElement() Adds a RIGHT JOIN clause and with to the query using the Element relation
- * @method     ChildRequirementQuery innerJoinWithElement() Adds a INNER JOIN clause and with to the query using the Element relation
+ * @method     ChildResponseQuery leftJoinWithElement() Adds a LEFT JOIN clause and with to the query using the Element relation
+ * @method     ChildResponseQuery rightJoinWithElement() Adds a RIGHT JOIN clause and with to the query using the Element relation
+ * @method     ChildResponseQuery innerJoinWithElement() Adds a INNER JOIN clause and with to the query using the Element relation
  *
- * @method     ChildRequirementQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
- * @method     ChildRequirementQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
- * @method     ChildRequirementQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ * @method     ChildResponseQuery leftJoinSubmission($relationAlias = null) Adds a LEFT JOIN clause to the query using the Submission relation
+ * @method     ChildResponseQuery rightJoinSubmission($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Submission relation
+ * @method     ChildResponseQuery innerJoinSubmission($relationAlias = null) Adds a INNER JOIN clause to the query using the Submission relation
  *
- * @method     ChildRequirementQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ * @method     ChildResponseQuery joinWithSubmission($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Submission relation
  *
- * @method     ChildRequirementQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
- * @method     ChildRequirementQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
- * @method     ChildRequirementQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ * @method     ChildResponseQuery leftJoinWithSubmission() Adds a LEFT JOIN clause and with to the query using the Submission relation
+ * @method     ChildResponseQuery rightJoinWithSubmission() Adds a RIGHT JOIN clause and with to the query using the Submission relation
+ * @method     ChildResponseQuery innerJoinWithSubmission() Adds a INNER JOIN clause and with to the query using the Submission relation
  *
- * @method     \FormsAPI\ElementQuery|\FormsAPI\FormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\SubmissionQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
- * @method     ChildRequirement findOne(ConnectionInterface $con = null) Return the first ChildRequirement matching the query
- * @method     ChildRequirement findOneOrCreate(ConnectionInterface $con = null) Return the first ChildRequirement matching the query, or a new ChildRequirement object populated from the query conditions when no match is found
+ * @method     ChildResponse findOne(ConnectionInterface $con = null) Return the first ChildResponse matching the query
+ * @method     ChildResponse findOneOrCreate(ConnectionInterface $con = null) Return the first ChildResponse matching the query, or a new ChildResponse object populated from the query conditions when no match is found
  *
- * @method     ChildRequirement findOneById(int $id) Return the first ChildRequirement filtered by the id column
- * @method     ChildRequirement findOneByFailureMessage(string $failure_message) Return the first ChildRequirement filtered by the failure_message column
- * @method     ChildRequirement findOneByElementId(int $element_id) Return the first ChildRequirement filtered by the element_id column
- * @method     ChildRequirement findOneByConditionId(int $condition_id) Return the first ChildRequirement filtered by the condition_id column *
+ * @method     ChildResponse findOneById(int $id) Return the first ChildResponse filtered by the id column
+ * @method     ChildResponse findOneByContent(string $content) Return the first ChildResponse filtered by the content column
+ * @method     ChildResponse findOneByElementId(int $element_id) Return the first ChildResponse filtered by the element_id column
+ * @method     ChildResponse findOneBySubmissionId(int $submission_id) Return the first ChildResponse filtered by the submission_id column *
 
- * @method     ChildRequirement requirePk($key, ConnectionInterface $con = null) Return the ChildRequirement by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRequirement requireOne(ConnectionInterface $con = null) Return the first ChildRequirement matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requirePk($key, ConnectionInterface $con = null) Return the ChildResponse by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requireOne(ConnectionInterface $con = null) Return the first ChildResponse matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildRequirement requireOneById(int $id) Return the first ChildRequirement filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRequirement requireOneByFailureMessage(string $failure_message) Return the first ChildRequirement filtered by the failure_message column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRequirement requireOneByElementId(int $element_id) Return the first ChildRequirement filtered by the element_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRequirement requireOneByConditionId(int $condition_id) Return the first ChildRequirement filtered by the condition_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requireOneById(int $id) Return the first ChildResponse filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requireOneByContent(string $content) Return the first ChildResponse filtered by the content column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requireOneByElementId(int $element_id) Return the first ChildResponse filtered by the element_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildResponse requireOneBySubmissionId(int $submission_id) Return the first ChildResponse filtered by the submission_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildRequirement[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildRequirement objects based on current ModelCriteria
- * @method     ChildRequirement[]|ObjectCollection findById(int $id) Return ChildRequirement objects filtered by the id column
- * @method     ChildRequirement[]|ObjectCollection findByFailureMessage(string $failure_message) Return ChildRequirement objects filtered by the failure_message column
- * @method     ChildRequirement[]|ObjectCollection findByElementId(int $element_id) Return ChildRequirement objects filtered by the element_id column
- * @method     ChildRequirement[]|ObjectCollection findByConditionId(int $condition_id) Return ChildRequirement objects filtered by the condition_id column
- * @method     ChildRequirement[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildResponse[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildResponse objects based on current ModelCriteria
+ * @method     ChildResponse[]|ObjectCollection findById(int $id) Return ChildResponse objects filtered by the id column
+ * @method     ChildResponse[]|ObjectCollection findByContent(string $content) Return ChildResponse objects filtered by the content column
+ * @method     ChildResponse[]|ObjectCollection findByElementId(int $element_id) Return ChildResponse objects filtered by the element_id column
+ * @method     ChildResponse[]|ObjectCollection findBySubmissionId(int $submission_id) Return ChildResponse objects filtered by the submission_id column
+ * @method     ChildResponse[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
-abstract class RequirementQuery extends ModelCriteria
+abstract class ResponseQuery extends ModelCriteria
 {
     protected $entityNotFoundExceptionClass = '\\Propel\\Runtime\\Exception\\EntityNotFoundException';
 
     /**
-     * Initializes internal state of \FormsAPI\Base\RequirementQuery object.
+     * Initializes internal state of \FormsAPI\Base\ResponseQuery object.
      *
      * @param     string $dbName The database name
      * @param     string $modelName The phpName of a model, e.g. 'Book'
      * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
      */
-    public function __construct($dbName = 'default', $modelName = '\\FormsAPI\\Requirement', $modelAlias = null)
+    public function __construct($dbName = 'default', $modelName = '\\FormsAPI\\Response', $modelAlias = null)
     {
         parent::__construct($dbName, $modelName, $modelAlias);
     }
 
     /**
-     * Returns a new ChildRequirementQuery object.
+     * Returns a new ChildResponseQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
      * @param     Criteria $criteria Optional Criteria to build the query from
      *
-     * @return ChildRequirementQuery
+     * @return ChildResponseQuery
      */
     public static function create($modelAlias = null, Criteria $criteria = null)
     {
-        if ($criteria instanceof ChildRequirementQuery) {
+        if ($criteria instanceof ChildResponseQuery) {
             return $criteria;
         }
-        $query = new ChildRequirementQuery();
+        $query = new ChildResponseQuery();
         if (null !== $modelAlias) {
             $query->setModelAlias($modelAlias);
         }
@@ -136,7 +136,7 @@ abstract class RequirementQuery extends ModelCriteria
      * @param mixed $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
-     * @return ChildRequirement|array|mixed the result, formatted by the current formatter
+     * @return ChildResponse|array|mixed the result, formatted by the current formatter
      */
     public function findPk($key, ConnectionInterface $con = null)
     {
@@ -145,7 +145,7 @@ abstract class RequirementQuery extends ModelCriteria
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(ResponseTableMap::DATABASE_NAME);
         }
 
         $this->basePreSelect($con);
@@ -158,7 +158,7 @@ abstract class RequirementQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = RequirementTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
+        if ((null !== ($obj = ResponseTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -175,11 +175,11 @@ abstract class RequirementQuery extends ModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildRequirement A model object, or null if the key is not found
+     * @return ChildResponse A model object, or null if the key is not found
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, failure_message, element_id, condition_id FROM requirement WHERE id = :p0';
+        $sql = 'SELECT id, content, element_id, submission_id FROM response WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -190,10 +190,10 @@ abstract class RequirementQuery extends ModelCriteria
         }
         $obj = null;
         if ($row = $stmt->fetch(\PDO::FETCH_NUM)) {
-            /** @var ChildRequirement $obj */
-            $obj = new ChildRequirement();
+            /** @var ChildResponse $obj */
+            $obj = new ChildResponse();
             $obj->hydrate($row);
-            RequirementTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
+            ResponseTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
         }
         $stmt->closeCursor();
 
@@ -206,7 +206,7 @@ abstract class RequirementQuery extends ModelCriteria
      * @param     mixed $key Primary key to use for the query
      * @param     ConnectionInterface $con A connection object
      *
-     * @return ChildRequirement|array|mixed the result, formatted by the current formatter
+     * @return ChildResponse|array|mixed the result, formatted by the current formatter
      */
     protected function findPkComplex($key, ConnectionInterface $con)
     {
@@ -248,12 +248,12 @@ abstract class RequirementQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
 
-        return $this->addUsingAlias(RequirementTableMap::COL_ID, $key, Criteria::EQUAL);
+        return $this->addUsingAlias(ResponseTableMap::COL_ID, $key, Criteria::EQUAL);
     }
 
     /**
@@ -261,12 +261,12 @@ abstract class RequirementQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
 
-        return $this->addUsingAlias(RequirementTableMap::COL_ID, $keys, Criteria::IN);
+        return $this->addUsingAlias(ResponseTableMap::COL_ID, $keys, Criteria::IN);
     }
 
     /**
@@ -285,18 +285,18 @@ abstract class RequirementQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id)) {
             $useMinMax = false;
             if (isset($id['min'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
+                $this->addUsingAlias(ResponseTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
             if (isset($id['max'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
+                $this->addUsingAlias(ResponseTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -307,32 +307,32 @@ abstract class RequirementQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(RequirementTableMap::COL_ID, $id, $comparison);
+        return $this->addUsingAlias(ResponseTableMap::COL_ID, $id, $comparison);
     }
 
     /**
-     * Filter the query on the failure_message column
+     * Filter the query on the content column
      *
      * Example usage:
      * <code>
-     * $query->filterByFailureMessage('fooValue');   // WHERE failure_message = 'fooValue'
-     * $query->filterByFailureMessage('%fooValue%', Criteria::LIKE); // WHERE failure_message LIKE '%fooValue%'
+     * $query->filterByContent('fooValue');   // WHERE content = 'fooValue'
+     * $query->filterByContent('%fooValue%', Criteria::LIKE); // WHERE content LIKE '%fooValue%'
      * </code>
      *
-     * @param     string $failureMessage The value to use as filter.
+     * @param     string $content The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
-    public function filterByFailureMessage($failureMessage = null, $comparison = null)
+    public function filterByContent($content = null, $comparison = null)
     {
         if (null === $comparison) {
-            if (is_array($failureMessage)) {
+            if (is_array($content)) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(RequirementTableMap::COL_FAILURE_MESSAGE, $failureMessage, $comparison);
+        return $this->addUsingAlias(ResponseTableMap::COL_CONTENT, $content, $comparison);
     }
 
     /**
@@ -353,18 +353,18 @@ abstract class RequirementQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
     public function filterByElementId($elementId = null, $comparison = null)
     {
         if (is_array($elementId)) {
             $useMinMax = false;
             if (isset($elementId['min'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_ELEMENT_ID, $elementId['min'], Criteria::GREATER_EQUAL);
+                $this->addUsingAlias(ResponseTableMap::COL_ELEMENT_ID, $elementId['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
             if (isset($elementId['max'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_ELEMENT_ID, $elementId['max'], Criteria::LESS_EQUAL);
+                $this->addUsingAlias(ResponseTableMap::COL_ELEMENT_ID, $elementId['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -375,39 +375,39 @@ abstract class RequirementQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(RequirementTableMap::COL_ELEMENT_ID, $elementId, $comparison);
+        return $this->addUsingAlias(ResponseTableMap::COL_ELEMENT_ID, $elementId, $comparison);
     }
 
     /**
-     * Filter the query on the condition_id column
+     * Filter the query on the submission_id column
      *
      * Example usage:
      * <code>
-     * $query->filterByConditionId(1234); // WHERE condition_id = 1234
-     * $query->filterByConditionId(array(12, 34)); // WHERE condition_id IN (12, 34)
-     * $query->filterByConditionId(array('min' => 12)); // WHERE condition_id > 12
+     * $query->filterBySubmissionId(1234); // WHERE submission_id = 1234
+     * $query->filterBySubmissionId(array(12, 34)); // WHERE submission_id IN (12, 34)
+     * $query->filterBySubmissionId(array('min' => 12)); // WHERE submission_id > 12
      * </code>
      *
-     * @see       filterByForm()
+     * @see       filterBySubmission()
      *
-     * @param     mixed $conditionId The value to use as filter.
+     * @param     mixed $submissionId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
-    public function filterByConditionId($conditionId = null, $comparison = null)
+    public function filterBySubmissionId($submissionId = null, $comparison = null)
     {
-        if (is_array($conditionId)) {
+        if (is_array($submissionId)) {
             $useMinMax = false;
-            if (isset($conditionId['min'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $conditionId['min'], Criteria::GREATER_EQUAL);
+            if (isset($submissionId['min'])) {
+                $this->addUsingAlias(ResponseTableMap::COL_SUBMISSION_ID, $submissionId['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
-            if (isset($conditionId['max'])) {
-                $this->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $conditionId['max'], Criteria::LESS_EQUAL);
+            if (isset($submissionId['max'])) {
+                $this->addUsingAlias(ResponseTableMap::COL_SUBMISSION_ID, $submissionId['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -418,7 +418,7 @@ abstract class RequirementQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $conditionId, $comparison);
+        return $this->addUsingAlias(ResponseTableMap::COL_SUBMISSION_ID, $submissionId, $comparison);
     }
 
     /**
@@ -429,20 +429,20 @@ abstract class RequirementQuery extends ModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildRequirementQuery The current query, for fluid interface
+     * @return ChildResponseQuery The current query, for fluid interface
      */
     public function filterByElement($element, $comparison = null)
     {
         if ($element instanceof \FormsAPI\Element) {
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_ELEMENT_ID, $element->getId(), $comparison);
+                ->addUsingAlias(ResponseTableMap::COL_ELEMENT_ID, $element->getId(), $comparison);
         } elseif ($element instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
 
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_ELEMENT_ID, $element->toKeyValue('PrimaryKey', 'Id'), $comparison);
+                ->addUsingAlias(ResponseTableMap::COL_ELEMENT_ID, $element->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
             throw new PropelException('filterByElement() only accepts arguments of type \FormsAPI\Element or Collection');
         }
@@ -454,7 +454,7 @@ abstract class RequirementQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
     public function joinElement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -499,44 +499,44 @@ abstract class RequirementQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query by a related \FormsAPI\Form object
+     * Filter the query by a related \FormsAPI\Submission object
      *
-     * @param \FormsAPI\Form|ObjectCollection $form The related object(s) to use as filter
+     * @param \FormsAPI\Submission|ObjectCollection $submission The related object(s) to use as filter
      * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildRequirementQuery The current query, for fluid interface
+     * @return ChildResponseQuery The current query, for fluid interface
      */
-    public function filterByForm($form, $comparison = null)
+    public function filterBySubmission($submission, $comparison = null)
     {
-        if ($form instanceof \FormsAPI\Form) {
+        if ($submission instanceof \FormsAPI\Submission) {
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $form->getId(), $comparison);
-        } elseif ($form instanceof ObjectCollection) {
+                ->addUsingAlias(ResponseTableMap::COL_SUBMISSION_ID, $submission->getId(), $comparison);
+        } elseif ($submission instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
 
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+                ->addUsingAlias(ResponseTableMap::COL_SUBMISSION_ID, $submission->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
-            throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
+            throw new PropelException('filterBySubmission() only accepts arguments of type \FormsAPI\Submission or Collection');
         }
     }
 
     /**
-     * Adds a JOIN clause to the query using the Form relation
+     * Adds a JOIN clause to the query using the Submission relation
      *
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
-    public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinSubmission($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('Form');
+        $relationMap = $tableMap->getRelation('Submission');
 
         // create a ModelJoin object for this join
         $join = new ModelJoin();
@@ -551,14 +551,14 @@ abstract class RequirementQuery extends ModelCriteria
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
-            $this->addJoinObject($join, 'Form');
+            $this->addJoinObject($join, 'Submission');
         }
 
         return $this;
     }
 
     /**
-     * Use the Form relation Form object
+     * Use the Submission relation Submission object
      *
      * @see useQuery()
      *
@@ -566,33 +566,33 @@ abstract class RequirementQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return \FormsAPI\FormQuery A secondary query class using the current class as primary query
+     * @return \FormsAPI\SubmissionQuery A secondary query class using the current class as primary query
      */
-    public function useFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function useSubmissionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         return $this
-            ->joinForm($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'Form', '\FormsAPI\FormQuery');
+            ->joinSubmission($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Submission', '\FormsAPI\SubmissionQuery');
     }
 
     /**
      * Exclude object from result
      *
-     * @param   ChildRequirement $requirement Object to remove from the list of results
+     * @param   ChildResponse $response Object to remove from the list of results
      *
-     * @return $this|ChildRequirementQuery The current query, for fluid interface
+     * @return $this|ChildResponseQuery The current query, for fluid interface
      */
-    public function prune($requirement = null)
+    public function prune($response = null)
     {
-        if ($requirement) {
-            $this->addUsingAlias(RequirementTableMap::COL_ID, $requirement->getId(), Criteria::NOT_EQUAL);
+        if ($response) {
+            $this->addUsingAlias(ResponseTableMap::COL_ID, $response->getId(), Criteria::NOT_EQUAL);
         }
 
         return $this;
     }
 
     /**
-     * Deletes all rows from the requirement table.
+     * Deletes all rows from the response table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
@@ -600,7 +600,7 @@ abstract class RequirementQuery extends ModelCriteria
     public function doDeleteAll(ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ResponseTableMap::DATABASE_NAME);
         }
 
         // use transaction because $criteria could contain info
@@ -611,8 +611,8 @@ abstract class RequirementQuery extends ModelCriteria
             // Because this db requires some delete cascade/set null emulation, we have to
             // clear the cached instance *after* the emulation has happened (since
             // instances get re-added by the select statement contained therein).
-            RequirementTableMap::clearInstancePool();
-            RequirementTableMap::clearRelatedInstancePool();
+            ResponseTableMap::clearInstancePool();
+            ResponseTableMap::clearRelatedInstancePool();
 
             return $affectedRows;
         });
@@ -630,26 +630,26 @@ abstract class RequirementQuery extends ModelCriteria
     public function delete(ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ResponseTableMap::DATABASE_NAME);
         }
 
         $criteria = $this;
 
         // Set the correct dbName
-        $criteria->setDbName(RequirementTableMap::DATABASE_NAME);
+        $criteria->setDbName(ResponseTableMap::DATABASE_NAME);
 
         // use transaction because $criteria could contain info
         // for more than one table or we could emulating ON DELETE CASCADE, etc.
         return $con->transaction(function () use ($con, $criteria) {
             $affectedRows = 0; // initialize var to track total num of affected rows
 
-            RequirementTableMap::removeInstanceFromPool($criteria);
+            ResponseTableMap::removeInstanceFromPool($criteria);
 
             $affectedRows += ModelCriteria::delete($con);
-            RequirementTableMap::clearRelatedInstancePool();
+            ResponseTableMap::clearRelatedInstancePool();
 
             return $affectedRows;
         });
     }
 
-} // RequirementQuery
+} // ResponseQuery

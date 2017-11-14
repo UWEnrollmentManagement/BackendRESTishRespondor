@@ -4,7 +4,11 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Submission as ChildSubmission;
+use FormsAPI\SubmissionQuery as ChildSubmissionQuery;
 use FormsAPI\SubmissionTagQuery as ChildSubmissionTagQuery;
+use FormsAPI\Tag as ChildTag;
+use FormsAPI\TagQuery as ChildTagQuery;
 use FormsAPI\Map\SubmissionTagTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -89,6 +93,16 @@ abstract class SubmissionTag implements ActiveRecordInterface
      * @var        int
      */
     protected $tag_id;
+
+    /**
+     * @var        ChildSubmission
+     */
+    protected $aSubmission;
+
+    /**
+     * @var        ChildTag
+     */
+    protected $aTag;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -407,6 +421,10 @@ abstract class SubmissionTag implements ActiveRecordInterface
             $this->modifiedColumns[SubmissionTagTableMap::COL_SUBMISSION_ID] = true;
         }
 
+        if ($this->aSubmission !== null && $this->aSubmission->getId() !== $v) {
+            $this->aSubmission = null;
+        }
+
         return $this;
     } // setSubmissionId()
 
@@ -425,6 +443,10 @@ abstract class SubmissionTag implements ActiveRecordInterface
         if ($this->tag_id !== $v) {
             $this->tag_id = $v;
             $this->modifiedColumns[SubmissionTagTableMap::COL_TAG_ID] = true;
+        }
+
+        if ($this->aTag !== null && $this->aTag->getId() !== $v) {
+            $this->aTag = null;
         }
 
         return $this;
@@ -504,6 +526,12 @@ abstract class SubmissionTag implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aSubmission !== null && $this->submission_id !== $this->aSubmission->getId()) {
+            $this->aSubmission = null;
+        }
+        if ($this->aTag !== null && $this->tag_id !== $this->aTag->getId()) {
+            $this->aTag = null;
+        }
     } // ensureConsistency
 
     /**
@@ -543,6 +571,8 @@ abstract class SubmissionTag implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aSubmission = null;
+            $this->aTag = null;
         } // if (deep)
     }
 
@@ -645,6 +675,25 @@ abstract class SubmissionTag implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aSubmission !== null) {
+                if ($this->aSubmission->isModified() || $this->aSubmission->isNew()) {
+                    $affectedRows += $this->aSubmission->save($con);
+                }
+                $this->setSubmission($this->aSubmission);
+            }
+
+            if ($this->aTag !== null) {
+                if ($this->aTag->isModified() || $this->aTag->isNew()) {
+                    $affectedRows += $this->aTag->save($con);
+                }
+                $this->setTag($this->aTag);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -800,10 +849,11 @@ abstract class SubmissionTag implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['SubmissionTag'][$this->hashCode()])) {
@@ -821,6 +871,38 @@ abstract class SubmissionTag implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aSubmission) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submission';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submission';
+                        break;
+                    default:
+                        $key = 'Submission';
+                }
+
+                $result[$key] = $this->aSubmission->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aTag) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'tag';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'tag';
+                        break;
+                    default:
+                        $key = 'Tag';
+                }
+
+                $result[$key] = $this->aTag->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -1065,12 +1147,120 @@ abstract class SubmissionTag implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildSubmission object.
+     *
+     * @param  ChildSubmission $v
+     * @return $this|\FormsAPI\SubmissionTag The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setSubmission(ChildSubmission $v = null)
+    {
+        if ($v === null) {
+            $this->setSubmissionId(NULL);
+        } else {
+            $this->setSubmissionId($v->getId());
+        }
+
+        $this->aSubmission = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildSubmission object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSubmissionTag($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildSubmission object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildSubmission The associated ChildSubmission object.
+     * @throws PropelException
+     */
+    public function getSubmission(ConnectionInterface $con = null)
+    {
+        if ($this->aSubmission === null && ($this->submission_id != 0)) {
+            $this->aSubmission = ChildSubmissionQuery::create()->findPk($this->submission_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aSubmission->addSubmissionTags($this);
+             */
+        }
+
+        return $this->aSubmission;
+    }
+
+    /**
+     * Declares an association between this object and a ChildTag object.
+     *
+     * @param  ChildTag $v
+     * @return $this|\FormsAPI\SubmissionTag The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setTag(ChildTag $v = null)
+    {
+        if ($v === null) {
+            $this->setTagId(NULL);
+        } else {
+            $this->setTagId($v->getId());
+        }
+
+        $this->aTag = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildTag object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSubmissionTag($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildTag object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildTag The associated ChildTag object.
+     * @throws PropelException
+     */
+    public function getTag(ConnectionInterface $con = null)
+    {
+        if ($this->aTag === null && ($this->tag_id != 0)) {
+            $this->aTag = ChildTagQuery::create()->findPk($this->tag_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aTag->addSubmissionTags($this);
+             */
+        }
+
+        return $this->aTag;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aSubmission) {
+            $this->aSubmission->removeSubmissionTag($this);
+        }
+        if (null !== $this->aTag) {
+            $this->aTag->removeSubmissionTag($this);
+        }
         $this->id = null;
         $this->submission_id = null;
         $this->tag_id = null;
@@ -1094,6 +1284,8 @@ abstract class SubmissionTag implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aSubmission = null;
+        $this->aTag = null;
     }
 
     /**
@@ -1143,6 +1335,23 @@ abstract class SubmissionTag implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aSubmission, 'validate')) {
+                if (!$this->aSubmission->validate($validator)) {
+                    $failureMap->addAll($this->aSubmission->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aTag, 'validate')) {
+                if (!$this->aTag->validate($validator)) {
+                    $failureMap->addAll($this->aTag->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

@@ -4,7 +4,11 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Condition as ChildCondition;
+use FormsAPI\ConditionQuery as ChildConditionQuery;
 use FormsAPI\DependencyQuery as ChildDependencyQuery;
+use FormsAPI\Element as ChildElement;
+use FormsAPI\ElementQuery as ChildElementQuery;
 use FormsAPI\Map\DependencyTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -96,6 +100,21 @@ abstract class Dependency implements ActiveRecordInterface
      * @var        int
      */
     protected $condition_id;
+
+    /**
+     * @var        ChildElement
+     */
+    protected $aElement;
+
+    /**
+     * @var        ChildElement
+     */
+    protected $aSlave;
+
+    /**
+     * @var        ChildCondition
+     */
+    protected $aCondition;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -424,6 +443,10 @@ abstract class Dependency implements ActiveRecordInterface
             $this->modifiedColumns[DependencyTableMap::COL_ELEMENT_ID] = true;
         }
 
+        if ($this->aElement !== null && $this->aElement->getId() !== $v) {
+            $this->aElement = null;
+        }
+
         return $this;
     } // setElementId()
 
@@ -444,6 +467,10 @@ abstract class Dependency implements ActiveRecordInterface
             $this->modifiedColumns[DependencyTableMap::COL_SLAVE_ID] = true;
         }
 
+        if ($this->aSlave !== null && $this->aSlave->getId() !== $v) {
+            $this->aSlave = null;
+        }
+
         return $this;
     } // setSlaveId()
 
@@ -462,6 +489,10 @@ abstract class Dependency implements ActiveRecordInterface
         if ($this->condition_id !== $v) {
             $this->condition_id = $v;
             $this->modifiedColumns[DependencyTableMap::COL_CONDITION_ID] = true;
+        }
+
+        if ($this->aCondition !== null && $this->aCondition->getId() !== $v) {
+            $this->aCondition = null;
         }
 
         return $this;
@@ -544,6 +575,15 @@ abstract class Dependency implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aElement !== null && $this->element_id !== $this->aElement->getId()) {
+            $this->aElement = null;
+        }
+        if ($this->aSlave !== null && $this->slave_id !== $this->aSlave->getId()) {
+            $this->aSlave = null;
+        }
+        if ($this->aCondition !== null && $this->condition_id !== $this->aCondition->getId()) {
+            $this->aCondition = null;
+        }
     } // ensureConsistency
 
     /**
@@ -583,6 +623,9 @@ abstract class Dependency implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aElement = null;
+            $this->aSlave = null;
+            $this->aCondition = null;
         } // if (deep)
     }
 
@@ -685,6 +728,32 @@ abstract class Dependency implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aElement !== null) {
+                if ($this->aElement->isModified() || $this->aElement->isNew()) {
+                    $affectedRows += $this->aElement->save($con);
+                }
+                $this->setElement($this->aElement);
+            }
+
+            if ($this->aSlave !== null) {
+                if ($this->aSlave->isModified() || $this->aSlave->isNew()) {
+                    $affectedRows += $this->aSlave->save($con);
+                }
+                $this->setSlave($this->aSlave);
+            }
+
+            if ($this->aCondition !== null) {
+                if ($this->aCondition->isModified() || $this->aCondition->isNew()) {
+                    $affectedRows += $this->aCondition->save($con);
+                }
+                $this->setCondition($this->aCondition);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -849,10 +918,11 @@ abstract class Dependency implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Dependency'][$this->hashCode()])) {
@@ -871,6 +941,53 @@ abstract class Dependency implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aElement) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'element';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'element';
+                        break;
+                    default:
+                        $key = 'Element';
+                }
+
+                $result[$key] = $this->aElement->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aSlave) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'element';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'element';
+                        break;
+                    default:
+                        $key = 'Slave';
+                }
+
+                $result[$key] = $this->aSlave->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aCondition) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'condition';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'condition';
+                        break;
+                    default:
+                        $key = 'Condition';
+                }
+
+                $result[$key] = $this->aCondition->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -1125,12 +1242,174 @@ abstract class Dependency implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildElement object.
+     *
+     * @param  ChildElement $v
+     * @return $this|\FormsAPI\Dependency The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setElement(ChildElement $v = null)
+    {
+        if ($v === null) {
+            $this->setElementId(NULL);
+        } else {
+            $this->setElementId($v->getId());
+        }
+
+        $this->aElement = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildElement object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsMaster($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildElement object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildElement The associated ChildElement object.
+     * @throws PropelException
+     */
+    public function getElement(ConnectionInterface $con = null)
+    {
+        if ($this->aElement === null && ($this->element_id != 0)) {
+            $this->aElement = ChildElementQuery::create()->findPk($this->element_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aElement->addAsMasters($this);
+             */
+        }
+
+        return $this->aElement;
+    }
+
+    /**
+     * Declares an association between this object and a ChildElement object.
+     *
+     * @param  ChildElement $v
+     * @return $this|\FormsAPI\Dependency The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setSlave(ChildElement $v = null)
+    {
+        if ($v === null) {
+            $this->setSlaveId(NULL);
+        } else {
+            $this->setSlaveId($v->getId());
+        }
+
+        $this->aSlave = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildElement object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsSlave($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildElement object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildElement The associated ChildElement object.
+     * @throws PropelException
+     */
+    public function getSlave(ConnectionInterface $con = null)
+    {
+        if ($this->aSlave === null && ($this->slave_id != 0)) {
+            $this->aSlave = ChildElementQuery::create()->findPk($this->slave_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aSlave->addAsSlaves($this);
+             */
+        }
+
+        return $this->aSlave;
+    }
+
+    /**
+     * Declares an association between this object and a ChildCondition object.
+     *
+     * @param  ChildCondition $v
+     * @return $this|\FormsAPI\Dependency The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setCondition(ChildCondition $v = null)
+    {
+        if ($v === null) {
+            $this->setConditionId(NULL);
+        } else {
+            $this->setConditionId($v->getId());
+        }
+
+        $this->aCondition = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildCondition object, it will not be re-added.
+        if ($v !== null) {
+            $v->addDependency($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildCondition object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildCondition The associated ChildCondition object.
+     * @throws PropelException
+     */
+    public function getCondition(ConnectionInterface $con = null)
+    {
+        if ($this->aCondition === null && ($this->condition_id != 0)) {
+            $this->aCondition = ChildConditionQuery::create()->findPk($this->condition_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aCondition->addDependencies($this);
+             */
+        }
+
+        return $this->aCondition;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aElement) {
+            $this->aElement->removeAsMaster($this);
+        }
+        if (null !== $this->aSlave) {
+            $this->aSlave->removeAsSlave($this);
+        }
+        if (null !== $this->aCondition) {
+            $this->aCondition->removeDependency($this);
+        }
         $this->id = null;
         $this->element_id = null;
         $this->slave_id = null;
@@ -1155,6 +1434,9 @@ abstract class Dependency implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aElement = null;
+        $this->aSlave = null;
+        $this->aCondition = null;
     }
 
     /**
@@ -1205,6 +1487,29 @@ abstract class Dependency implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aElement, 'validate')) {
+                if (!$this->aElement->validate($validator)) {
+                    $failureMap->addAll($this->aElement->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aSlave, 'validate')) {
+                if (!$this->aSlave->validate($validator)) {
+                    $failureMap->addAll($this->aSlave->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aCondition, 'validate')) {
+                if (!$this->aCondition->validate($validator)) {
+                    $failureMap->addAll($this->aCondition->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

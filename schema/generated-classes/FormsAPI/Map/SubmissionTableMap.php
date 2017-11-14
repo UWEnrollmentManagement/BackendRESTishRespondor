@@ -77,6 +77,11 @@ class SubmissionTableMap extends TableMap
     const COL_ID = 'submission.id';
 
     /**
+     * the column name for the submitted field
+     */
+    const COL_SUBMITTED = 'submission.submitted';
+
+    /**
      * the column name for the visitor_id field
      */
     const COL_VISITOR_ID = 'submission.visitor_id';
@@ -102,11 +107,6 @@ class SubmissionTableMap extends TableMap
     const COL_PARENT_ID = 'submission.parent_id';
 
     /**
-     * the column name for the submitted field
-     */
-    const COL_SUBMITTED = 'submission.submitted';
-
-    /**
      * The default string format for model objects of the related table
      */
     const DEFAULT_STRING_FORMAT = 'YAML';
@@ -118,10 +118,10 @@ class SubmissionTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'VisitorId', 'FormId', 'StatusId', 'AssigneeId', 'ParentId', 'Submitted', ),
-        self::TYPE_CAMELNAME     => array('id', 'visitorId', 'formId', 'statusId', 'assigneeId', 'parentId', 'submitted', ),
-        self::TYPE_COLNAME       => array(SubmissionTableMap::COL_ID, SubmissionTableMap::COL_VISITOR_ID, SubmissionTableMap::COL_FORM_ID, SubmissionTableMap::COL_STATUS_ID, SubmissionTableMap::COL_ASSIGNEE_ID, SubmissionTableMap::COL_PARENT_ID, SubmissionTableMap::COL_SUBMITTED, ),
-        self::TYPE_FIELDNAME     => array('id', 'visitor_id', 'form_id', 'status_id', 'assignee_id', 'parent_id', 'submitted', ),
+        self::TYPE_PHPNAME       => array('Id', 'Submitted', 'VisitorId', 'FormId', 'StatusId', 'AssigneeId', 'ParentId', ),
+        self::TYPE_CAMELNAME     => array('id', 'submitted', 'visitorId', 'formId', 'statusId', 'assigneeId', 'parentId', ),
+        self::TYPE_COLNAME       => array(SubmissionTableMap::COL_ID, SubmissionTableMap::COL_SUBMITTED, SubmissionTableMap::COL_VISITOR_ID, SubmissionTableMap::COL_FORM_ID, SubmissionTableMap::COL_STATUS_ID, SubmissionTableMap::COL_ASSIGNEE_ID, SubmissionTableMap::COL_PARENT_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'submitted', 'visitor_id', 'form_id', 'status_id', 'assignee_id', 'parent_id', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
     );
 
@@ -132,10 +132,10 @@ class SubmissionTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'VisitorId' => 1, 'FormId' => 2, 'StatusId' => 3, 'AssigneeId' => 4, 'ParentId' => 5, 'Submitted' => 6, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'visitorId' => 1, 'formId' => 2, 'statusId' => 3, 'assigneeId' => 4, 'parentId' => 5, 'submitted' => 6, ),
-        self::TYPE_COLNAME       => array(SubmissionTableMap::COL_ID => 0, SubmissionTableMap::COL_VISITOR_ID => 1, SubmissionTableMap::COL_FORM_ID => 2, SubmissionTableMap::COL_STATUS_ID => 3, SubmissionTableMap::COL_ASSIGNEE_ID => 4, SubmissionTableMap::COL_PARENT_ID => 5, SubmissionTableMap::COL_SUBMITTED => 6, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'visitor_id' => 1, 'form_id' => 2, 'status_id' => 3, 'assignee_id' => 4, 'parent_id' => 5, 'submitted' => 6, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Submitted' => 1, 'VisitorId' => 2, 'FormId' => 3, 'StatusId' => 4, 'AssigneeId' => 5, 'ParentId' => 6, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'submitted' => 1, 'visitorId' => 2, 'formId' => 3, 'statusId' => 4, 'assigneeId' => 5, 'parentId' => 6, ),
+        self::TYPE_COLNAME       => array(SubmissionTableMap::COL_ID => 0, SubmissionTableMap::COL_SUBMITTED => 1, SubmissionTableMap::COL_VISITOR_ID => 2, SubmissionTableMap::COL_FORM_ID => 3, SubmissionTableMap::COL_STATUS_ID => 4, SubmissionTableMap::COL_ASSIGNEE_ID => 5, SubmissionTableMap::COL_PARENT_ID => 6, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'submitted' => 1, 'visitor_id' => 2, 'form_id' => 3, 'status_id' => 4, 'assignee_id' => 5, 'parent_id' => 6, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
     );
 
@@ -157,12 +157,12 @@ class SubmissionTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('visitor_id', 'VisitorId', 'INTEGER', true, null, null);
-        $this->addColumn('form_id', 'FormId', 'INTEGER', true, null, null);
-        $this->addColumn('status_id', 'StatusId', 'INTEGER', false, null, null);
-        $this->addColumn('assignee_id', 'AssigneeId', 'INTEGER', false, null, null);
-        $this->addColumn('parent_id', 'ParentId', 'INTEGER', false, null, null);
         $this->addColumn('submitted', 'Submitted', 'TIMESTAMP', false, null, null);
+        $this->addForeignKey('visitor_id', 'VisitorId', 'INTEGER', 'visitor', 'id', true, null, null);
+        $this->addForeignKey('form_id', 'FormId', 'INTEGER', 'form', 'id', true, null, null);
+        $this->addForeignKey('status_id', 'StatusId', 'INTEGER', 'status', 'id', false, null, null);
+        $this->addForeignKey('assignee_id', 'AssigneeId', 'INTEGER', 'visitor', 'id', false, null, null);
+        $this->addForeignKey('parent_id', 'ParentId', 'INTEGER', 'submission', 'id', false, null, null);
     } // initialize()
 
     /**
@@ -170,6 +170,62 @@ class SubmissionTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Visitor', '\\FormsAPI\\Visitor', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':visitor_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Status', '\\FormsAPI\\Status', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':status_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, null, false);
+        $this->addRelation('Assignee', '\\FormsAPI\\Visitor', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':assignee_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, null, false);
+        $this->addRelation('SubmissionRelatedByParentId', '\\FormsAPI\\Submission', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':parent_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, null, false);
+        $this->addRelation('Response', '\\FormsAPI\\Response', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':submission_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Responses', false);
+        $this->addRelation('AsParent', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':parent_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, 'AsParents', false);
+        $this->addRelation('SubmissionTag', '\\FormsAPI\\SubmissionTag', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':submission_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'SubmissionTags', false);
     } // buildRelations()
 
     /**
@@ -184,6 +240,17 @@ class SubmissionTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'form_id','validator' => 'NotNull',), 'rule2' => array ('column' => 'visitor_id','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to submission     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        ResponseTableMap::clearInstancePool();
+        SubmissionTableMap::clearInstancePool();
+        SubmissionTagTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
@@ -327,20 +394,20 @@ class SubmissionTableMap extends TableMap
     {
         if (null === $alias) {
             $criteria->addSelectColumn(SubmissionTableMap::COL_ID);
+            $criteria->addSelectColumn(SubmissionTableMap::COL_SUBMITTED);
             $criteria->addSelectColumn(SubmissionTableMap::COL_VISITOR_ID);
             $criteria->addSelectColumn(SubmissionTableMap::COL_FORM_ID);
             $criteria->addSelectColumn(SubmissionTableMap::COL_STATUS_ID);
             $criteria->addSelectColumn(SubmissionTableMap::COL_ASSIGNEE_ID);
             $criteria->addSelectColumn(SubmissionTableMap::COL_PARENT_ID);
-            $criteria->addSelectColumn(SubmissionTableMap::COL_SUBMITTED);
         } else {
             $criteria->addSelectColumn($alias . '.id');
+            $criteria->addSelectColumn($alias . '.submitted');
             $criteria->addSelectColumn($alias . '.visitor_id');
             $criteria->addSelectColumn($alias . '.form_id');
             $criteria->addSelectColumn($alias . '.status_id');
             $criteria->addSelectColumn($alias . '.assignee_id');
             $criteria->addSelectColumn($alias . '.parent_id');
-            $criteria->addSelectColumn($alias . '.submitted');
         }
     }
 

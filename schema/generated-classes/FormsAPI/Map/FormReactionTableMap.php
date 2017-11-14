@@ -137,8 +137,8 @@ class FormReactionTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('reaction_id', 'ReactionId', 'INTEGER', true, null, null);
-        $this->addColumn('form_id', 'FormId', 'INTEGER', true, null, null);
+        $this->addForeignKey('reaction_id', 'ReactionId', 'INTEGER', 'reaction', 'id', true, null, null);
+        $this->addForeignKey('form_id', 'FormId', 'INTEGER', 'form', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -146,6 +146,20 @@ class FormReactionTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Reaction', '\\FormsAPI\\Reaction', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':reaction_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**

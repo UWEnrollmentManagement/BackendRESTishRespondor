@@ -10,6 +10,7 @@ use FormsAPI\Map\DependencyTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -36,6 +37,38 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildDependencyQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildDependencyQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildDependencyQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildDependencyQuery leftJoinElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Element relation
+ * @method     ChildDependencyQuery rightJoinElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Element relation
+ * @method     ChildDependencyQuery innerJoinElement($relationAlias = null) Adds a INNER JOIN clause to the query using the Element relation
+ *
+ * @method     ChildDependencyQuery joinWithElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Element relation
+ *
+ * @method     ChildDependencyQuery leftJoinWithElement() Adds a LEFT JOIN clause and with to the query using the Element relation
+ * @method     ChildDependencyQuery rightJoinWithElement() Adds a RIGHT JOIN clause and with to the query using the Element relation
+ * @method     ChildDependencyQuery innerJoinWithElement() Adds a INNER JOIN clause and with to the query using the Element relation
+ *
+ * @method     ChildDependencyQuery leftJoinSlave($relationAlias = null) Adds a LEFT JOIN clause to the query using the Slave relation
+ * @method     ChildDependencyQuery rightJoinSlave($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Slave relation
+ * @method     ChildDependencyQuery innerJoinSlave($relationAlias = null) Adds a INNER JOIN clause to the query using the Slave relation
+ *
+ * @method     ChildDependencyQuery joinWithSlave($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Slave relation
+ *
+ * @method     ChildDependencyQuery leftJoinWithSlave() Adds a LEFT JOIN clause and with to the query using the Slave relation
+ * @method     ChildDependencyQuery rightJoinWithSlave() Adds a RIGHT JOIN clause and with to the query using the Slave relation
+ * @method     ChildDependencyQuery innerJoinWithSlave() Adds a INNER JOIN clause and with to the query using the Slave relation
+ *
+ * @method     ChildDependencyQuery leftJoinCondition($relationAlias = null) Adds a LEFT JOIN clause to the query using the Condition relation
+ * @method     ChildDependencyQuery rightJoinCondition($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Condition relation
+ * @method     ChildDependencyQuery innerJoinCondition($relationAlias = null) Adds a INNER JOIN clause to the query using the Condition relation
+ *
+ * @method     ChildDependencyQuery joinWithCondition($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Condition relation
+ *
+ * @method     ChildDependencyQuery leftJoinWithCondition() Adds a LEFT JOIN clause and with to the query using the Condition relation
+ * @method     ChildDependencyQuery rightJoinWithCondition() Adds a RIGHT JOIN clause and with to the query using the Condition relation
+ * @method     ChildDependencyQuery innerJoinWithCondition() Adds a INNER JOIN clause and with to the query using the Condition relation
+ *
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\ConditionQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildDependency findOne(ConnectionInterface $con = null) Return the first ChildDependency matching the query
  * @method     ChildDependency findOneOrCreate(ConnectionInterface $con = null) Return the first ChildDependency matching the query, or a new ChildDependency object populated from the query conditions when no match is found
@@ -297,6 +330,8 @@ abstract class DependencyQuery extends ModelCriteria
      * $query->filterByElementId(array('min' => 12)); // WHERE element_id > 12
      * </code>
      *
+     * @see       filterByElement()
+     *
      * @param     mixed $elementId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -337,6 +372,8 @@ abstract class DependencyQuery extends ModelCriteria
      * $query->filterBySlaveId(array(12, 34)); // WHERE slave_id IN (12, 34)
      * $query->filterBySlaveId(array('min' => 12)); // WHERE slave_id > 12
      * </code>
+     *
+     * @see       filterBySlave()
      *
      * @param     mixed $slaveId The value to use as filter.
      *              Use scalar values for equality.
@@ -379,6 +416,8 @@ abstract class DependencyQuery extends ModelCriteria
      * $query->filterByConditionId(array('min' => 12)); // WHERE condition_id > 12
      * </code>
      *
+     * @see       filterByCondition()
+     *
      * @param     mixed $conditionId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -408,6 +447,237 @@ abstract class DependencyQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(DependencyTableMap::COL_CONDITION_ID, $conditionId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Element object
+     *
+     * @param \FormsAPI\Element|ObjectCollection $element The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildDependencyQuery The current query, for fluid interface
+     */
+    public function filterByElement($element, $comparison = null)
+    {
+        if ($element instanceof \FormsAPI\Element) {
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_ELEMENT_ID, $element->getId(), $comparison);
+        } elseif ($element instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_ELEMENT_ID, $element->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByElement() only accepts arguments of type \FormsAPI\Element or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Element relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildDependencyQuery The current query, for fluid interface
+     */
+    public function joinElement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Element');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Element');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Element relation Element object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ElementQuery A secondary query class using the current class as primary query
+     */
+    public function useElementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinElement($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Element', '\FormsAPI\ElementQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Element object
+     *
+     * @param \FormsAPI\Element|ObjectCollection $element The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildDependencyQuery The current query, for fluid interface
+     */
+    public function filterBySlave($element, $comparison = null)
+    {
+        if ($element instanceof \FormsAPI\Element) {
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_SLAVE_ID, $element->getId(), $comparison);
+        } elseif ($element instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_SLAVE_ID, $element->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterBySlave() only accepts arguments of type \FormsAPI\Element or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Slave relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildDependencyQuery The current query, for fluid interface
+     */
+    public function joinSlave($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Slave');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Slave');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Slave relation Element object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ElementQuery A secondary query class using the current class as primary query
+     */
+    public function useSlaveQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSlave($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Slave', '\FormsAPI\ElementQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Condition object
+     *
+     * @param \FormsAPI\Condition|ObjectCollection $condition The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildDependencyQuery The current query, for fluid interface
+     */
+    public function filterByCondition($condition, $comparison = null)
+    {
+        if ($condition instanceof \FormsAPI\Condition) {
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_CONDITION_ID, $condition->getId(), $comparison);
+        } elseif ($condition instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(DependencyTableMap::COL_CONDITION_ID, $condition->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByCondition() only accepts arguments of type \FormsAPI\Condition or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Condition relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildDependencyQuery The current query, for fluid interface
+     */
+    public function joinCondition($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Condition');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Condition');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Condition relation Condition object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ConditionQuery A secondary query class using the current class as primary query
+     */
+    public function useConditionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinCondition($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Condition', '\FormsAPI\ConditionQuery');
     }
 
     /**

@@ -137,8 +137,8 @@ class ElementChoiceTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('element_id', 'ElementId', 'INTEGER', true, null, null);
-        $this->addColumn('choice_id', 'ChoiceId', 'INTEGER', true, null, null);
+        $this->addForeignKey('element_id', 'ElementId', 'INTEGER', 'element', 'id', true, null, null);
+        $this->addForeignKey('choice_id', 'ChoiceId', 'INTEGER', 'choice_value', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -146,6 +146,20 @@ class ElementChoiceTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Element', '\\FormsAPI\\Element', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('ChoiceValue', '\\FormsAPI\\ChoiceValue', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':choice_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**

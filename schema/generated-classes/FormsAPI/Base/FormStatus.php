@@ -4,12 +4,12 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
-use FormsAPI\Element as ChildElement;
-use FormsAPI\ElementQuery as ChildElementQuery;
 use FormsAPI\Form as ChildForm;
 use FormsAPI\FormQuery as ChildFormQuery;
-use FormsAPI\RequirementQuery as ChildRequirementQuery;
-use FormsAPI\Map\RequirementTableMap;
+use FormsAPI\FormStatusQuery as ChildFormStatusQuery;
+use FormsAPI\Status as ChildStatus;
+use FormsAPI\StatusQuery as ChildStatusQuery;
+use FormsAPI\Map\FormStatusTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -33,18 +33,18 @@ use Symfony\Component\Validator\Validator\RecursiveValidator;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Base class that represents a row from the 'requirement' table.
+ * Base class that represents a row from the 'form_status' table.
  *
  *
  *
  * @package    propel.generator.FormsAPI.Base
  */
-abstract class Requirement implements ActiveRecordInterface
+abstract class FormStatus implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      */
-    const TABLE_MAP = '\\FormsAPI\\Map\\RequirementTableMap';
+    const TABLE_MAP = '\\FormsAPI\\Map\\FormStatusTableMap';
 
 
     /**
@@ -81,35 +81,35 @@ abstract class Requirement implements ActiveRecordInterface
     protected $id;
 
     /**
-     * The value for the failure_message field.
+     * The value for the message field.
      *
      * @var        string
      */
-    protected $failure_message;
+    protected $message;
 
     /**
-     * The value for the element_id field.
+     * The value for the form_id field.
      *
      * @var        int
      */
-    protected $element_id;
+    protected $form_id;
 
     /**
-     * The value for the condition_id field.
+     * The value for the status_id field.
      *
      * @var        int
      */
-    protected $condition_id;
-
-    /**
-     * @var        ChildElement
-     */
-    protected $aElement;
+    protected $status_id;
 
     /**
      * @var        ChildForm
      */
     protected $aForm;
+
+    /**
+     * @var        ChildStatus
+     */
+    protected $aStatus;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -137,7 +137,7 @@ abstract class Requirement implements ActiveRecordInterface
     protected $validationFailures;
 
     /**
-     * Initializes internal state of FormsAPI\Base\Requirement object.
+     * Initializes internal state of FormsAPI\Base\FormStatus object.
      */
     public function __construct()
     {
@@ -232,9 +232,9 @@ abstract class Requirement implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>Requirement</code> instance.  If
-     * <code>obj</code> is an instance of <code>Requirement</code>, delegates to
-     * <code>equals(Requirement)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>FormStatus</code> instance.  If
+     * <code>obj</code> is an instance of <code>FormStatus</code>, delegates to
+     * <code>equals(FormStatus)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param  mixed   $obj The object to compare to.
      * @return boolean Whether equal to the object specified.
@@ -300,7 +300,7 @@ abstract class Requirement implements ActiveRecordInterface
      * @param string $name  The virtual column name
      * @param mixed  $value The value to give to the virtual column
      *
-     * @return $this|Requirement The current object, for fluid interface
+     * @return $this|FormStatus The current object, for fluid interface
      */
     public function setVirtualColumn($name, $value)
     {
@@ -372,40 +372,40 @@ abstract class Requirement implements ActiveRecordInterface
     }
 
     /**
-     * Get the [failure_message] column value.
+     * Get the [message] column value.
      *
      * @return string
      */
-    public function getFailureMessage()
+    public function getMessage()
     {
-        return $this->failure_message;
+        return $this->message;
     }
 
     /**
-     * Get the [element_id] column value.
+     * Get the [form_id] column value.
      *
      * @return int
      */
-    public function getElementId()
+    public function getFormId()
     {
-        return $this->element_id;
+        return $this->form_id;
     }
 
     /**
-     * Get the [condition_id] column value.
+     * Get the [status_id] column value.
      *
      * @return int
      */
-    public function getConditionId()
+    public function getStatusId()
     {
-        return $this->condition_id;
+        return $this->status_id;
     }
 
     /**
      * Set the value of [id] column.
      *
      * @param int $v new value
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
      */
     public function setId($v)
     {
@@ -415,71 +415,47 @@ abstract class Requirement implements ActiveRecordInterface
 
         if ($this->id !== $v) {
             $this->id = $v;
-            $this->modifiedColumns[RequirementTableMap::COL_ID] = true;
+            $this->modifiedColumns[FormStatusTableMap::COL_ID] = true;
         }
 
         return $this;
     } // setId()
 
     /**
-     * Set the value of [failure_message] column.
+     * Set the value of [message] column.
      *
      * @param string $v new value
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
      */
-    public function setFailureMessage($v)
+    public function setMessage($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->failure_message !== $v) {
-            $this->failure_message = $v;
-            $this->modifiedColumns[RequirementTableMap::COL_FAILURE_MESSAGE] = true;
+        if ($this->message !== $v) {
+            $this->message = $v;
+            $this->modifiedColumns[FormStatusTableMap::COL_MESSAGE] = true;
         }
 
         return $this;
-    } // setFailureMessage()
+    } // setMessage()
 
     /**
-     * Set the value of [element_id] column.
+     * Set the value of [form_id] column.
      *
      * @param int $v new value
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
      */
-    public function setElementId($v)
+    public function setFormId($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->element_id !== $v) {
-            $this->element_id = $v;
-            $this->modifiedColumns[RequirementTableMap::COL_ELEMENT_ID] = true;
-        }
-
-        if ($this->aElement !== null && $this->aElement->getId() !== $v) {
-            $this->aElement = null;
-        }
-
-        return $this;
-    } // setElementId()
-
-    /**
-     * Set the value of [condition_id] column.
-     *
-     * @param int $v new value
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
-     */
-    public function setConditionId($v)
-    {
-        if ($v !== null) {
-            $v = (int) $v;
-        }
-
-        if ($this->condition_id !== $v) {
-            $this->condition_id = $v;
-            $this->modifiedColumns[RequirementTableMap::COL_CONDITION_ID] = true;
+        if ($this->form_id !== $v) {
+            $this->form_id = $v;
+            $this->modifiedColumns[FormStatusTableMap::COL_FORM_ID] = true;
         }
 
         if ($this->aForm !== null && $this->aForm->getId() !== $v) {
@@ -487,7 +463,31 @@ abstract class Requirement implements ActiveRecordInterface
         }
 
         return $this;
-    } // setConditionId()
+    } // setFormId()
+
+    /**
+     * Set the value of [status_id] column.
+     *
+     * @param int $v new value
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
+     */
+    public function setStatusId($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->status_id !== $v) {
+            $this->status_id = $v;
+            $this->modifiedColumns[FormStatusTableMap::COL_STATUS_ID] = true;
+        }
+
+        if ($this->aStatus !== null && $this->aStatus->getId() !== $v) {
+            $this->aStatus = null;
+        }
+
+        return $this;
+    } // setStatusId()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -525,17 +525,17 @@ abstract class Requirement implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : RequirementTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : FormStatusTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : RequirementTableMap::translateFieldName('FailureMessage', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->failure_message = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : FormStatusTableMap::translateFieldName('Message', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->message = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RequirementTableMap::translateFieldName('ElementId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->element_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : FormStatusTableMap::translateFieldName('FormId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->form_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : RequirementTableMap::translateFieldName('ConditionId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->condition_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : FormStatusTableMap::translateFieldName('StatusId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->status_id = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -544,10 +544,10 @@ abstract class Requirement implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 4; // 4 = RequirementTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 4; // 4 = FormStatusTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\Requirement'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\FormStatus'), 0, $e);
         }
     }
 
@@ -566,11 +566,11 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
-        if ($this->aElement !== null && $this->element_id !== $this->aElement->getId()) {
-            $this->aElement = null;
-        }
-        if ($this->aForm !== null && $this->condition_id !== $this->aForm->getId()) {
+        if ($this->aForm !== null && $this->form_id !== $this->aForm->getId()) {
             $this->aForm = null;
+        }
+        if ($this->aStatus !== null && $this->status_id !== $this->aStatus->getId()) {
+            $this->aStatus = null;
         }
     } // ensureConsistency
 
@@ -595,13 +595,13 @@ abstract class Requirement implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildRequirementQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildFormStatusQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -611,8 +611,8 @@ abstract class Requirement implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
-            $this->aElement = null;
             $this->aForm = null;
+            $this->aStatus = null;
         } // if (deep)
     }
 
@@ -622,8 +622,8 @@ abstract class Requirement implements ActiveRecordInterface
      * @param      ConnectionInterface $con
      * @return void
      * @throws PropelException
-     * @see Requirement::setDeleted()
-     * @see Requirement::isDeleted()
+     * @see FormStatus::setDeleted()
+     * @see FormStatus::isDeleted()
      */
     public function delete(ConnectionInterface $con = null)
     {
@@ -632,11 +632,11 @@ abstract class Requirement implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildRequirementQuery::create()
+            $deleteQuery = ChildFormStatusQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -671,7 +671,7 @@ abstract class Requirement implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(RequirementTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -690,7 +690,7 @@ abstract class Requirement implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                RequirementTableMap::addInstanceToPool($this);
+                FormStatusTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -721,18 +721,18 @@ abstract class Requirement implements ActiveRecordInterface
             // method.  This object relates to these object(s) by a
             // foreign key reference.
 
-            if ($this->aElement !== null) {
-                if ($this->aElement->isModified() || $this->aElement->isNew()) {
-                    $affectedRows += $this->aElement->save($con);
-                }
-                $this->setElement($this->aElement);
-            }
-
             if ($this->aForm !== null) {
                 if ($this->aForm->isModified() || $this->aForm->isNew()) {
                     $affectedRows += $this->aForm->save($con);
                 }
                 $this->setForm($this->aForm);
+            }
+
+            if ($this->aStatus !== null) {
+                if ($this->aStatus->isModified() || $this->aStatus->isNew()) {
+                    $affectedRows += $this->aStatus->save($con);
+                }
+                $this->setStatus($this->aStatus);
             }
 
             if ($this->isNew() || $this->isModified()) {
@@ -766,27 +766,27 @@ abstract class Requirement implements ActiveRecordInterface
         $modifiedColumns = array();
         $index = 0;
 
-        $this->modifiedColumns[RequirementTableMap::COL_ID] = true;
+        $this->modifiedColumns[FormStatusTableMap::COL_ID] = true;
         if (null !== $this->id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . RequirementTableMap::COL_ID . ')');
+            throw new PropelException('Cannot insert a value for auto-increment primary key (' . FormStatusTableMap::COL_ID . ')');
         }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(RequirementTableMap::COL_ID)) {
+        if ($this->isColumnModified(FormStatusTableMap::COL_ID)) {
             $modifiedColumns[':p' . $index++]  = 'id';
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_FAILURE_MESSAGE)) {
-            $modifiedColumns[':p' . $index++]  = 'failure_message';
+        if ($this->isColumnModified(FormStatusTableMap::COL_MESSAGE)) {
+            $modifiedColumns[':p' . $index++]  = 'message';
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_ELEMENT_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'element_id';
+        if ($this->isColumnModified(FormStatusTableMap::COL_FORM_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'form_id';
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_CONDITION_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'condition_id';
+        if ($this->isColumnModified(FormStatusTableMap::COL_STATUS_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'status_id';
         }
 
         $sql = sprintf(
-            'INSERT INTO requirement (%s) VALUES (%s)',
+            'INSERT INTO form_status (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -798,14 +798,14 @@ abstract class Requirement implements ActiveRecordInterface
                     case 'id':
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
-                    case 'failure_message':
-                        $stmt->bindValue($identifier, $this->failure_message, PDO::PARAM_STR);
+                    case 'message':
+                        $stmt->bindValue($identifier, $this->message, PDO::PARAM_STR);
                         break;
-                    case 'element_id':
-                        $stmt->bindValue($identifier, $this->element_id, PDO::PARAM_INT);
+                    case 'form_id':
+                        $stmt->bindValue($identifier, $this->form_id, PDO::PARAM_INT);
                         break;
-                    case 'condition_id':
-                        $stmt->bindValue($identifier, $this->condition_id, PDO::PARAM_INT);
+                    case 'status_id':
+                        $stmt->bindValue($identifier, $this->status_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -853,7 +853,7 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function getByName($name, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = RequirementTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = FormStatusTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -873,13 +873,13 @@ abstract class Requirement implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getFailureMessage();
+                return $this->getMessage();
                 break;
             case 2:
-                return $this->getElementId();
+                return $this->getFormId();
                 break;
             case 3:
-                return $this->getConditionId();
+                return $this->getStatusId();
                 break;
             default:
                 return null;
@@ -905,16 +905,16 @@ abstract class Requirement implements ActiveRecordInterface
     public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
-        if (isset($alreadyDumpedObjects['Requirement'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['FormStatus'][$this->hashCode()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['Requirement'][$this->hashCode()] = true;
-        $keys = RequirementTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['FormStatus'][$this->hashCode()] = true;
+        $keys = FormStatusTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getFailureMessage(),
-            $keys[2] => $this->getElementId(),
-            $keys[3] => $this->getConditionId(),
+            $keys[1] => $this->getMessage(),
+            $keys[2] => $this->getFormId(),
+            $keys[3] => $this->getStatusId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -922,21 +922,6 @@ abstract class Requirement implements ActiveRecordInterface
         }
 
         if ($includeForeignObjects) {
-            if (null !== $this->aElement) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'element';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'element';
-                        break;
-                    default:
-                        $key = 'Element';
-                }
-
-                $result[$key] = $this->aElement->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
             if (null !== $this->aForm) {
 
                 switch ($keyType) {
@@ -952,6 +937,21 @@ abstract class Requirement implements ActiveRecordInterface
 
                 $result[$key] = $this->aForm->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
+            if (null !== $this->aStatus) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'status';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'status';
+                        break;
+                    default:
+                        $key = 'Status';
+                }
+
+                $result[$key] = $this->aStatus->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
         }
 
         return $result;
@@ -966,11 +966,11 @@ abstract class Requirement implements ActiveRecordInterface
      *                one of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                Defaults to TableMap::TYPE_PHPNAME.
-     * @return $this|\FormsAPI\Requirement
+     * @return $this|\FormsAPI\FormStatus
      */
     public function setByName($name, $value, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = RequirementTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = FormStatusTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         return $this->setByPosition($pos, $value);
     }
@@ -981,7 +981,7 @@ abstract class Requirement implements ActiveRecordInterface
      *
      * @param  int $pos position in xml schema
      * @param  mixed $value field value
-     * @return $this|\FormsAPI\Requirement
+     * @return $this|\FormsAPI\FormStatus
      */
     public function setByPosition($pos, $value)
     {
@@ -990,13 +990,13 @@ abstract class Requirement implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setFailureMessage($value);
+                $this->setMessage($value);
                 break;
             case 2:
-                $this->setElementId($value);
+                $this->setFormId($value);
                 break;
             case 3:
-                $this->setConditionId($value);
+                $this->setStatusId($value);
                 break;
         } // switch()
 
@@ -1022,19 +1022,19 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = RequirementTableMap::getFieldNames($keyType);
+        $keys = FormStatusTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setFailureMessage($arr[$keys[1]]);
+            $this->setMessage($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setElementId($arr[$keys[2]]);
+            $this->setFormId($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setConditionId($arr[$keys[3]]);
+            $this->setStatusId($arr[$keys[3]]);
         }
     }
 
@@ -1055,7 +1055,7 @@ abstract class Requirement implements ActiveRecordInterface
      * @param string $data The source data to import from
      * @param string $keyType The type of keys the array uses.
      *
-     * @return $this|\FormsAPI\Requirement The current object, for fluid interface
+     * @return $this|\FormsAPI\FormStatus The current object, for fluid interface
      */
     public function importFrom($parser, $data, $keyType = TableMap::TYPE_PHPNAME)
     {
@@ -1075,19 +1075,19 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(RequirementTableMap::DATABASE_NAME);
+        $criteria = new Criteria(FormStatusTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(RequirementTableMap::COL_ID)) {
-            $criteria->add(RequirementTableMap::COL_ID, $this->id);
+        if ($this->isColumnModified(FormStatusTableMap::COL_ID)) {
+            $criteria->add(FormStatusTableMap::COL_ID, $this->id);
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_FAILURE_MESSAGE)) {
-            $criteria->add(RequirementTableMap::COL_FAILURE_MESSAGE, $this->failure_message);
+        if ($this->isColumnModified(FormStatusTableMap::COL_MESSAGE)) {
+            $criteria->add(FormStatusTableMap::COL_MESSAGE, $this->message);
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_ELEMENT_ID)) {
-            $criteria->add(RequirementTableMap::COL_ELEMENT_ID, $this->element_id);
+        if ($this->isColumnModified(FormStatusTableMap::COL_FORM_ID)) {
+            $criteria->add(FormStatusTableMap::COL_FORM_ID, $this->form_id);
         }
-        if ($this->isColumnModified(RequirementTableMap::COL_CONDITION_ID)) {
-            $criteria->add(RequirementTableMap::COL_CONDITION_ID, $this->condition_id);
+        if ($this->isColumnModified(FormStatusTableMap::COL_STATUS_ID)) {
+            $criteria->add(FormStatusTableMap::COL_STATUS_ID, $this->status_id);
         }
 
         return $criteria;
@@ -1105,8 +1105,8 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function buildPkeyCriteria()
     {
-        $criteria = ChildRequirementQuery::create();
-        $criteria->add(RequirementTableMap::COL_ID, $this->id);
+        $criteria = ChildFormStatusQuery::create();
+        $criteria->add(FormStatusTableMap::COL_ID, $this->id);
 
         return $criteria;
     }
@@ -1168,16 +1168,16 @@ abstract class Requirement implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param      object $copyObj An object of \FormsAPI\Requirement (or compatible) type.
+     * @param      object $copyObj An object of \FormsAPI\FormStatus (or compatible) type.
      * @param      boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param      boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setFailureMessage($this->getFailureMessage());
-        $copyObj->setElementId($this->getElementId());
-        $copyObj->setConditionId($this->getConditionId());
+        $copyObj->setMessage($this->getMessage());
+        $copyObj->setFormId($this->getFormId());
+        $copyObj->setStatusId($this->getStatusId());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1193,7 +1193,7 @@ abstract class Requirement implements ActiveRecordInterface
      * objects.
      *
      * @param  boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \FormsAPI\Requirement Clone of current object.
+     * @return \FormsAPI\FormStatus Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1207,69 +1207,18 @@ abstract class Requirement implements ActiveRecordInterface
     }
 
     /**
-     * Declares an association between this object and a ChildElement object.
-     *
-     * @param  ChildElement $v
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setElement(ChildElement $v = null)
-    {
-        if ($v === null) {
-            $this->setElementId(NULL);
-        } else {
-            $this->setElementId($v->getId());
-        }
-
-        $this->aElement = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildElement object, it will not be re-added.
-        if ($v !== null) {
-            $v->addRequirement($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated ChildElement object
-     *
-     * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildElement The associated ChildElement object.
-     * @throws PropelException
-     */
-    public function getElement(ConnectionInterface $con = null)
-    {
-        if ($this->aElement === null && ($this->element_id != 0)) {
-            $this->aElement = ChildElementQuery::create()->findPk($this->element_id, $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aElement->addRequirements($this);
-             */
-        }
-
-        return $this->aElement;
-    }
-
-    /**
      * Declares an association between this object and a ChildForm object.
      *
      * @param  ChildForm $v
-     * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
      * @throws PropelException
      */
     public function setForm(ChildForm $v = null)
     {
         if ($v === null) {
-            $this->setConditionId(NULL);
+            $this->setFormId(NULL);
         } else {
-            $this->setConditionId($v->getId());
+            $this->setFormId($v->getId());
         }
 
         $this->aForm = $v;
@@ -1277,7 +1226,7 @@ abstract class Requirement implements ActiveRecordInterface
         // Add binding for other direction of this n:n relationship.
         // If this object has already been added to the ChildForm object, it will not be re-added.
         if ($v !== null) {
-            $v->addRequirement($this);
+            $v->addFormStatus($this);
         }
 
 
@@ -1294,18 +1243,69 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function getForm(ConnectionInterface $con = null)
     {
-        if ($this->aForm === null && ($this->condition_id != 0)) {
-            $this->aForm = ChildFormQuery::create()->findPk($this->condition_id, $con);
+        if ($this->aForm === null && ($this->form_id != 0)) {
+            $this->aForm = ChildFormQuery::create()->findPk($this->form_id, $con);
             /* The following can be used additionally to
                 guarantee the related object contains a reference
                 to this object.  This level of coupling may, however, be
                 undesirable since it could result in an only partially populated collection
                 in the referenced object.
-                $this->aForm->addRequirements($this);
+                $this->aForm->addFormStatuses($this);
              */
         }
 
         return $this->aForm;
+    }
+
+    /**
+     * Declares an association between this object and a ChildStatus object.
+     *
+     * @param  ChildStatus $v
+     * @return $this|\FormsAPI\FormStatus The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setStatus(ChildStatus $v = null)
+    {
+        if ($v === null) {
+            $this->setStatusId(NULL);
+        } else {
+            $this->setStatusId($v->getId());
+        }
+
+        $this->aStatus = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildStatus object, it will not be re-added.
+        if ($v !== null) {
+            $v->addFormStatus($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildStatus object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildStatus The associated ChildStatus object.
+     * @throws PropelException
+     */
+    public function getStatus(ConnectionInterface $con = null)
+    {
+        if ($this->aStatus === null && ($this->status_id != 0)) {
+            $this->aStatus = ChildStatusQuery::create()->findPk($this->status_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aStatus->addFormStatuses($this);
+             */
+        }
+
+        return $this->aStatus;
     }
 
     /**
@@ -1315,16 +1315,16 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function clear()
     {
-        if (null !== $this->aElement) {
-            $this->aElement->removeRequirement($this);
-        }
         if (null !== $this->aForm) {
-            $this->aForm->removeRequirement($this);
+            $this->aForm->removeFormStatus($this);
+        }
+        if (null !== $this->aStatus) {
+            $this->aStatus->removeFormStatus($this);
         }
         $this->id = null;
-        $this->failure_message = null;
-        $this->element_id = null;
-        $this->condition_id = null;
+        $this->message = null;
+        $this->form_id = null;
+        $this->status_id = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1345,8 +1345,8 @@ abstract class Requirement implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
-        $this->aElement = null;
         $this->aForm = null;
+        $this->aStatus = null;
     }
 
     /**
@@ -1356,7 +1356,7 @@ abstract class Requirement implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(RequirementTableMap::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(FormStatusTableMap::DEFAULT_STRING_FORMAT);
     }
 
     // validate behavior
@@ -1369,8 +1369,8 @@ abstract class Requirement implements ActiveRecordInterface
      */
     static public function loadValidatorMetadata(ClassMetadata $metadata)
     {
-        $metadata->addPropertyConstraint('element_id', new NotNull());
-        $metadata->addPropertyConstraint('condition_id', new NotNull());
+        $metadata->addPropertyConstraint('form_id', new NotNull());
+        $metadata->addPropertyConstraint('tag_id', new NotNull());
     }
 
     /**
@@ -1402,15 +1402,15 @@ abstract class Requirement implements ActiveRecordInterface
             // foreign key reference.
 
             // If validate() method exists, the validate-behavior is configured for related object
-            if (method_exists($this->aElement, 'validate')) {
-                if (!$this->aElement->validate($validator)) {
-                    $failureMap->addAll($this->aElement->getValidationFailures());
-                }
-            }
-            // If validate() method exists, the validate-behavior is configured for related object
             if (method_exists($this->aForm, 'validate')) {
                 if (!$this->aForm->validate($validator)) {
                     $failureMap->addAll($this->aForm->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aStatus, 'validate')) {
+                if (!$this->aStatus->validate($validator)) {
+                    $failureMap->addAll($this->aStatus->getValidationFailures());
                 }
             }
 

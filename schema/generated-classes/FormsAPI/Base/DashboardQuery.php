@@ -10,6 +10,7 @@ use FormsAPI\Map\DashboardTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -32,6 +33,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildDashboardQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildDashboardQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildDashboardQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildDashboardQuery leftJoinDashboardElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the DashboardElement relation
+ * @method     ChildDashboardQuery rightJoinDashboardElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the DashboardElement relation
+ * @method     ChildDashboardQuery innerJoinDashboardElement($relationAlias = null) Adds a INNER JOIN clause to the query using the DashboardElement relation
+ *
+ * @method     ChildDashboardQuery joinWithDashboardElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the DashboardElement relation
+ *
+ * @method     ChildDashboardQuery leftJoinWithDashboardElement() Adds a LEFT JOIN clause and with to the query using the DashboardElement relation
+ * @method     ChildDashboardQuery rightJoinWithDashboardElement() Adds a RIGHT JOIN clause and with to the query using the DashboardElement relation
+ * @method     ChildDashboardQuery innerJoinWithDashboardElement() Adds a INNER JOIN clause and with to the query using the DashboardElement relation
+ *
+ * @method     ChildDashboardQuery leftJoinDashboardForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the DashboardForm relation
+ * @method     ChildDashboardQuery rightJoinDashboardForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the DashboardForm relation
+ * @method     ChildDashboardQuery innerJoinDashboardForm($relationAlias = null) Adds a INNER JOIN clause to the query using the DashboardForm relation
+ *
+ * @method     ChildDashboardQuery joinWithDashboardForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the DashboardForm relation
+ *
+ * @method     ChildDashboardQuery leftJoinWithDashboardForm() Adds a LEFT JOIN clause and with to the query using the DashboardForm relation
+ * @method     ChildDashboardQuery rightJoinWithDashboardForm() Adds a RIGHT JOIN clause and with to the query using the DashboardForm relation
+ * @method     ChildDashboardQuery innerJoinWithDashboardForm() Adds a INNER JOIN clause and with to the query using the DashboardForm relation
+ *
+ * @method     \FormsAPI\DashboardElementQuery|\FormsAPI\DashboardFormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildDashboard findOne(ConnectionInterface $con = null) Return the first ChildDashboard matching the query
  * @method     ChildDashboard findOneOrCreate(ConnectionInterface $con = null) Return the first ChildDashboard matching the query, or a new ChildDashboard object populated from the query conditions when no match is found
@@ -300,6 +323,152 @@ abstract class DashboardQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(DashboardTableMap::COL_NAME, $name, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\DashboardElement object
+     *
+     * @param \FormsAPI\DashboardElement|ObjectCollection $dashboardElement the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildDashboardQuery The current query, for fluid interface
+     */
+    public function filterByDashboardElement($dashboardElement, $comparison = null)
+    {
+        if ($dashboardElement instanceof \FormsAPI\DashboardElement) {
+            return $this
+                ->addUsingAlias(DashboardTableMap::COL_ID, $dashboardElement->getDashboardId(), $comparison);
+        } elseif ($dashboardElement instanceof ObjectCollection) {
+            return $this
+                ->useDashboardElementQuery()
+                ->filterByPrimaryKeys($dashboardElement->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByDashboardElement() only accepts arguments of type \FormsAPI\DashboardElement or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the DashboardElement relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildDashboardQuery The current query, for fluid interface
+     */
+    public function joinDashboardElement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('DashboardElement');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'DashboardElement');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the DashboardElement relation DashboardElement object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\DashboardElementQuery A secondary query class using the current class as primary query
+     */
+    public function useDashboardElementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinDashboardElement($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'DashboardElement', '\FormsAPI\DashboardElementQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\DashboardForm object
+     *
+     * @param \FormsAPI\DashboardForm|ObjectCollection $dashboardForm the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildDashboardQuery The current query, for fluid interface
+     */
+    public function filterByDashboardForm($dashboardForm, $comparison = null)
+    {
+        if ($dashboardForm instanceof \FormsAPI\DashboardForm) {
+            return $this
+                ->addUsingAlias(DashboardTableMap::COL_ID, $dashboardForm->getDashboardId(), $comparison);
+        } elseif ($dashboardForm instanceof ObjectCollection) {
+            return $this
+                ->useDashboardFormQuery()
+                ->filterByPrimaryKeys($dashboardForm->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByDashboardForm() only accepts arguments of type \FormsAPI\DashboardForm or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the DashboardForm relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildDashboardQuery The current query, for fluid interface
+     */
+    public function joinDashboardForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('DashboardForm');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'DashboardForm');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the DashboardForm relation DashboardForm object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\DashboardFormQuery A secondary query class using the current class as primary query
+     */
+    public function useDashboardFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinDashboardForm($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'DashboardForm', '\FormsAPI\DashboardFormQuery');
     }
 
     /**

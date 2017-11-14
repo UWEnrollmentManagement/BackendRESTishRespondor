@@ -4,12 +4,27 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\DashboardElement as ChildDashboardElement;
+use FormsAPI\DashboardElementQuery as ChildDashboardElementQuery;
+use FormsAPI\Dependency as ChildDependency;
+use FormsAPI\DependencyQuery as ChildDependencyQuery;
 use FormsAPI\Element as ChildElement;
+use FormsAPI\ElementChoice as ChildElementChoice;
+use FormsAPI\ElementChoiceQuery as ChildElementChoiceQuery;
 use FormsAPI\ElementQuery as ChildElementQuery;
 use FormsAPI\Form as ChildForm;
 use FormsAPI\FormQuery as ChildFormQuery;
+use FormsAPI\Requirement as ChildRequirement;
+use FormsAPI\RequirementQuery as ChildRequirementQuery;
+use FormsAPI\Response as ChildResponse;
+use FormsAPI\ResponseQuery as ChildResponseQuery;
+use FormsAPI\Map\DashboardElementTableMap;
+use FormsAPI\Map\DependencyTableMap;
+use FormsAPI\Map\ElementChoiceTableMap;
 use FormsAPI\Map\ElementTableMap;
 use FormsAPI\Map\FormTableMap;
+use FormsAPI\Map\RequirementTableMap;
+use FormsAPI\Map\ResponseTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -151,10 +166,46 @@ abstract class Element implements ActiveRecordInterface
     protected $collParentsPartial;
 
     /**
+     * @var        ObjectCollection|ChildResponse[] Collection to store aggregation of ChildResponse objects.
+     */
+    protected $collResponses;
+    protected $collResponsesPartial;
+
+    /**
      * @var        ObjectCollection|ChildForm[] Collection to store aggregation of ChildForm objects.
      */
     protected $collRootElements;
     protected $collRootElementsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildDependency[] Collection to store aggregation of ChildDependency objects.
+     */
+    protected $collAsMasters;
+    protected $collAsMastersPartial;
+
+    /**
+     * @var        ObjectCollection|ChildDependency[] Collection to store aggregation of ChildDependency objects.
+     */
+    protected $collAsSlaves;
+    protected $collAsSlavesPartial;
+
+    /**
+     * @var        ObjectCollection|ChildRequirement[] Collection to store aggregation of ChildRequirement objects.
+     */
+    protected $collRequirements;
+    protected $collRequirementsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildElementChoice[] Collection to store aggregation of ChildElementChoice objects.
+     */
+    protected $collElementChoices;
+    protected $collElementChoicesPartial;
+
+    /**
+     * @var        ObjectCollection|ChildDashboardElement[] Collection to store aggregation of ChildDashboardElement objects.
+     */
+    protected $collDashboardElements;
+    protected $collDashboardElementsPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -189,9 +240,45 @@ abstract class Element implements ActiveRecordInterface
 
     /**
      * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildResponse[]
+     */
+    protected $responsesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
      * @var ObjectCollection|ChildForm[]
      */
     protected $rootElementsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDependency[]
+     */
+    protected $asMastersScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDependency[]
+     */
+    protected $asSlavesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildRequirement[]
+     */
+    protected $requirementsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildElementChoice[]
+     */
+    protected $elementChoicesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDashboardElement[]
+     */
+    protected $dashboardElementsScheduledForDeletion = null;
 
     /**
      * Applies default values to this object.
@@ -887,7 +974,19 @@ abstract class Element implements ActiveRecordInterface
             $this->aElementRelatedByParentId = null;
             $this->collParents = null;
 
+            $this->collResponses = null;
+
             $this->collRootElements = null;
+
+            $this->collAsMasters = null;
+
+            $this->collAsSlaves = null;
+
+            $this->collRequirements = null;
+
+            $this->collElementChoices = null;
+
+            $this->collDashboardElements = null;
 
         } // if (deep)
     }
@@ -1033,6 +1132,23 @@ abstract class Element implements ActiveRecordInterface
                 }
             }
 
+            if ($this->responsesScheduledForDeletion !== null) {
+                if (!$this->responsesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\ResponseQuery::create()
+                        ->filterByPrimaryKeys($this->responsesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->responsesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collResponses !== null) {
+                foreach ($this->collResponses as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
             if ($this->rootElementsScheduledForDeletion !== null) {
                 if (!$this->rootElementsScheduledForDeletion->isEmpty()) {
                     foreach ($this->rootElementsScheduledForDeletion as $rootElement) {
@@ -1045,6 +1161,91 @@ abstract class Element implements ActiveRecordInterface
 
             if ($this->collRootElements !== null) {
                 foreach ($this->collRootElements as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->asMastersScheduledForDeletion !== null) {
+                if (!$this->asMastersScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DependencyQuery::create()
+                        ->filterByPrimaryKeys($this->asMastersScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->asMastersScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collAsMasters !== null) {
+                foreach ($this->collAsMasters as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->asSlavesScheduledForDeletion !== null) {
+                if (!$this->asSlavesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DependencyQuery::create()
+                        ->filterByPrimaryKeys($this->asSlavesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->asSlavesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collAsSlaves !== null) {
+                foreach ($this->collAsSlaves as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->requirementsScheduledForDeletion !== null) {
+                if (!$this->requirementsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\RequirementQuery::create()
+                        ->filterByPrimaryKeys($this->requirementsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->requirementsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collRequirements !== null) {
+                foreach ($this->collRequirements as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->elementChoicesScheduledForDeletion !== null) {
+                if (!$this->elementChoicesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\ElementChoiceQuery::create()
+                        ->filterByPrimaryKeys($this->elementChoicesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->elementChoicesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collElementChoices !== null) {
+                foreach ($this->collElementChoices as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->dashboardElementsScheduledForDeletion !== null) {
+                if (!$this->dashboardElementsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DashboardElementQuery::create()
+                        ->filterByPrimaryKeys($this->dashboardElementsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->dashboardElementsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collDashboardElements !== null) {
+                foreach ($this->collDashboardElements as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1307,6 +1508,21 @@ abstract class Element implements ActiveRecordInterface
 
                 $result[$key] = $this->collParents->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
+            if (null !== $this->collResponses) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'responses';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'responses';
+                        break;
+                    default:
+                        $key = 'Responses';
+                }
+
+                $result[$key] = $this->collResponses->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
             if (null !== $this->collRootElements) {
 
                 switch ($keyType) {
@@ -1321,6 +1537,81 @@ abstract class Element implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collRootElements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collAsMasters) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dependencies';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dependencies';
+                        break;
+                    default:
+                        $key = 'AsMasters';
+                }
+
+                $result[$key] = $this->collAsMasters->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collAsSlaves) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dependencies';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dependencies';
+                        break;
+                    default:
+                        $key = 'AsSlaves';
+                }
+
+                $result[$key] = $this->collAsSlaves->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collRequirements) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'requirements';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'requirements';
+                        break;
+                    default:
+                        $key = 'Requirements';
+                }
+
+                $result[$key] = $this->collRequirements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collElementChoices) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'elementChoices';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'element_choices';
+                        break;
+                    default:
+                        $key = 'ElementChoices';
+                }
+
+                $result[$key] = $this->collElementChoices->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collDashboardElements) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dashboardElements';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dashboard_elements';
+                        break;
+                    default:
+                        $key = 'DashboardElements';
+                }
+
+                $result[$key] = $this->collDashboardElements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1610,9 +1901,45 @@ abstract class Element implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getResponses() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addResponse($relObj->copy($deepCopy));
+                }
+            }
+
             foreach ($this->getRootElements() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addRootElement($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getAsMasters() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addAsMaster($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getAsSlaves() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addAsSlave($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getRequirements() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addRequirement($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getElementChoices() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addElementChoice($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getDashboardElements() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addDashboardElement($relObj->copy($deepCopy));
                 }
             }
 
@@ -1712,8 +2039,32 @@ abstract class Element implements ActiveRecordInterface
             $this->initParents();
             return;
         }
+        if ('Response' == $relationName) {
+            $this->initResponses();
+            return;
+        }
         if ('RootElement' == $relationName) {
             $this->initRootElements();
+            return;
+        }
+        if ('AsMaster' == $relationName) {
+            $this->initAsMasters();
+            return;
+        }
+        if ('AsSlave' == $relationName) {
+            $this->initAsSlaves();
+            return;
+        }
+        if ('Requirement' == $relationName) {
+            $this->initRequirements();
+            return;
+        }
+        if ('ElementChoice' == $relationName) {
+            $this->initElementChoices();
+            return;
+        }
+        if ('DashboardElement' == $relationName) {
+            $this->initDashboardElements();
             return;
         }
     }
@@ -1944,6 +2295,256 @@ abstract class Element implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collResponses collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addResponses()
+     */
+    public function clearResponses()
+    {
+        $this->collResponses = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collResponses collection loaded partially.
+     */
+    public function resetPartialResponses($v = true)
+    {
+        $this->collResponsesPartial = $v;
+    }
+
+    /**
+     * Initializes the collResponses collection.
+     *
+     * By default this just sets the collResponses collection to an empty array (like clearcollResponses());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initResponses($overrideExisting = true)
+    {
+        if (null !== $this->collResponses && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ResponseTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collResponses = new $collectionClassName;
+        $this->collResponses->setModel('\FormsAPI\Response');
+    }
+
+    /**
+     * Gets an array of ChildResponse objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildResponse[] List of ChildResponse objects
+     * @throws PropelException
+     */
+    public function getResponses(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collResponsesPartial && !$this->isNew();
+        if (null === $this->collResponses || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collResponses) {
+                // return empty collection
+                $this->initResponses();
+            } else {
+                $collResponses = ChildResponseQuery::create(null, $criteria)
+                    ->filterByElement($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collResponsesPartial && count($collResponses)) {
+                        $this->initResponses(false);
+
+                        foreach ($collResponses as $obj) {
+                            if (false == $this->collResponses->contains($obj)) {
+                                $this->collResponses->append($obj);
+                            }
+                        }
+
+                        $this->collResponsesPartial = true;
+                    }
+
+                    return $collResponses;
+                }
+
+                if ($partial && $this->collResponses) {
+                    foreach ($this->collResponses as $obj) {
+                        if ($obj->isNew()) {
+                            $collResponses[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collResponses = $collResponses;
+                $this->collResponsesPartial = false;
+            }
+        }
+
+        return $this->collResponses;
+    }
+
+    /**
+     * Sets a collection of ChildResponse objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $responses A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setResponses(Collection $responses, ConnectionInterface $con = null)
+    {
+        /** @var ChildResponse[] $responsesToDelete */
+        $responsesToDelete = $this->getResponses(new Criteria(), $con)->diff($responses);
+
+
+        $this->responsesScheduledForDeletion = $responsesToDelete;
+
+        foreach ($responsesToDelete as $responseRemoved) {
+            $responseRemoved->setElement(null);
+        }
+
+        $this->collResponses = null;
+        foreach ($responses as $response) {
+            $this->addResponse($response);
+        }
+
+        $this->collResponses = $responses;
+        $this->collResponsesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Response objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Response objects.
+     * @throws PropelException
+     */
+    public function countResponses(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collResponsesPartial && !$this->isNew();
+        if (null === $this->collResponses || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collResponses) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getResponses());
+            }
+
+            $query = ChildResponseQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElement($this)
+                ->count($con);
+        }
+
+        return count($this->collResponses);
+    }
+
+    /**
+     * Method called to associate a ChildResponse object to this object
+     * through the ChildResponse foreign key attribute.
+     *
+     * @param  ChildResponse $l ChildResponse
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addResponse(ChildResponse $l)
+    {
+        if ($this->collResponses === null) {
+            $this->initResponses();
+            $this->collResponsesPartial = true;
+        }
+
+        if (!$this->collResponses->contains($l)) {
+            $this->doAddResponse($l);
+
+            if ($this->responsesScheduledForDeletion and $this->responsesScheduledForDeletion->contains($l)) {
+                $this->responsesScheduledForDeletion->remove($this->responsesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildResponse $response The ChildResponse object to add.
+     */
+    protected function doAddResponse(ChildResponse $response)
+    {
+        $this->collResponses[]= $response;
+        $response->setElement($this);
+    }
+
+    /**
+     * @param  ChildResponse $response The ChildResponse object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeResponse(ChildResponse $response)
+    {
+        if ($this->getResponses()->contains($response)) {
+            $pos = $this->collResponses->search($response);
+            $this->collResponses->remove($pos);
+            if (null === $this->responsesScheduledForDeletion) {
+                $this->responsesScheduledForDeletion = clone $this->collResponses;
+                $this->responsesScheduledForDeletion->clear();
+            }
+            $this->responsesScheduledForDeletion[]= clone $response;
+            $response->setElement(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related Responses from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildResponse[] List of ChildResponse objects
+     */
+    public function getResponsesJoinSubmission(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildResponseQuery::create(null, $criteria);
+        $query->joinWith('Submission', $joinBehavior);
+
+        return $this->getResponses($query, $con);
+    }
+
+    /**
      * Clears out the collRootElements collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -2169,6 +2770,1256 @@ abstract class Element implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collAsMasters collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addAsMasters()
+     */
+    public function clearAsMasters()
+    {
+        $this->collAsMasters = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collAsMasters collection loaded partially.
+     */
+    public function resetPartialAsMasters($v = true)
+    {
+        $this->collAsMastersPartial = $v;
+    }
+
+    /**
+     * Initializes the collAsMasters collection.
+     *
+     * By default this just sets the collAsMasters collection to an empty array (like clearcollAsMasters());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initAsMasters($overrideExisting = true)
+    {
+        if (null !== $this->collAsMasters && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DependencyTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collAsMasters = new $collectionClassName;
+        $this->collAsMasters->setModel('\FormsAPI\Dependency');
+    }
+
+    /**
+     * Gets an array of ChildDependency objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     * @throws PropelException
+     */
+    public function getAsMasters(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsMastersPartial && !$this->isNew();
+        if (null === $this->collAsMasters || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collAsMasters) {
+                // return empty collection
+                $this->initAsMasters();
+            } else {
+                $collAsMasters = ChildDependencyQuery::create(null, $criteria)
+                    ->filterByElement($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collAsMastersPartial && count($collAsMasters)) {
+                        $this->initAsMasters(false);
+
+                        foreach ($collAsMasters as $obj) {
+                            if (false == $this->collAsMasters->contains($obj)) {
+                                $this->collAsMasters->append($obj);
+                            }
+                        }
+
+                        $this->collAsMastersPartial = true;
+                    }
+
+                    return $collAsMasters;
+                }
+
+                if ($partial && $this->collAsMasters) {
+                    foreach ($this->collAsMasters as $obj) {
+                        if ($obj->isNew()) {
+                            $collAsMasters[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collAsMasters = $collAsMasters;
+                $this->collAsMastersPartial = false;
+            }
+        }
+
+        return $this->collAsMasters;
+    }
+
+    /**
+     * Sets a collection of ChildDependency objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $asMasters A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setAsMasters(Collection $asMasters, ConnectionInterface $con = null)
+    {
+        /** @var ChildDependency[] $asMastersToDelete */
+        $asMastersToDelete = $this->getAsMasters(new Criteria(), $con)->diff($asMasters);
+
+
+        $this->asMastersScheduledForDeletion = $asMastersToDelete;
+
+        foreach ($asMastersToDelete as $asMasterRemoved) {
+            $asMasterRemoved->setElement(null);
+        }
+
+        $this->collAsMasters = null;
+        foreach ($asMasters as $asMaster) {
+            $this->addAsMaster($asMaster);
+        }
+
+        $this->collAsMasters = $asMasters;
+        $this->collAsMastersPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Dependency objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Dependency objects.
+     * @throws PropelException
+     */
+    public function countAsMasters(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsMastersPartial && !$this->isNew();
+        if (null === $this->collAsMasters || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collAsMasters) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getAsMasters());
+            }
+
+            $query = ChildDependencyQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElement($this)
+                ->count($con);
+        }
+
+        return count($this->collAsMasters);
+    }
+
+    /**
+     * Method called to associate a ChildDependency object to this object
+     * through the ChildDependency foreign key attribute.
+     *
+     * @param  ChildDependency $l ChildDependency
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addAsMaster(ChildDependency $l)
+    {
+        if ($this->collAsMasters === null) {
+            $this->initAsMasters();
+            $this->collAsMastersPartial = true;
+        }
+
+        if (!$this->collAsMasters->contains($l)) {
+            $this->doAddAsMaster($l);
+
+            if ($this->asMastersScheduledForDeletion and $this->asMastersScheduledForDeletion->contains($l)) {
+                $this->asMastersScheduledForDeletion->remove($this->asMastersScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDependency $asMaster The ChildDependency object to add.
+     */
+    protected function doAddAsMaster(ChildDependency $asMaster)
+    {
+        $this->collAsMasters[]= $asMaster;
+        $asMaster->setElement($this);
+    }
+
+    /**
+     * @param  ChildDependency $asMaster The ChildDependency object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeAsMaster(ChildDependency $asMaster)
+    {
+        if ($this->getAsMasters()->contains($asMaster)) {
+            $pos = $this->collAsMasters->search($asMaster);
+            $this->collAsMasters->remove($pos);
+            if (null === $this->asMastersScheduledForDeletion) {
+                $this->asMastersScheduledForDeletion = clone $this->collAsMasters;
+                $this->asMastersScheduledForDeletion->clear();
+            }
+            $this->asMastersScheduledForDeletion[]= clone $asMaster;
+            $asMaster->setElement(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related AsMasters from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     */
+    public function getAsMastersJoinCondition(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDependencyQuery::create(null, $criteria);
+        $query->joinWith('Condition', $joinBehavior);
+
+        return $this->getAsMasters($query, $con);
+    }
+
+    /**
+     * Clears out the collAsSlaves collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addAsSlaves()
+     */
+    public function clearAsSlaves()
+    {
+        $this->collAsSlaves = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collAsSlaves collection loaded partially.
+     */
+    public function resetPartialAsSlaves($v = true)
+    {
+        $this->collAsSlavesPartial = $v;
+    }
+
+    /**
+     * Initializes the collAsSlaves collection.
+     *
+     * By default this just sets the collAsSlaves collection to an empty array (like clearcollAsSlaves());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initAsSlaves($overrideExisting = true)
+    {
+        if (null !== $this->collAsSlaves && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DependencyTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collAsSlaves = new $collectionClassName;
+        $this->collAsSlaves->setModel('\FormsAPI\Dependency');
+    }
+
+    /**
+     * Gets an array of ChildDependency objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     * @throws PropelException
+     */
+    public function getAsSlaves(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsSlavesPartial && !$this->isNew();
+        if (null === $this->collAsSlaves || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collAsSlaves) {
+                // return empty collection
+                $this->initAsSlaves();
+            } else {
+                $collAsSlaves = ChildDependencyQuery::create(null, $criteria)
+                    ->filterBySlave($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collAsSlavesPartial && count($collAsSlaves)) {
+                        $this->initAsSlaves(false);
+
+                        foreach ($collAsSlaves as $obj) {
+                            if (false == $this->collAsSlaves->contains($obj)) {
+                                $this->collAsSlaves->append($obj);
+                            }
+                        }
+
+                        $this->collAsSlavesPartial = true;
+                    }
+
+                    return $collAsSlaves;
+                }
+
+                if ($partial && $this->collAsSlaves) {
+                    foreach ($this->collAsSlaves as $obj) {
+                        if ($obj->isNew()) {
+                            $collAsSlaves[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collAsSlaves = $collAsSlaves;
+                $this->collAsSlavesPartial = false;
+            }
+        }
+
+        return $this->collAsSlaves;
+    }
+
+    /**
+     * Sets a collection of ChildDependency objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $asSlaves A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setAsSlaves(Collection $asSlaves, ConnectionInterface $con = null)
+    {
+        /** @var ChildDependency[] $asSlavesToDelete */
+        $asSlavesToDelete = $this->getAsSlaves(new Criteria(), $con)->diff($asSlaves);
+
+
+        $this->asSlavesScheduledForDeletion = $asSlavesToDelete;
+
+        foreach ($asSlavesToDelete as $asSlaveRemoved) {
+            $asSlaveRemoved->setSlave(null);
+        }
+
+        $this->collAsSlaves = null;
+        foreach ($asSlaves as $asSlave) {
+            $this->addAsSlave($asSlave);
+        }
+
+        $this->collAsSlaves = $asSlaves;
+        $this->collAsSlavesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Dependency objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Dependency objects.
+     * @throws PropelException
+     */
+    public function countAsSlaves(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsSlavesPartial && !$this->isNew();
+        if (null === $this->collAsSlaves || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collAsSlaves) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getAsSlaves());
+            }
+
+            $query = ChildDependencyQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySlave($this)
+                ->count($con);
+        }
+
+        return count($this->collAsSlaves);
+    }
+
+    /**
+     * Method called to associate a ChildDependency object to this object
+     * through the ChildDependency foreign key attribute.
+     *
+     * @param  ChildDependency $l ChildDependency
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addAsSlave(ChildDependency $l)
+    {
+        if ($this->collAsSlaves === null) {
+            $this->initAsSlaves();
+            $this->collAsSlavesPartial = true;
+        }
+
+        if (!$this->collAsSlaves->contains($l)) {
+            $this->doAddAsSlave($l);
+
+            if ($this->asSlavesScheduledForDeletion and $this->asSlavesScheduledForDeletion->contains($l)) {
+                $this->asSlavesScheduledForDeletion->remove($this->asSlavesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDependency $asSlave The ChildDependency object to add.
+     */
+    protected function doAddAsSlave(ChildDependency $asSlave)
+    {
+        $this->collAsSlaves[]= $asSlave;
+        $asSlave->setSlave($this);
+    }
+
+    /**
+     * @param  ChildDependency $asSlave The ChildDependency object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeAsSlave(ChildDependency $asSlave)
+    {
+        if ($this->getAsSlaves()->contains($asSlave)) {
+            $pos = $this->collAsSlaves->search($asSlave);
+            $this->collAsSlaves->remove($pos);
+            if (null === $this->asSlavesScheduledForDeletion) {
+                $this->asSlavesScheduledForDeletion = clone $this->collAsSlaves;
+                $this->asSlavesScheduledForDeletion->clear();
+            }
+            $this->asSlavesScheduledForDeletion[]= clone $asSlave;
+            $asSlave->setSlave(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related AsSlaves from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     */
+    public function getAsSlavesJoinCondition(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDependencyQuery::create(null, $criteria);
+        $query->joinWith('Condition', $joinBehavior);
+
+        return $this->getAsSlaves($query, $con);
+    }
+
+    /**
+     * Clears out the collRequirements collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addRequirements()
+     */
+    public function clearRequirements()
+    {
+        $this->collRequirements = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collRequirements collection loaded partially.
+     */
+    public function resetPartialRequirements($v = true)
+    {
+        $this->collRequirementsPartial = $v;
+    }
+
+    /**
+     * Initializes the collRequirements collection.
+     *
+     * By default this just sets the collRequirements collection to an empty array (like clearcollRequirements());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initRequirements($overrideExisting = true)
+    {
+        if (null !== $this->collRequirements && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = RequirementTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collRequirements = new $collectionClassName;
+        $this->collRequirements->setModel('\FormsAPI\Requirement');
+    }
+
+    /**
+     * Gets an array of ChildRequirement objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
+     * @throws PropelException
+     */
+    public function getRequirements(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collRequirementsPartial && !$this->isNew();
+        if (null === $this->collRequirements || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collRequirements) {
+                // return empty collection
+                $this->initRequirements();
+            } else {
+                $collRequirements = ChildRequirementQuery::create(null, $criteria)
+                    ->filterByElement($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collRequirementsPartial && count($collRequirements)) {
+                        $this->initRequirements(false);
+
+                        foreach ($collRequirements as $obj) {
+                            if (false == $this->collRequirements->contains($obj)) {
+                                $this->collRequirements->append($obj);
+                            }
+                        }
+
+                        $this->collRequirementsPartial = true;
+                    }
+
+                    return $collRequirements;
+                }
+
+                if ($partial && $this->collRequirements) {
+                    foreach ($this->collRequirements as $obj) {
+                        if ($obj->isNew()) {
+                            $collRequirements[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collRequirements = $collRequirements;
+                $this->collRequirementsPartial = false;
+            }
+        }
+
+        return $this->collRequirements;
+    }
+
+    /**
+     * Sets a collection of ChildRequirement objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $requirements A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setRequirements(Collection $requirements, ConnectionInterface $con = null)
+    {
+        /** @var ChildRequirement[] $requirementsToDelete */
+        $requirementsToDelete = $this->getRequirements(new Criteria(), $con)->diff($requirements);
+
+
+        $this->requirementsScheduledForDeletion = $requirementsToDelete;
+
+        foreach ($requirementsToDelete as $requirementRemoved) {
+            $requirementRemoved->setElement(null);
+        }
+
+        $this->collRequirements = null;
+        foreach ($requirements as $requirement) {
+            $this->addRequirement($requirement);
+        }
+
+        $this->collRequirements = $requirements;
+        $this->collRequirementsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Requirement objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Requirement objects.
+     * @throws PropelException
+     */
+    public function countRequirements(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collRequirementsPartial && !$this->isNew();
+        if (null === $this->collRequirements || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collRequirements) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getRequirements());
+            }
+
+            $query = ChildRequirementQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElement($this)
+                ->count($con);
+        }
+
+        return count($this->collRequirements);
+    }
+
+    /**
+     * Method called to associate a ChildRequirement object to this object
+     * through the ChildRequirement foreign key attribute.
+     *
+     * @param  ChildRequirement $l ChildRequirement
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addRequirement(ChildRequirement $l)
+    {
+        if ($this->collRequirements === null) {
+            $this->initRequirements();
+            $this->collRequirementsPartial = true;
+        }
+
+        if (!$this->collRequirements->contains($l)) {
+            $this->doAddRequirement($l);
+
+            if ($this->requirementsScheduledForDeletion and $this->requirementsScheduledForDeletion->contains($l)) {
+                $this->requirementsScheduledForDeletion->remove($this->requirementsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildRequirement $requirement The ChildRequirement object to add.
+     */
+    protected function doAddRequirement(ChildRequirement $requirement)
+    {
+        $this->collRequirements[]= $requirement;
+        $requirement->setElement($this);
+    }
+
+    /**
+     * @param  ChildRequirement $requirement The ChildRequirement object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeRequirement(ChildRequirement $requirement)
+    {
+        if ($this->getRequirements()->contains($requirement)) {
+            $pos = $this->collRequirements->search($requirement);
+            $this->collRequirements->remove($pos);
+            if (null === $this->requirementsScheduledForDeletion) {
+                $this->requirementsScheduledForDeletion = clone $this->collRequirements;
+                $this->requirementsScheduledForDeletion->clear();
+            }
+            $this->requirementsScheduledForDeletion[]= clone $requirement;
+            $requirement->setElement(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related Requirements from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
+     */
+    public function getRequirementsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildRequirementQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getRequirements($query, $con);
+    }
+
+    /**
+     * Clears out the collElementChoices collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addElementChoices()
+     */
+    public function clearElementChoices()
+    {
+        $this->collElementChoices = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collElementChoices collection loaded partially.
+     */
+    public function resetPartialElementChoices($v = true)
+    {
+        $this->collElementChoicesPartial = $v;
+    }
+
+    /**
+     * Initializes the collElementChoices collection.
+     *
+     * By default this just sets the collElementChoices collection to an empty array (like clearcollElementChoices());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initElementChoices($overrideExisting = true)
+    {
+        if (null !== $this->collElementChoices && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ElementChoiceTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collElementChoices = new $collectionClassName;
+        $this->collElementChoices->setModel('\FormsAPI\ElementChoice');
+    }
+
+    /**
+     * Gets an array of ChildElementChoice objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildElementChoice[] List of ChildElementChoice objects
+     * @throws PropelException
+     */
+    public function getElementChoices(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElementChoicesPartial && !$this->isNew();
+        if (null === $this->collElementChoices || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collElementChoices) {
+                // return empty collection
+                $this->initElementChoices();
+            } else {
+                $collElementChoices = ChildElementChoiceQuery::create(null, $criteria)
+                    ->filterByElement($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collElementChoicesPartial && count($collElementChoices)) {
+                        $this->initElementChoices(false);
+
+                        foreach ($collElementChoices as $obj) {
+                            if (false == $this->collElementChoices->contains($obj)) {
+                                $this->collElementChoices->append($obj);
+                            }
+                        }
+
+                        $this->collElementChoicesPartial = true;
+                    }
+
+                    return $collElementChoices;
+                }
+
+                if ($partial && $this->collElementChoices) {
+                    foreach ($this->collElementChoices as $obj) {
+                        if ($obj->isNew()) {
+                            $collElementChoices[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collElementChoices = $collElementChoices;
+                $this->collElementChoicesPartial = false;
+            }
+        }
+
+        return $this->collElementChoices;
+    }
+
+    /**
+     * Sets a collection of ChildElementChoice objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $elementChoices A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setElementChoices(Collection $elementChoices, ConnectionInterface $con = null)
+    {
+        /** @var ChildElementChoice[] $elementChoicesToDelete */
+        $elementChoicesToDelete = $this->getElementChoices(new Criteria(), $con)->diff($elementChoices);
+
+
+        $this->elementChoicesScheduledForDeletion = $elementChoicesToDelete;
+
+        foreach ($elementChoicesToDelete as $elementChoiceRemoved) {
+            $elementChoiceRemoved->setElement(null);
+        }
+
+        $this->collElementChoices = null;
+        foreach ($elementChoices as $elementChoice) {
+            $this->addElementChoice($elementChoice);
+        }
+
+        $this->collElementChoices = $elementChoices;
+        $this->collElementChoicesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ElementChoice objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related ElementChoice objects.
+     * @throws PropelException
+     */
+    public function countElementChoices(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElementChoicesPartial && !$this->isNew();
+        if (null === $this->collElementChoices || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collElementChoices) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getElementChoices());
+            }
+
+            $query = ChildElementChoiceQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElement($this)
+                ->count($con);
+        }
+
+        return count($this->collElementChoices);
+    }
+
+    /**
+     * Method called to associate a ChildElementChoice object to this object
+     * through the ChildElementChoice foreign key attribute.
+     *
+     * @param  ChildElementChoice $l ChildElementChoice
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addElementChoice(ChildElementChoice $l)
+    {
+        if ($this->collElementChoices === null) {
+            $this->initElementChoices();
+            $this->collElementChoicesPartial = true;
+        }
+
+        if (!$this->collElementChoices->contains($l)) {
+            $this->doAddElementChoice($l);
+
+            if ($this->elementChoicesScheduledForDeletion and $this->elementChoicesScheduledForDeletion->contains($l)) {
+                $this->elementChoicesScheduledForDeletion->remove($this->elementChoicesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildElementChoice $elementChoice The ChildElementChoice object to add.
+     */
+    protected function doAddElementChoice(ChildElementChoice $elementChoice)
+    {
+        $this->collElementChoices[]= $elementChoice;
+        $elementChoice->setElement($this);
+    }
+
+    /**
+     * @param  ChildElementChoice $elementChoice The ChildElementChoice object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeElementChoice(ChildElementChoice $elementChoice)
+    {
+        if ($this->getElementChoices()->contains($elementChoice)) {
+            $pos = $this->collElementChoices->search($elementChoice);
+            $this->collElementChoices->remove($pos);
+            if (null === $this->elementChoicesScheduledForDeletion) {
+                $this->elementChoicesScheduledForDeletion = clone $this->collElementChoices;
+                $this->elementChoicesScheduledForDeletion->clear();
+            }
+            $this->elementChoicesScheduledForDeletion[]= clone $elementChoice;
+            $elementChoice->setElement(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related ElementChoices from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildElementChoice[] List of ChildElementChoice objects
+     */
+    public function getElementChoicesJoinChoiceValue(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildElementChoiceQuery::create(null, $criteria);
+        $query->joinWith('ChoiceValue', $joinBehavior);
+
+        return $this->getElementChoices($query, $con);
+    }
+
+    /**
+     * Clears out the collDashboardElements collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addDashboardElements()
+     */
+    public function clearDashboardElements()
+    {
+        $this->collDashboardElements = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collDashboardElements collection loaded partially.
+     */
+    public function resetPartialDashboardElements($v = true)
+    {
+        $this->collDashboardElementsPartial = $v;
+    }
+
+    /**
+     * Initializes the collDashboardElements collection.
+     *
+     * By default this just sets the collDashboardElements collection to an empty array (like clearcollDashboardElements());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initDashboardElements($overrideExisting = true)
+    {
+        if (null !== $this->collDashboardElements && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DashboardElementTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collDashboardElements = new $collectionClassName;
+        $this->collDashboardElements->setModel('\FormsAPI\DashboardElement');
+    }
+
+    /**
+     * Gets an array of ChildDashboardElement objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElement is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDashboardElement[] List of ChildDashboardElement objects
+     * @throws PropelException
+     */
+    public function getDashboardElements(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardElementsPartial && !$this->isNew();
+        if (null === $this->collDashboardElements || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collDashboardElements) {
+                // return empty collection
+                $this->initDashboardElements();
+            } else {
+                $collDashboardElements = ChildDashboardElementQuery::create(null, $criteria)
+                    ->filterByElement($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collDashboardElementsPartial && count($collDashboardElements)) {
+                        $this->initDashboardElements(false);
+
+                        foreach ($collDashboardElements as $obj) {
+                            if (false == $this->collDashboardElements->contains($obj)) {
+                                $this->collDashboardElements->append($obj);
+                            }
+                        }
+
+                        $this->collDashboardElementsPartial = true;
+                    }
+
+                    return $collDashboardElements;
+                }
+
+                if ($partial && $this->collDashboardElements) {
+                    foreach ($this->collDashboardElements as $obj) {
+                        if ($obj->isNew()) {
+                            $collDashboardElements[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collDashboardElements = $collDashboardElements;
+                $this->collDashboardElementsPartial = false;
+            }
+        }
+
+        return $this->collDashboardElements;
+    }
+
+    /**
+     * Sets a collection of ChildDashboardElement objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $dashboardElements A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function setDashboardElements(Collection $dashboardElements, ConnectionInterface $con = null)
+    {
+        /** @var ChildDashboardElement[] $dashboardElementsToDelete */
+        $dashboardElementsToDelete = $this->getDashboardElements(new Criteria(), $con)->diff($dashboardElements);
+
+
+        $this->dashboardElementsScheduledForDeletion = $dashboardElementsToDelete;
+
+        foreach ($dashboardElementsToDelete as $dashboardElementRemoved) {
+            $dashboardElementRemoved->setElement(null);
+        }
+
+        $this->collDashboardElements = null;
+        foreach ($dashboardElements as $dashboardElement) {
+            $this->addDashboardElement($dashboardElement);
+        }
+
+        $this->collDashboardElements = $dashboardElements;
+        $this->collDashboardElementsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related DashboardElement objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related DashboardElement objects.
+     * @throws PropelException
+     */
+    public function countDashboardElements(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardElementsPartial && !$this->isNew();
+        if (null === $this->collDashboardElements || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collDashboardElements) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getDashboardElements());
+            }
+
+            $query = ChildDashboardElementQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElement($this)
+                ->count($con);
+        }
+
+        return count($this->collDashboardElements);
+    }
+
+    /**
+     * Method called to associate a ChildDashboardElement object to this object
+     * through the ChildDashboardElement foreign key attribute.
+     *
+     * @param  ChildDashboardElement $l ChildDashboardElement
+     * @return $this|\FormsAPI\Element The current object (for fluent API support)
+     */
+    public function addDashboardElement(ChildDashboardElement $l)
+    {
+        if ($this->collDashboardElements === null) {
+            $this->initDashboardElements();
+            $this->collDashboardElementsPartial = true;
+        }
+
+        if (!$this->collDashboardElements->contains($l)) {
+            $this->doAddDashboardElement($l);
+
+            if ($this->dashboardElementsScheduledForDeletion and $this->dashboardElementsScheduledForDeletion->contains($l)) {
+                $this->dashboardElementsScheduledForDeletion->remove($this->dashboardElementsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDashboardElement $dashboardElement The ChildDashboardElement object to add.
+     */
+    protected function doAddDashboardElement(ChildDashboardElement $dashboardElement)
+    {
+        $this->collDashboardElements[]= $dashboardElement;
+        $dashboardElement->setElement($this);
+    }
+
+    /**
+     * @param  ChildDashboardElement $dashboardElement The ChildDashboardElement object to remove.
+     * @return $this|ChildElement The current object (for fluent API support)
+     */
+    public function removeDashboardElement(ChildDashboardElement $dashboardElement)
+    {
+        if ($this->getDashboardElements()->contains($dashboardElement)) {
+            $pos = $this->collDashboardElements->search($dashboardElement);
+            $this->collDashboardElements->remove($pos);
+            if (null === $this->dashboardElementsScheduledForDeletion) {
+                $this->dashboardElementsScheduledForDeletion = clone $this->collDashboardElements;
+                $this->dashboardElementsScheduledForDeletion->clear();
+            }
+            $this->dashboardElementsScheduledForDeletion[]= clone $dashboardElement;
+            $dashboardElement->setElement(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Element is new, it will return
+     * an empty collection; or if this Element has previously
+     * been saved, it will retrieve related DashboardElements from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Element.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDashboardElement[] List of ChildDashboardElement objects
+     */
+    public function getDashboardElementsJoinDashboard(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDashboardElementQuery::create(null, $criteria);
+        $query->joinWith('Dashboard', $joinBehavior);
+
+        return $this->getDashboardElements($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -2211,15 +4062,51 @@ abstract class Element implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collResponses) {
+                foreach ($this->collResponses as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collRootElements) {
                 foreach ($this->collRootElements as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collAsMasters) {
+                foreach ($this->collAsMasters as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collAsSlaves) {
+                foreach ($this->collAsSlaves as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collRequirements) {
+                foreach ($this->collRequirements as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collElementChoices) {
+                foreach ($this->collElementChoices as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collDashboardElements) {
+                foreach ($this->collDashboardElements as $o) {
                     $o->clearAllReferences($deep);
                 }
             }
         } // if ($deep)
 
         $this->collParents = null;
+        $this->collResponses = null;
         $this->collRootElements = null;
+        $this->collAsMasters = null;
+        $this->collAsSlaves = null;
+        $this->collRequirements = null;
+        $this->collElementChoices = null;
+        $this->collDashboardElements = null;
         $this->aElementRelatedByParentId = null;
     }
 
@@ -2295,8 +4182,62 @@ abstract class Element implements ActiveRecordInterface
                     }
                 }
             }
+            if (null !== $this->collResponses) {
+                foreach ($this->collResponses as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
             if (null !== $this->collRootElements) {
                 foreach ($this->collRootElements as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collAsMasters) {
+                foreach ($this->collAsMasters as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collAsSlaves) {
+                foreach ($this->collAsSlaves as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collRequirements) {
+                foreach ($this->collRequirements as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collElementChoices) {
+                foreach ($this->collElementChoices as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collDashboardElements) {
+                foreach ($this->collDashboardElements as $referrerFK) {
                     if (method_exists($referrerFK, 'validate')) {
                         if (!$referrerFK->validate($validator)) {
                             $failureMap->addAll($referrerFK->getValidationFailures());

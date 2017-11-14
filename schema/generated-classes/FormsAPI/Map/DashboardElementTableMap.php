@@ -137,8 +137,8 @@ class DashboardElementTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('dashboard_id', 'DashboardId', 'INTEGER', true, null, null);
-        $this->addColumn('element_id', 'ElementId', 'INTEGER', true, null, null);
+        $this->addForeignKey('dashboard_id', 'DashboardId', 'INTEGER', 'dashboard', 'id', true, null, null);
+        $this->addForeignKey('element_id', 'ElementId', 'INTEGER', 'element', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -146,6 +146,20 @@ class DashboardElementTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Dashboard', '\\FormsAPI\\Dashboard', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':dashboard_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Element', '\\FormsAPI\\Element', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**

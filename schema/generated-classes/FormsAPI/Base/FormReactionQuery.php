@@ -10,6 +10,7 @@ use FormsAPI\Map\FormReactionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -34,6 +35,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildFormReactionQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildFormReactionQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildFormReactionQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildFormReactionQuery leftJoinReaction($relationAlias = null) Adds a LEFT JOIN clause to the query using the Reaction relation
+ * @method     ChildFormReactionQuery rightJoinReaction($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Reaction relation
+ * @method     ChildFormReactionQuery innerJoinReaction($relationAlias = null) Adds a INNER JOIN clause to the query using the Reaction relation
+ *
+ * @method     ChildFormReactionQuery joinWithReaction($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Reaction relation
+ *
+ * @method     ChildFormReactionQuery leftJoinWithReaction() Adds a LEFT JOIN clause and with to the query using the Reaction relation
+ * @method     ChildFormReactionQuery rightJoinWithReaction() Adds a RIGHT JOIN clause and with to the query using the Reaction relation
+ * @method     ChildFormReactionQuery innerJoinWithReaction() Adds a INNER JOIN clause and with to the query using the Reaction relation
+ *
+ * @method     ChildFormReactionQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
+ * @method     ChildFormReactionQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
+ * @method     ChildFormReactionQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ *
+ * @method     ChildFormReactionQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ *
+ * @method     ChildFormReactionQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
+ * @method     ChildFormReactionQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
+ * @method     ChildFormReactionQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ *
+ * @method     \FormsAPI\ReactionQuery|\FormsAPI\FormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildFormReaction findOne(ConnectionInterface $con = null) Return the first ChildFormReaction matching the query
  * @method     ChildFormReaction findOneOrCreate(ConnectionInterface $con = null) Return the first ChildFormReaction matching the query, or a new ChildFormReaction object populated from the query conditions when no match is found
@@ -292,6 +315,8 @@ abstract class FormReactionQuery extends ModelCriteria
      * $query->filterByReactionId(array('min' => 12)); // WHERE reaction_id > 12
      * </code>
      *
+     * @see       filterByReaction()
+     *
      * @param     mixed $reactionId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -333,6 +358,8 @@ abstract class FormReactionQuery extends ModelCriteria
      * $query->filterByFormId(array('min' => 12)); // WHERE form_id > 12
      * </code>
      *
+     * @see       filterByForm()
+     *
      * @param     mixed $formId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -362,6 +389,160 @@ abstract class FormReactionQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(FormReactionTableMap::COL_FORM_ID, $formId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Reaction object
+     *
+     * @param \FormsAPI\Reaction|ObjectCollection $reaction The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildFormReactionQuery The current query, for fluid interface
+     */
+    public function filterByReaction($reaction, $comparison = null)
+    {
+        if ($reaction instanceof \FormsAPI\Reaction) {
+            return $this
+                ->addUsingAlias(FormReactionTableMap::COL_REACTION_ID, $reaction->getId(), $comparison);
+        } elseif ($reaction instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(FormReactionTableMap::COL_REACTION_ID, $reaction->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByReaction() only accepts arguments of type \FormsAPI\Reaction or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Reaction relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildFormReactionQuery The current query, for fluid interface
+     */
+    public function joinReaction($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Reaction');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Reaction');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Reaction relation Reaction object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ReactionQuery A secondary query class using the current class as primary query
+     */
+    public function useReactionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinReaction($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Reaction', '\FormsAPI\ReactionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Form object
+     *
+     * @param \FormsAPI\Form|ObjectCollection $form The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildFormReactionQuery The current query, for fluid interface
+     */
+    public function filterByForm($form, $comparison = null)
+    {
+        if ($form instanceof \FormsAPI\Form) {
+            return $this
+                ->addUsingAlias(FormReactionTableMap::COL_FORM_ID, $form->getId(), $comparison);
+        } elseif ($form instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(FormReactionTableMap::COL_FORM_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Form relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildFormReactionQuery The current query, for fluid interface
+     */
+    public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Form');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Form');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Form relation Form object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\FormQuery A secondary query class using the current class as primary query
+     */
+    public function useFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinForm($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Form', '\FormsAPI\FormQuery');
     }
 
     /**

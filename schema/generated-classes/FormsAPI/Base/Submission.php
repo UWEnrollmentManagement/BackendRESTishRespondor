@@ -5,13 +5,27 @@ namespace FormsAPI\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use FormsAPI\Form as ChildForm;
+use FormsAPI\FormQuery as ChildFormQuery;
+use FormsAPI\Response as ChildResponse;
+use FormsAPI\ResponseQuery as ChildResponseQuery;
+use FormsAPI\Status as ChildStatus;
+use FormsAPI\StatusQuery as ChildStatusQuery;
+use FormsAPI\Submission as ChildSubmission;
 use FormsAPI\SubmissionQuery as ChildSubmissionQuery;
+use FormsAPI\SubmissionTag as ChildSubmissionTag;
+use FormsAPI\SubmissionTagQuery as ChildSubmissionTagQuery;
+use FormsAPI\Visitor as ChildVisitor;
+use FormsAPI\VisitorQuery as ChildVisitorQuery;
+use FormsAPI\Map\ResponseTableMap;
 use FormsAPI\Map\SubmissionTableMap;
+use FormsAPI\Map\SubmissionTagTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -79,6 +93,13 @@ abstract class Submission implements ActiveRecordInterface
     protected $id;
 
     /**
+     * The value for the submitted field.
+     *
+     * @var        DateTime
+     */
+    protected $submitted;
+
+    /**
      * The value for the visitor_id field.
      *
      * @var        int
@@ -114,11 +135,47 @@ abstract class Submission implements ActiveRecordInterface
     protected $parent_id;
 
     /**
-     * The value for the submitted field.
-     *
-     * @var        DateTime
+     * @var        ChildVisitor
      */
-    protected $submitted;
+    protected $aVisitor;
+
+    /**
+     * @var        ChildForm
+     */
+    protected $aForm;
+
+    /**
+     * @var        ChildStatus
+     */
+    protected $aStatus;
+
+    /**
+     * @var        ChildVisitor
+     */
+    protected $aAssignee;
+
+    /**
+     * @var        ChildSubmission
+     */
+    protected $aSubmissionRelatedByParentId;
+
+    /**
+     * @var        ObjectCollection|ChildResponse[] Collection to store aggregation of ChildResponse objects.
+     */
+    protected $collResponses;
+    protected $collResponsesPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSubmission[] Collection to store aggregation of ChildSubmission objects.
+     */
+    protected $collAsParents;
+    protected $collAsParentsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSubmissionTag[] Collection to store aggregation of ChildSubmissionTag objects.
+     */
+    protected $collSubmissionTags;
+    protected $collSubmissionTagsPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -144,6 +201,24 @@ abstract class Submission implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildResponse[]
+     */
+    protected $responsesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSubmission[]
+     */
+    protected $asParentsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSubmissionTag[]
+     */
+    protected $submissionTagsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Submission object.
@@ -381,6 +456,26 @@ abstract class Submission implements ActiveRecordInterface
     }
 
     /**
+     * Get the [optionally formatted] temporal [submitted] column value.
+     *
+     *
+     * @param      string $format The date/time format string (either date()-style or strftime()-style).
+     *                            If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL
+     *
+     * @throws PropelException - if unable to parse/validate the date/time value.
+     */
+    public function getSubmitted($format = NULL)
+    {
+        if ($format === null) {
+            return $this->submitted;
+        } else {
+            return $this->submitted instanceof \DateTimeInterface ? $this->submitted->format($format) : null;
+        }
+    }
+
+    /**
      * Get the [visitor_id] column value.
      *
      * @return int
@@ -431,26 +526,6 @@ abstract class Submission implements ActiveRecordInterface
     }
 
     /**
-     * Get the [optionally formatted] temporal [submitted] column value.
-     *
-     *
-     * @param      string $format The date/time format string (either date()-style or strftime()-style).
-     *                            If format is NULL, then the raw DateTime object will be returned.
-     *
-     * @return string|DateTime Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL
-     *
-     * @throws PropelException - if unable to parse/validate the date/time value.
-     */
-    public function getSubmitted($format = NULL)
-    {
-        if ($format === null) {
-            return $this->submitted;
-        } else {
-            return $this->submitted instanceof \DateTimeInterface ? $this->submitted->format($format) : null;
-        }
-    }
-
-    /**
      * Set the value of [id] column.
      *
      * @param int $v new value
@@ -471,6 +546,26 @@ abstract class Submission implements ActiveRecordInterface
     } // setId()
 
     /**
+     * Sets the value of [submitted] column to a normalized version of the date/time value specified.
+     *
+     * @param  mixed $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     */
+    public function setSubmitted($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->submitted !== null || $dt !== null) {
+            if ($this->submitted === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->submitted->format("Y-m-d H:i:s.u")) {
+                $this->submitted = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[SubmissionTableMap::COL_SUBMITTED] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    } // setSubmitted()
+
+    /**
      * Set the value of [visitor_id] column.
      *
      * @param int $v new value
@@ -485,6 +580,10 @@ abstract class Submission implements ActiveRecordInterface
         if ($this->visitor_id !== $v) {
             $this->visitor_id = $v;
             $this->modifiedColumns[SubmissionTableMap::COL_VISITOR_ID] = true;
+        }
+
+        if ($this->aVisitor !== null && $this->aVisitor->getId() !== $v) {
+            $this->aVisitor = null;
         }
 
         return $this;
@@ -507,6 +606,10 @@ abstract class Submission implements ActiveRecordInterface
             $this->modifiedColumns[SubmissionTableMap::COL_FORM_ID] = true;
         }
 
+        if ($this->aForm !== null && $this->aForm->getId() !== $v) {
+            $this->aForm = null;
+        }
+
         return $this;
     } // setFormId()
 
@@ -525,6 +628,10 @@ abstract class Submission implements ActiveRecordInterface
         if ($this->status_id !== $v) {
             $this->status_id = $v;
             $this->modifiedColumns[SubmissionTableMap::COL_STATUS_ID] = true;
+        }
+
+        if ($this->aStatus !== null && $this->aStatus->getId() !== $v) {
+            $this->aStatus = null;
         }
 
         return $this;
@@ -547,6 +654,10 @@ abstract class Submission implements ActiveRecordInterface
             $this->modifiedColumns[SubmissionTableMap::COL_ASSIGNEE_ID] = true;
         }
 
+        if ($this->aAssignee !== null && $this->aAssignee->getId() !== $v) {
+            $this->aAssignee = null;
+        }
+
         return $this;
     } // setAssigneeId()
 
@@ -567,28 +678,12 @@ abstract class Submission implements ActiveRecordInterface
             $this->modifiedColumns[SubmissionTableMap::COL_PARENT_ID] = true;
         }
 
+        if ($this->aSubmissionRelatedByParentId !== null && $this->aSubmissionRelatedByParentId->getId() !== $v) {
+            $this->aSubmissionRelatedByParentId = null;
+        }
+
         return $this;
     } // setParentId()
-
-    /**
-     * Sets the value of [submitted] column to a normalized version of the date/time value specified.
-     *
-     * @param  mixed $v string, integer (timestamp), or \DateTimeInterface value.
-     *               Empty strings are treated as NULL.
-     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
-     */
-    public function setSubmitted($v)
-    {
-        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
-        if ($this->submitted !== null || $dt !== null) {
-            if ($this->submitted === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->submitted->format("Y-m-d H:i:s.u")) {
-                $this->submitted = $dt === null ? null : clone $dt;
-                $this->modifiedColumns[SubmissionTableMap::COL_SUBMITTED] = true;
-            }
-        } // if either are not null
-
-        return $this;
-    } // setSubmitted()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -629,23 +724,23 @@ abstract class Submission implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : SubmissionTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SubmissionTableMap::translateFieldName('VisitorId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : SubmissionTableMap::translateFieldName('Submitted', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->submitted = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SubmissionTableMap::translateFieldName('VisitorId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->visitor_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : SubmissionTableMap::translateFieldName('FormId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SubmissionTableMap::translateFieldName('FormId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->form_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : SubmissionTableMap::translateFieldName('StatusId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SubmissionTableMap::translateFieldName('StatusId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->status_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : SubmissionTableMap::translateFieldName('AssigneeId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SubmissionTableMap::translateFieldName('AssigneeId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->assignee_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : SubmissionTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : SubmissionTableMap::translateFieldName('ParentId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->parent_id = (null !== $col) ? (int) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : SubmissionTableMap::translateFieldName('Submitted', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->submitted = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -676,6 +771,21 @@ abstract class Submission implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aVisitor !== null && $this->visitor_id !== $this->aVisitor->getId()) {
+            $this->aVisitor = null;
+        }
+        if ($this->aForm !== null && $this->form_id !== $this->aForm->getId()) {
+            $this->aForm = null;
+        }
+        if ($this->aStatus !== null && $this->status_id !== $this->aStatus->getId()) {
+            $this->aStatus = null;
+        }
+        if ($this->aAssignee !== null && $this->assignee_id !== $this->aAssignee->getId()) {
+            $this->aAssignee = null;
+        }
+        if ($this->aSubmissionRelatedByParentId !== null && $this->parent_id !== $this->aSubmissionRelatedByParentId->getId()) {
+            $this->aSubmissionRelatedByParentId = null;
+        }
     } // ensureConsistency
 
     /**
@@ -714,6 +824,17 @@ abstract class Submission implements ActiveRecordInterface
         $this->hydrate($row, 0, true, $dataFetcher->getIndexType()); // rehydrate
 
         if ($deep) {  // also de-associate any related objects?
+
+            $this->aVisitor = null;
+            $this->aForm = null;
+            $this->aStatus = null;
+            $this->aAssignee = null;
+            $this->aSubmissionRelatedByParentId = null;
+            $this->collResponses = null;
+
+            $this->collAsParents = null;
+
+            $this->collSubmissionTags = null;
 
         } // if (deep)
     }
@@ -818,6 +939,46 @@ abstract class Submission implements ActiveRecordInterface
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aVisitor !== null) {
+                if ($this->aVisitor->isModified() || $this->aVisitor->isNew()) {
+                    $affectedRows += $this->aVisitor->save($con);
+                }
+                $this->setVisitor($this->aVisitor);
+            }
+
+            if ($this->aForm !== null) {
+                if ($this->aForm->isModified() || $this->aForm->isNew()) {
+                    $affectedRows += $this->aForm->save($con);
+                }
+                $this->setForm($this->aForm);
+            }
+
+            if ($this->aStatus !== null) {
+                if ($this->aStatus->isModified() || $this->aStatus->isNew()) {
+                    $affectedRows += $this->aStatus->save($con);
+                }
+                $this->setStatus($this->aStatus);
+            }
+
+            if ($this->aAssignee !== null) {
+                if ($this->aAssignee->isModified() || $this->aAssignee->isNew()) {
+                    $affectedRows += $this->aAssignee->save($con);
+                }
+                $this->setAssignee($this->aAssignee);
+            }
+
+            if ($this->aSubmissionRelatedByParentId !== null) {
+                if ($this->aSubmissionRelatedByParentId->isModified() || $this->aSubmissionRelatedByParentId->isNew()) {
+                    $affectedRows += $this->aSubmissionRelatedByParentId->save($con);
+                }
+                $this->setSubmissionRelatedByParentId($this->aSubmissionRelatedByParentId);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -827,6 +988,58 @@ abstract class Submission implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->responsesScheduledForDeletion !== null) {
+                if (!$this->responsesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\ResponseQuery::create()
+                        ->filterByPrimaryKeys($this->responsesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->responsesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collResponses !== null) {
+                foreach ($this->collResponses as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->asParentsScheduledForDeletion !== null) {
+                if (!$this->asParentsScheduledForDeletion->isEmpty()) {
+                    foreach ($this->asParentsScheduledForDeletion as $asParent) {
+                        // need to save related object because we set the relation to null
+                        $asParent->save($con);
+                    }
+                    $this->asParentsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collAsParents !== null) {
+                foreach ($this->collAsParents as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->submissionTagsScheduledForDeletion !== null) {
+                if (!$this->submissionTagsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\SubmissionTagQuery::create()
+                        ->filterByPrimaryKeys($this->submissionTagsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->submissionTagsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSubmissionTags !== null) {
+                foreach ($this->collSubmissionTags as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -858,6 +1071,9 @@ abstract class Submission implements ActiveRecordInterface
         if ($this->isColumnModified(SubmissionTableMap::COL_ID)) {
             $modifiedColumns[':p' . $index++]  = 'id';
         }
+        if ($this->isColumnModified(SubmissionTableMap::COL_SUBMITTED)) {
+            $modifiedColumns[':p' . $index++]  = 'submitted';
+        }
         if ($this->isColumnModified(SubmissionTableMap::COL_VISITOR_ID)) {
             $modifiedColumns[':p' . $index++]  = 'visitor_id';
         }
@@ -873,9 +1089,6 @@ abstract class Submission implements ActiveRecordInterface
         if ($this->isColumnModified(SubmissionTableMap::COL_PARENT_ID)) {
             $modifiedColumns[':p' . $index++]  = 'parent_id';
         }
-        if ($this->isColumnModified(SubmissionTableMap::COL_SUBMITTED)) {
-            $modifiedColumns[':p' . $index++]  = 'submitted';
-        }
 
         $sql = sprintf(
             'INSERT INTO submission (%s) VALUES (%s)',
@@ -889,6 +1102,9 @@ abstract class Submission implements ActiveRecordInterface
                 switch ($columnName) {
                     case 'id':
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
+                        break;
+                    case 'submitted':
+                        $stmt->bindValue($identifier, $this->submitted ? $this->submitted->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
                         break;
                     case 'visitor_id':
                         $stmt->bindValue($identifier, $this->visitor_id, PDO::PARAM_INT);
@@ -904,9 +1120,6 @@ abstract class Submission implements ActiveRecordInterface
                         break;
                     case 'parent_id':
                         $stmt->bindValue($identifier, $this->parent_id, PDO::PARAM_INT);
-                        break;
-                    case 'submitted':
-                        $stmt->bindValue($identifier, $this->submitted ? $this->submitted->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -974,22 +1187,22 @@ abstract class Submission implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getVisitorId();
+                return $this->getSubmitted();
                 break;
             case 2:
-                return $this->getFormId();
+                return $this->getVisitorId();
                 break;
             case 3:
-                return $this->getStatusId();
+                return $this->getFormId();
                 break;
             case 4:
-                return $this->getAssigneeId();
+                return $this->getStatusId();
                 break;
             case 5:
-                return $this->getParentId();
+                return $this->getAssigneeId();
                 break;
             case 6:
-                return $this->getSubmitted();
+                return $this->getParentId();
                 break;
             default:
                 return null;
@@ -1008,10 +1221,11 @@ abstract class Submission implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Submission'][$this->hashCode()])) {
@@ -1021,15 +1235,15 @@ abstract class Submission implements ActiveRecordInterface
         $keys = SubmissionTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getVisitorId(),
-            $keys[2] => $this->getFormId(),
-            $keys[3] => $this->getStatusId(),
-            $keys[4] => $this->getAssigneeId(),
-            $keys[5] => $this->getParentId(),
-            $keys[6] => $this->getSubmitted(),
+            $keys[1] => $this->getSubmitted(),
+            $keys[2] => $this->getVisitorId(),
+            $keys[3] => $this->getFormId(),
+            $keys[4] => $this->getStatusId(),
+            $keys[5] => $this->getAssigneeId(),
+            $keys[6] => $this->getParentId(),
         );
-        if ($result[$keys[6]] instanceof \DateTimeInterface) {
-            $result[$keys[6]] = $result[$keys[6]]->format('c');
+        if ($result[$keys[1]] instanceof \DateTimeInterface) {
+            $result[$keys[1]] = $result[$keys[1]]->format('c');
         }
 
         $virtualColumns = $this->virtualColumns;
@@ -1037,6 +1251,128 @@ abstract class Submission implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aVisitor) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'visitor';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'visitor';
+                        break;
+                    default:
+                        $key = 'Visitor';
+                }
+
+                $result[$key] = $this->aVisitor->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aForm) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'form';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form';
+                        break;
+                    default:
+                        $key = 'Form';
+                }
+
+                $result[$key] = $this->aForm->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aStatus) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'status';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'status';
+                        break;
+                    default:
+                        $key = 'Status';
+                }
+
+                $result[$key] = $this->aStatus->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aAssignee) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'visitor';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'visitor';
+                        break;
+                    default:
+                        $key = 'Assignee';
+                }
+
+                $result[$key] = $this->aAssignee->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aSubmissionRelatedByParentId) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submission';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submission';
+                        break;
+                    default:
+                        $key = 'Submission';
+                }
+
+                $result[$key] = $this->aSubmissionRelatedByParentId->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->collResponses) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'responses';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'responses';
+                        break;
+                    default:
+                        $key = 'Responses';
+                }
+
+                $result[$key] = $this->collResponses->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collAsParents) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submissions';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submissions';
+                        break;
+                    default:
+                        $key = 'AsParents';
+                }
+
+                $result[$key] = $this->collAsParents->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collSubmissionTags) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submissionTags';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submission_tags';
+                        break;
+                    default:
+                        $key = 'SubmissionTags';
+                }
+
+                $result[$key] = $this->collSubmissionTags->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1074,22 +1410,22 @@ abstract class Submission implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setVisitorId($value);
+                $this->setSubmitted($value);
                 break;
             case 2:
-                $this->setFormId($value);
+                $this->setVisitorId($value);
                 break;
             case 3:
-                $this->setStatusId($value);
+                $this->setFormId($value);
                 break;
             case 4:
-                $this->setAssigneeId($value);
+                $this->setStatusId($value);
                 break;
             case 5:
-                $this->setParentId($value);
+                $this->setAssigneeId($value);
                 break;
             case 6:
-                $this->setSubmitted($value);
+                $this->setParentId($value);
                 break;
         } // switch()
 
@@ -1115,30 +1451,28 @@ abstract class Submission implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-//        var_dump($arr);
-//        die();
         $keys = SubmissionTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setVisitorId($arr[$keys[1]]);
+            $this->setSubmitted($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setFormId($arr[$keys[2]]);
+            $this->setVisitorId($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setStatusId($arr[$keys[3]]);
+            $this->setFormId($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setAssigneeId($arr[$keys[4]]);
+            $this->setStatusId($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setParentId($arr[$keys[5]]);
+            $this->setAssigneeId($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setSubmitted($arr[$keys[6]]);
+            $this->setParentId($arr[$keys[6]]);
         }
     }
 
@@ -1184,6 +1518,9 @@ abstract class Submission implements ActiveRecordInterface
         if ($this->isColumnModified(SubmissionTableMap::COL_ID)) {
             $criteria->add(SubmissionTableMap::COL_ID, $this->id);
         }
+        if ($this->isColumnModified(SubmissionTableMap::COL_SUBMITTED)) {
+            $criteria->add(SubmissionTableMap::COL_SUBMITTED, $this->submitted);
+        }
         if ($this->isColumnModified(SubmissionTableMap::COL_VISITOR_ID)) {
             $criteria->add(SubmissionTableMap::COL_VISITOR_ID, $this->visitor_id);
         }
@@ -1198,9 +1535,6 @@ abstract class Submission implements ActiveRecordInterface
         }
         if ($this->isColumnModified(SubmissionTableMap::COL_PARENT_ID)) {
             $criteria->add(SubmissionTableMap::COL_PARENT_ID, $this->parent_id);
-        }
-        if ($this->isColumnModified(SubmissionTableMap::COL_SUBMITTED)) {
-            $criteria->add(SubmissionTableMap::COL_SUBMITTED, $this->submitted);
         }
 
         return $criteria;
@@ -1288,12 +1622,38 @@ abstract class Submission implements ActiveRecordInterface
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
+        $copyObj->setSubmitted($this->getSubmitted());
         $copyObj->setVisitorId($this->getVisitorId());
         $copyObj->setFormId($this->getFormId());
         $copyObj->setStatusId($this->getStatusId());
         $copyObj->setAssigneeId($this->getAssigneeId());
         $copyObj->setParentId($this->getParentId());
-        $copyObj->setSubmitted($this->getSubmitted());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getResponses() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addResponse($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getAsParents() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addAsParent($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getSubmissionTags() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSubmissionTag($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1323,19 +1683,1139 @@ abstract class Submission implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildVisitor object.
+     *
+     * @param  ChildVisitor $v
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setVisitor(ChildVisitor $v = null)
+    {
+        if ($v === null) {
+            $this->setVisitorId(NULL);
+        } else {
+            $this->setVisitorId($v->getId());
+        }
+
+        $this->aVisitor = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildVisitor object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSubmissionRelatedByVisitorId($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildVisitor object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildVisitor The associated ChildVisitor object.
+     * @throws PropelException
+     */
+    public function getVisitor(ConnectionInterface $con = null)
+    {
+        if ($this->aVisitor === null && ($this->visitor_id != 0)) {
+            $this->aVisitor = ChildVisitorQuery::create()->findPk($this->visitor_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aVisitor->addSubmissionsRelatedByVisitorId($this);
+             */
+        }
+
+        return $this->aVisitor;
+    }
+
+    /**
+     * Declares an association between this object and a ChildForm object.
+     *
+     * @param  ChildForm $v
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setForm(ChildForm $v = null)
+    {
+        if ($v === null) {
+            $this->setFormId(NULL);
+        } else {
+            $this->setFormId($v->getId());
+        }
+
+        $this->aForm = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildForm object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSubmission($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildForm object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildForm The associated ChildForm object.
+     * @throws PropelException
+     */
+    public function getForm(ConnectionInterface $con = null)
+    {
+        if ($this->aForm === null && ($this->form_id != 0)) {
+            $this->aForm = ChildFormQuery::create()->findPk($this->form_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aForm->addSubmissions($this);
+             */
+        }
+
+        return $this->aForm;
+    }
+
+    /**
+     * Declares an association between this object and a ChildStatus object.
+     *
+     * @param  ChildStatus $v
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setStatus(ChildStatus $v = null)
+    {
+        if ($v === null) {
+            $this->setStatusId(NULL);
+        } else {
+            $this->setStatusId($v->getId());
+        }
+
+        $this->aStatus = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildStatus object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSubmission($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildStatus object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildStatus The associated ChildStatus object.
+     * @throws PropelException
+     */
+    public function getStatus(ConnectionInterface $con = null)
+    {
+        if ($this->aStatus === null && ($this->status_id != 0)) {
+            $this->aStatus = ChildStatusQuery::create()->findPk($this->status_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aStatus->addSubmissions($this);
+             */
+        }
+
+        return $this->aStatus;
+    }
+
+    /**
+     * Declares an association between this object and a ChildVisitor object.
+     *
+     * @param  ChildVisitor $v
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setAssignee(ChildVisitor $v = null)
+    {
+        if ($v === null) {
+            $this->setAssigneeId(NULL);
+        } else {
+            $this->setAssigneeId($v->getId());
+        }
+
+        $this->aAssignee = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildVisitor object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsAssignee($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildVisitor object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildVisitor The associated ChildVisitor object.
+     * @throws PropelException
+     */
+    public function getAssignee(ConnectionInterface $con = null)
+    {
+        if ($this->aAssignee === null && ($this->assignee_id != 0)) {
+            $this->aAssignee = ChildVisitorQuery::create()->findPk($this->assignee_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aAssignee->addAsAssignees($this);
+             */
+        }
+
+        return $this->aAssignee;
+    }
+
+    /**
+     * Declares an association between this object and a ChildSubmission object.
+     *
+     * @param  ChildSubmission $v
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setSubmissionRelatedByParentId(ChildSubmission $v = null)
+    {
+        if ($v === null) {
+            $this->setParentId(NULL);
+        } else {
+            $this->setParentId($v->getId());
+        }
+
+        $this->aSubmissionRelatedByParentId = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildSubmission object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsParent($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildSubmission object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildSubmission The associated ChildSubmission object.
+     * @throws PropelException
+     */
+    public function getSubmissionRelatedByParentId(ConnectionInterface $con = null)
+    {
+        if ($this->aSubmissionRelatedByParentId === null && ($this->parent_id != 0)) {
+            $this->aSubmissionRelatedByParentId = ChildSubmissionQuery::create()->findPk($this->parent_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aSubmissionRelatedByParentId->addAsParents($this);
+             */
+        }
+
+        return $this->aSubmissionRelatedByParentId;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('Response' == $relationName) {
+            $this->initResponses();
+            return;
+        }
+        if ('AsParent' == $relationName) {
+            $this->initAsParents();
+            return;
+        }
+        if ('SubmissionTag' == $relationName) {
+            $this->initSubmissionTags();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collResponses collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addResponses()
+     */
+    public function clearResponses()
+    {
+        $this->collResponses = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collResponses collection loaded partially.
+     */
+    public function resetPartialResponses($v = true)
+    {
+        $this->collResponsesPartial = $v;
+    }
+
+    /**
+     * Initializes the collResponses collection.
+     *
+     * By default this just sets the collResponses collection to an empty array (like clearcollResponses());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initResponses($overrideExisting = true)
+    {
+        if (null !== $this->collResponses && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ResponseTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collResponses = new $collectionClassName;
+        $this->collResponses->setModel('\FormsAPI\Response');
+    }
+
+    /**
+     * Gets an array of ChildResponse objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSubmission is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildResponse[] List of ChildResponse objects
+     * @throws PropelException
+     */
+    public function getResponses(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collResponsesPartial && !$this->isNew();
+        if (null === $this->collResponses || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collResponses) {
+                // return empty collection
+                $this->initResponses();
+            } else {
+                $collResponses = ChildResponseQuery::create(null, $criteria)
+                    ->filterBySubmission($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collResponsesPartial && count($collResponses)) {
+                        $this->initResponses(false);
+
+                        foreach ($collResponses as $obj) {
+                            if (false == $this->collResponses->contains($obj)) {
+                                $this->collResponses->append($obj);
+                            }
+                        }
+
+                        $this->collResponsesPartial = true;
+                    }
+
+                    return $collResponses;
+                }
+
+                if ($partial && $this->collResponses) {
+                    foreach ($this->collResponses as $obj) {
+                        if ($obj->isNew()) {
+                            $collResponses[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collResponses = $collResponses;
+                $this->collResponsesPartial = false;
+            }
+        }
+
+        return $this->collResponses;
+    }
+
+    /**
+     * Sets a collection of ChildResponse objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $responses A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function setResponses(Collection $responses, ConnectionInterface $con = null)
+    {
+        /** @var ChildResponse[] $responsesToDelete */
+        $responsesToDelete = $this->getResponses(new Criteria(), $con)->diff($responses);
+
+
+        $this->responsesScheduledForDeletion = $responsesToDelete;
+
+        foreach ($responsesToDelete as $responseRemoved) {
+            $responseRemoved->setSubmission(null);
+        }
+
+        $this->collResponses = null;
+        foreach ($responses as $response) {
+            $this->addResponse($response);
+        }
+
+        $this->collResponses = $responses;
+        $this->collResponsesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Response objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Response objects.
+     * @throws PropelException
+     */
+    public function countResponses(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collResponsesPartial && !$this->isNew();
+        if (null === $this->collResponses || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collResponses) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getResponses());
+            }
+
+            $query = ChildResponseQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySubmission($this)
+                ->count($con);
+        }
+
+        return count($this->collResponses);
+    }
+
+    /**
+     * Method called to associate a ChildResponse object to this object
+     * through the ChildResponse foreign key attribute.
+     *
+     * @param  ChildResponse $l ChildResponse
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     */
+    public function addResponse(ChildResponse $l)
+    {
+        if ($this->collResponses === null) {
+            $this->initResponses();
+            $this->collResponsesPartial = true;
+        }
+
+        if (!$this->collResponses->contains($l)) {
+            $this->doAddResponse($l);
+
+            if ($this->responsesScheduledForDeletion and $this->responsesScheduledForDeletion->contains($l)) {
+                $this->responsesScheduledForDeletion->remove($this->responsesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildResponse $response The ChildResponse object to add.
+     */
+    protected function doAddResponse(ChildResponse $response)
+    {
+        $this->collResponses[]= $response;
+        $response->setSubmission($this);
+    }
+
+    /**
+     * @param  ChildResponse $response The ChildResponse object to remove.
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function removeResponse(ChildResponse $response)
+    {
+        if ($this->getResponses()->contains($response)) {
+            $pos = $this->collResponses->search($response);
+            $this->collResponses->remove($pos);
+            if (null === $this->responsesScheduledForDeletion) {
+                $this->responsesScheduledForDeletion = clone $this->collResponses;
+                $this->responsesScheduledForDeletion->clear();
+            }
+            $this->responsesScheduledForDeletion[]= clone $response;
+            $response->setSubmission(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related Responses from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildResponse[] List of ChildResponse objects
+     */
+    public function getResponsesJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildResponseQuery::create(null, $criteria);
+        $query->joinWith('Element', $joinBehavior);
+
+        return $this->getResponses($query, $con);
+    }
+
+    /**
+     * Clears out the collAsParents collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addAsParents()
+     */
+    public function clearAsParents()
+    {
+        $this->collAsParents = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collAsParents collection loaded partially.
+     */
+    public function resetPartialAsParents($v = true)
+    {
+        $this->collAsParentsPartial = $v;
+    }
+
+    /**
+     * Initializes the collAsParents collection.
+     *
+     * By default this just sets the collAsParents collection to an empty array (like clearcollAsParents());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initAsParents($overrideExisting = true)
+    {
+        if (null !== $this->collAsParents && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SubmissionTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collAsParents = new $collectionClassName;
+        $this->collAsParents->setModel('\FormsAPI\Submission');
+    }
+
+    /**
+     * Gets an array of ChildSubmission objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSubmission is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     * @throws PropelException
+     */
+    public function getAsParents(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsParentsPartial && !$this->isNew();
+        if (null === $this->collAsParents || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collAsParents) {
+                // return empty collection
+                $this->initAsParents();
+            } else {
+                $collAsParents = ChildSubmissionQuery::create(null, $criteria)
+                    ->filterBySubmissionRelatedByParentId($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collAsParentsPartial && count($collAsParents)) {
+                        $this->initAsParents(false);
+
+                        foreach ($collAsParents as $obj) {
+                            if (false == $this->collAsParents->contains($obj)) {
+                                $this->collAsParents->append($obj);
+                            }
+                        }
+
+                        $this->collAsParentsPartial = true;
+                    }
+
+                    return $collAsParents;
+                }
+
+                if ($partial && $this->collAsParents) {
+                    foreach ($this->collAsParents as $obj) {
+                        if ($obj->isNew()) {
+                            $collAsParents[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collAsParents = $collAsParents;
+                $this->collAsParentsPartial = false;
+            }
+        }
+
+        return $this->collAsParents;
+    }
+
+    /**
+     * Sets a collection of ChildSubmission objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $asParents A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function setAsParents(Collection $asParents, ConnectionInterface $con = null)
+    {
+        /** @var ChildSubmission[] $asParentsToDelete */
+        $asParentsToDelete = $this->getAsParents(new Criteria(), $con)->diff($asParents);
+
+
+        $this->asParentsScheduledForDeletion = $asParentsToDelete;
+
+        foreach ($asParentsToDelete as $asParentRemoved) {
+            $asParentRemoved->setSubmissionRelatedByParentId(null);
+        }
+
+        $this->collAsParents = null;
+        foreach ($asParents as $asParent) {
+            $this->addAsParent($asParent);
+        }
+
+        $this->collAsParents = $asParents;
+        $this->collAsParentsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Submission objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Submission objects.
+     * @throws PropelException
+     */
+    public function countAsParents(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collAsParentsPartial && !$this->isNew();
+        if (null === $this->collAsParents || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collAsParents) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getAsParents());
+            }
+
+            $query = ChildSubmissionQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySubmissionRelatedByParentId($this)
+                ->count($con);
+        }
+
+        return count($this->collAsParents);
+    }
+
+    /**
+     * Method called to associate a ChildSubmission object to this object
+     * through the ChildSubmission foreign key attribute.
+     *
+     * @param  ChildSubmission $l ChildSubmission
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     */
+    public function addAsParent(ChildSubmission $l)
+    {
+        if ($this->collAsParents === null) {
+            $this->initAsParents();
+            $this->collAsParentsPartial = true;
+        }
+
+        if (!$this->collAsParents->contains($l)) {
+            $this->doAddAsParent($l);
+
+            if ($this->asParentsScheduledForDeletion and $this->asParentsScheduledForDeletion->contains($l)) {
+                $this->asParentsScheduledForDeletion->remove($this->asParentsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSubmission $asParent The ChildSubmission object to add.
+     */
+    protected function doAddAsParent(ChildSubmission $asParent)
+    {
+        $this->collAsParents[]= $asParent;
+        $asParent->setSubmissionRelatedByParentId($this);
+    }
+
+    /**
+     * @param  ChildSubmission $asParent The ChildSubmission object to remove.
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function removeAsParent(ChildSubmission $asParent)
+    {
+        if ($this->getAsParents()->contains($asParent)) {
+            $pos = $this->collAsParents->search($asParent);
+            $this->collAsParents->remove($pos);
+            if (null === $this->asParentsScheduledForDeletion) {
+                $this->asParentsScheduledForDeletion = clone $this->collAsParents;
+                $this->asParentsScheduledForDeletion->clear();
+            }
+            $this->asParentsScheduledForDeletion[]= $asParent;
+            $asParent->setSubmissionRelatedByParentId(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related AsParents from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getAsParentsJoinVisitor(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Visitor', $joinBehavior);
+
+        return $this->getAsParents($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related AsParents from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getAsParentsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getAsParents($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related AsParents from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getAsParentsJoinStatus(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Status', $joinBehavior);
+
+        return $this->getAsParents($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related AsParents from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getAsParentsJoinAssignee(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Assignee', $joinBehavior);
+
+        return $this->getAsParents($query, $con);
+    }
+
+    /**
+     * Clears out the collSubmissionTags collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSubmissionTags()
+     */
+    public function clearSubmissionTags()
+    {
+        $this->collSubmissionTags = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSubmissionTags collection loaded partially.
+     */
+    public function resetPartialSubmissionTags($v = true)
+    {
+        $this->collSubmissionTagsPartial = $v;
+    }
+
+    /**
+     * Initializes the collSubmissionTags collection.
+     *
+     * By default this just sets the collSubmissionTags collection to an empty array (like clearcollSubmissionTags());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSubmissionTags($overrideExisting = true)
+    {
+        if (null !== $this->collSubmissionTags && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SubmissionTagTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSubmissionTags = new $collectionClassName;
+        $this->collSubmissionTags->setModel('\FormsAPI\SubmissionTag');
+    }
+
+    /**
+     * Gets an array of ChildSubmissionTag objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSubmission is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSubmissionTag[] List of ChildSubmissionTag objects
+     * @throws PropelException
+     */
+    public function getSubmissionTags(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionTagsPartial && !$this->isNew();
+        if (null === $this->collSubmissionTags || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collSubmissionTags) {
+                // return empty collection
+                $this->initSubmissionTags();
+            } else {
+                $collSubmissionTags = ChildSubmissionTagQuery::create(null, $criteria)
+                    ->filterBySubmission($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSubmissionTagsPartial && count($collSubmissionTags)) {
+                        $this->initSubmissionTags(false);
+
+                        foreach ($collSubmissionTags as $obj) {
+                            if (false == $this->collSubmissionTags->contains($obj)) {
+                                $this->collSubmissionTags->append($obj);
+                            }
+                        }
+
+                        $this->collSubmissionTagsPartial = true;
+                    }
+
+                    return $collSubmissionTags;
+                }
+
+                if ($partial && $this->collSubmissionTags) {
+                    foreach ($this->collSubmissionTags as $obj) {
+                        if ($obj->isNew()) {
+                            $collSubmissionTags[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSubmissionTags = $collSubmissionTags;
+                $this->collSubmissionTagsPartial = false;
+            }
+        }
+
+        return $this->collSubmissionTags;
+    }
+
+    /**
+     * Sets a collection of ChildSubmissionTag objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $submissionTags A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function setSubmissionTags(Collection $submissionTags, ConnectionInterface $con = null)
+    {
+        /** @var ChildSubmissionTag[] $submissionTagsToDelete */
+        $submissionTagsToDelete = $this->getSubmissionTags(new Criteria(), $con)->diff($submissionTags);
+
+
+        $this->submissionTagsScheduledForDeletion = $submissionTagsToDelete;
+
+        foreach ($submissionTagsToDelete as $submissionTagRemoved) {
+            $submissionTagRemoved->setSubmission(null);
+        }
+
+        $this->collSubmissionTags = null;
+        foreach ($submissionTags as $submissionTag) {
+            $this->addSubmissionTag($submissionTag);
+        }
+
+        $this->collSubmissionTags = $submissionTags;
+        $this->collSubmissionTagsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related SubmissionTag objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related SubmissionTag objects.
+     * @throws PropelException
+     */
+    public function countSubmissionTags(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionTagsPartial && !$this->isNew();
+        if (null === $this->collSubmissionTags || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSubmissionTags) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSubmissionTags());
+            }
+
+            $query = ChildSubmissionTagQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySubmission($this)
+                ->count($con);
+        }
+
+        return count($this->collSubmissionTags);
+    }
+
+    /**
+     * Method called to associate a ChildSubmissionTag object to this object
+     * through the ChildSubmissionTag foreign key attribute.
+     *
+     * @param  ChildSubmissionTag $l ChildSubmissionTag
+     * @return $this|\FormsAPI\Submission The current object (for fluent API support)
+     */
+    public function addSubmissionTag(ChildSubmissionTag $l)
+    {
+        if ($this->collSubmissionTags === null) {
+            $this->initSubmissionTags();
+            $this->collSubmissionTagsPartial = true;
+        }
+
+        if (!$this->collSubmissionTags->contains($l)) {
+            $this->doAddSubmissionTag($l);
+
+            if ($this->submissionTagsScheduledForDeletion and $this->submissionTagsScheduledForDeletion->contains($l)) {
+                $this->submissionTagsScheduledForDeletion->remove($this->submissionTagsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSubmissionTag $submissionTag The ChildSubmissionTag object to add.
+     */
+    protected function doAddSubmissionTag(ChildSubmissionTag $submissionTag)
+    {
+        $this->collSubmissionTags[]= $submissionTag;
+        $submissionTag->setSubmission($this);
+    }
+
+    /**
+     * @param  ChildSubmissionTag $submissionTag The ChildSubmissionTag object to remove.
+     * @return $this|ChildSubmission The current object (for fluent API support)
+     */
+    public function removeSubmissionTag(ChildSubmissionTag $submissionTag)
+    {
+        if ($this->getSubmissionTags()->contains($submissionTag)) {
+            $pos = $this->collSubmissionTags->search($submissionTag);
+            $this->collSubmissionTags->remove($pos);
+            if (null === $this->submissionTagsScheduledForDeletion) {
+                $this->submissionTagsScheduledForDeletion = clone $this->collSubmissionTags;
+                $this->submissionTagsScheduledForDeletion->clear();
+            }
+            $this->submissionTagsScheduledForDeletion[]= clone $submissionTag;
+            $submissionTag->setSubmission(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Submission is new, it will return
+     * an empty collection; or if this Submission has previously
+     * been saved, it will retrieve related SubmissionTags from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Submission.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmissionTag[] List of ChildSubmissionTag objects
+     */
+    public function getSubmissionTagsJoinTag(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionTagQuery::create(null, $criteria);
+        $query->joinWith('Tag', $joinBehavior);
+
+        return $this->getSubmissionTags($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aVisitor) {
+            $this->aVisitor->removeSubmissionRelatedByVisitorId($this);
+        }
+        if (null !== $this->aForm) {
+            $this->aForm->removeSubmission($this);
+        }
+        if (null !== $this->aStatus) {
+            $this->aStatus->removeSubmission($this);
+        }
+        if (null !== $this->aAssignee) {
+            $this->aAssignee->removeAsAssignee($this);
+        }
+        if (null !== $this->aSubmissionRelatedByParentId) {
+            $this->aSubmissionRelatedByParentId->removeAsParent($this);
+        }
         $this->id = null;
+        $this->submitted = null;
         $this->visitor_id = null;
         $this->form_id = null;
         $this->status_id = null;
         $this->assignee_id = null;
         $this->parent_id = null;
-        $this->submitted = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1354,8 +2834,31 @@ abstract class Submission implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collResponses) {
+                foreach ($this->collResponses as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collAsParents) {
+                foreach ($this->collAsParents as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collSubmissionTags) {
+                foreach ($this->collSubmissionTags as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collResponses = null;
+        $this->collAsParents = null;
+        $this->collSubmissionTags = null;
+        $this->aVisitor = null;
+        $this->aForm = null;
+        $this->aStatus = null;
+        $this->aAssignee = null;
+        $this->aSubmissionRelatedByParentId = null;
     }
 
     /**
@@ -1405,12 +2908,74 @@ abstract class Submission implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aVisitor, 'validate')) {
+                if (!$this->aVisitor->validate($validator)) {
+                    $failureMap->addAll($this->aVisitor->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aForm, 'validate')) {
+                if (!$this->aForm->validate($validator)) {
+                    $failureMap->addAll($this->aForm->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aStatus, 'validate')) {
+                if (!$this->aStatus->validate($validator)) {
+                    $failureMap->addAll($this->aStatus->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aAssignee, 'validate')) {
+                if (!$this->aAssignee->validate($validator)) {
+                    $failureMap->addAll($this->aAssignee->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aSubmissionRelatedByParentId, 'validate')) {
+                if (!$this->aSubmissionRelatedByParentId->validate($validator)) {
+                    $failureMap->addAll($this->aSubmissionRelatedByParentId->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collResponses) {
+                foreach ($this->collResponses as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collAsParents) {
+                foreach ($this->collAsParents as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collSubmissionTags) {
+                foreach ($this->collSubmissionTags as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

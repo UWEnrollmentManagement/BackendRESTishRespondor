@@ -146,6 +146,20 @@ class StatusTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Submission', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':status_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, 'Submissions', false);
+        $this->addRelation('FormStatus', '\\FormsAPI\\FormStatus', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':status_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'FormStatuses', false);
     } // buildRelations()
 
     /**
@@ -160,6 +174,16 @@ class StatusTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'name','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to status     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        SubmissionTableMap::clearInstancePool();
+        FormStatusTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

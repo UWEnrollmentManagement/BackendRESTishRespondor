@@ -196,6 +196,13 @@ class ElementTableMap extends TableMap
     1 => ':id',
   ),
 ), 'SET NULL', null, 'Parents', false);
+        $this->addRelation('Response', '\\FormsAPI\\Response', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Responses', false);
         $this->addRelation('RootElement', '\\FormsAPI\\Form', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -203,6 +210,41 @@ class ElementTableMap extends TableMap
     1 => ':id',
   ),
 ), 'SET NULL', null, 'RootElements', false);
+        $this->addRelation('AsMaster', '\\FormsAPI\\Dependency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'AsMasters', false);
+        $this->addRelation('AsSlave', '\\FormsAPI\\Dependency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':slave_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'AsSlaves', false);
+        $this->addRelation('Requirement', '\\FormsAPI\\Requirement', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Requirements', false);
+        $this->addRelation('ElementChoice', '\\FormsAPI\\ElementChoice', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'ElementChoices', false);
+        $this->addRelation('DashboardElement', '\\FormsAPI\\DashboardElement', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'DashboardElements', false);
     } // buildRelations()
 
     /**
@@ -225,7 +267,12 @@ class ElementTableMap extends TableMap
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
         ElementTableMap::clearInstancePool();
+        ResponseTableMap::clearInstancePool();
         FormTableMap::clearInstancePool();
+        DependencyTableMap::clearInstancePool();
+        RequirementTableMap::clearInstancePool();
+        ElementChoiceTableMap::clearInstancePool();
+        DashboardElementTableMap::clearInstancePool();
     }
 
     /**

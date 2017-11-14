@@ -10,6 +10,7 @@ use FormsAPI\Map\SubmissionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -20,20 +21,20 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  * @method     ChildSubmissionQuery orderById($order = Criteria::ASC) Order by the id column
+ * @method     ChildSubmissionQuery orderBySubmitted($order = Criteria::ASC) Order by the submitted column
  * @method     ChildSubmissionQuery orderByVisitorId($order = Criteria::ASC) Order by the visitor_id column
  * @method     ChildSubmissionQuery orderByFormId($order = Criteria::ASC) Order by the form_id column
  * @method     ChildSubmissionQuery orderByStatusId($order = Criteria::ASC) Order by the status_id column
  * @method     ChildSubmissionQuery orderByAssigneeId($order = Criteria::ASC) Order by the assignee_id column
  * @method     ChildSubmissionQuery orderByParentId($order = Criteria::ASC) Order by the parent_id column
- * @method     ChildSubmissionQuery orderBySubmitted($order = Criteria::ASC) Order by the submitted column
  *
  * @method     ChildSubmissionQuery groupById() Group by the id column
+ * @method     ChildSubmissionQuery groupBySubmitted() Group by the submitted column
  * @method     ChildSubmissionQuery groupByVisitorId() Group by the visitor_id column
  * @method     ChildSubmissionQuery groupByFormId() Group by the form_id column
  * @method     ChildSubmissionQuery groupByStatusId() Group by the status_id column
  * @method     ChildSubmissionQuery groupByAssigneeId() Group by the assignee_id column
  * @method     ChildSubmissionQuery groupByParentId() Group by the parent_id column
- * @method     ChildSubmissionQuery groupBySubmitted() Group by the submitted column
  *
  * @method     ChildSubmissionQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildSubmissionQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -43,36 +44,118 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSubmissionQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildSubmissionQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
+ * @method     ChildSubmissionQuery leftJoinVisitor($relationAlias = null) Adds a LEFT JOIN clause to the query using the Visitor relation
+ * @method     ChildSubmissionQuery rightJoinVisitor($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Visitor relation
+ * @method     ChildSubmissionQuery innerJoinVisitor($relationAlias = null) Adds a INNER JOIN clause to the query using the Visitor relation
+ *
+ * @method     ChildSubmissionQuery joinWithVisitor($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Visitor relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithVisitor() Adds a LEFT JOIN clause and with to the query using the Visitor relation
+ * @method     ChildSubmissionQuery rightJoinWithVisitor() Adds a RIGHT JOIN clause and with to the query using the Visitor relation
+ * @method     ChildSubmissionQuery innerJoinWithVisitor() Adds a INNER JOIN clause and with to the query using the Visitor relation
+ *
+ * @method     ChildSubmissionQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
+ * @method     ChildSubmissionQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
+ * @method     ChildSubmissionQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ *
+ * @method     ChildSubmissionQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
+ * @method     ChildSubmissionQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
+ * @method     ChildSubmissionQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ *
+ * @method     ChildSubmissionQuery leftJoinStatus($relationAlias = null) Adds a LEFT JOIN clause to the query using the Status relation
+ * @method     ChildSubmissionQuery rightJoinStatus($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Status relation
+ * @method     ChildSubmissionQuery innerJoinStatus($relationAlias = null) Adds a INNER JOIN clause to the query using the Status relation
+ *
+ * @method     ChildSubmissionQuery joinWithStatus($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Status relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithStatus() Adds a LEFT JOIN clause and with to the query using the Status relation
+ * @method     ChildSubmissionQuery rightJoinWithStatus() Adds a RIGHT JOIN clause and with to the query using the Status relation
+ * @method     ChildSubmissionQuery innerJoinWithStatus() Adds a INNER JOIN clause and with to the query using the Status relation
+ *
+ * @method     ChildSubmissionQuery leftJoinAssignee($relationAlias = null) Adds a LEFT JOIN clause to the query using the Assignee relation
+ * @method     ChildSubmissionQuery rightJoinAssignee($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Assignee relation
+ * @method     ChildSubmissionQuery innerJoinAssignee($relationAlias = null) Adds a INNER JOIN clause to the query using the Assignee relation
+ *
+ * @method     ChildSubmissionQuery joinWithAssignee($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Assignee relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithAssignee() Adds a LEFT JOIN clause and with to the query using the Assignee relation
+ * @method     ChildSubmissionQuery rightJoinWithAssignee() Adds a RIGHT JOIN clause and with to the query using the Assignee relation
+ * @method     ChildSubmissionQuery innerJoinWithAssignee() Adds a INNER JOIN clause and with to the query using the Assignee relation
+ *
+ * @method     ChildSubmissionQuery leftJoinSubmissionRelatedByParentId($relationAlias = null) Adds a LEFT JOIN clause to the query using the SubmissionRelatedByParentId relation
+ * @method     ChildSubmissionQuery rightJoinSubmissionRelatedByParentId($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SubmissionRelatedByParentId relation
+ * @method     ChildSubmissionQuery innerJoinSubmissionRelatedByParentId($relationAlias = null) Adds a INNER JOIN clause to the query using the SubmissionRelatedByParentId relation
+ *
+ * @method     ChildSubmissionQuery joinWithSubmissionRelatedByParentId($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SubmissionRelatedByParentId relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithSubmissionRelatedByParentId() Adds a LEFT JOIN clause and with to the query using the SubmissionRelatedByParentId relation
+ * @method     ChildSubmissionQuery rightJoinWithSubmissionRelatedByParentId() Adds a RIGHT JOIN clause and with to the query using the SubmissionRelatedByParentId relation
+ * @method     ChildSubmissionQuery innerJoinWithSubmissionRelatedByParentId() Adds a INNER JOIN clause and with to the query using the SubmissionRelatedByParentId relation
+ *
+ * @method     ChildSubmissionQuery leftJoinResponse($relationAlias = null) Adds a LEFT JOIN clause to the query using the Response relation
+ * @method     ChildSubmissionQuery rightJoinResponse($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Response relation
+ * @method     ChildSubmissionQuery innerJoinResponse($relationAlias = null) Adds a INNER JOIN clause to the query using the Response relation
+ *
+ * @method     ChildSubmissionQuery joinWithResponse($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Response relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithResponse() Adds a LEFT JOIN clause and with to the query using the Response relation
+ * @method     ChildSubmissionQuery rightJoinWithResponse() Adds a RIGHT JOIN clause and with to the query using the Response relation
+ * @method     ChildSubmissionQuery innerJoinWithResponse() Adds a INNER JOIN clause and with to the query using the Response relation
+ *
+ * @method     ChildSubmissionQuery leftJoinAsParent($relationAlias = null) Adds a LEFT JOIN clause to the query using the AsParent relation
+ * @method     ChildSubmissionQuery rightJoinAsParent($relationAlias = null) Adds a RIGHT JOIN clause to the query using the AsParent relation
+ * @method     ChildSubmissionQuery innerJoinAsParent($relationAlias = null) Adds a INNER JOIN clause to the query using the AsParent relation
+ *
+ * @method     ChildSubmissionQuery joinWithAsParent($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the AsParent relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithAsParent() Adds a LEFT JOIN clause and with to the query using the AsParent relation
+ * @method     ChildSubmissionQuery rightJoinWithAsParent() Adds a RIGHT JOIN clause and with to the query using the AsParent relation
+ * @method     ChildSubmissionQuery innerJoinWithAsParent() Adds a INNER JOIN clause and with to the query using the AsParent relation
+ *
+ * @method     ChildSubmissionQuery leftJoinSubmissionTag($relationAlias = null) Adds a LEFT JOIN clause to the query using the SubmissionTag relation
+ * @method     ChildSubmissionQuery rightJoinSubmissionTag($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SubmissionTag relation
+ * @method     ChildSubmissionQuery innerJoinSubmissionTag($relationAlias = null) Adds a INNER JOIN clause to the query using the SubmissionTag relation
+ *
+ * @method     ChildSubmissionQuery joinWithSubmissionTag($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SubmissionTag relation
+ *
+ * @method     ChildSubmissionQuery leftJoinWithSubmissionTag() Adds a LEFT JOIN clause and with to the query using the SubmissionTag relation
+ * @method     ChildSubmissionQuery rightJoinWithSubmissionTag() Adds a RIGHT JOIN clause and with to the query using the SubmissionTag relation
+ * @method     ChildSubmissionQuery innerJoinWithSubmissionTag() Adds a INNER JOIN clause and with to the query using the SubmissionTag relation
+ *
+ * @method     \FormsAPI\VisitorQuery|\FormsAPI\FormQuery|\FormsAPI\StatusQuery|\FormsAPI\SubmissionQuery|\FormsAPI\ResponseQuery|\FormsAPI\SubmissionTagQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ *
  * @method     ChildSubmission findOne(ConnectionInterface $con = null) Return the first ChildSubmission matching the query
  * @method     ChildSubmission findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSubmission matching the query, or a new ChildSubmission object populated from the query conditions when no match is found
  *
  * @method     ChildSubmission findOneById(int $id) Return the first ChildSubmission filtered by the id column
+ * @method     ChildSubmission findOneBySubmitted(string $submitted) Return the first ChildSubmission filtered by the submitted column
  * @method     ChildSubmission findOneByVisitorId(int $visitor_id) Return the first ChildSubmission filtered by the visitor_id column
  * @method     ChildSubmission findOneByFormId(int $form_id) Return the first ChildSubmission filtered by the form_id column
  * @method     ChildSubmission findOneByStatusId(int $status_id) Return the first ChildSubmission filtered by the status_id column
  * @method     ChildSubmission findOneByAssigneeId(int $assignee_id) Return the first ChildSubmission filtered by the assignee_id column
- * @method     ChildSubmission findOneByParentId(int $parent_id) Return the first ChildSubmission filtered by the parent_id column
- * @method     ChildSubmission findOneBySubmitted(string $submitted) Return the first ChildSubmission filtered by the submitted column *
+ * @method     ChildSubmission findOneByParentId(int $parent_id) Return the first ChildSubmission filtered by the parent_id column *
 
  * @method     ChildSubmission requirePk($key, ConnectionInterface $con = null) Return the ChildSubmission by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOne(ConnectionInterface $con = null) Return the first ChildSubmission matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildSubmission requireOneById(int $id) Return the first ChildSubmission filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildSubmission requireOneBySubmitted(string $submitted) Return the first ChildSubmission filtered by the submitted column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOneByVisitorId(int $visitor_id) Return the first ChildSubmission filtered by the visitor_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOneByFormId(int $form_id) Return the first ChildSubmission filtered by the form_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOneByStatusId(int $status_id) Return the first ChildSubmission filtered by the status_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOneByAssigneeId(int $assignee_id) Return the first ChildSubmission filtered by the assignee_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildSubmission requireOneByParentId(int $parent_id) Return the first ChildSubmission filtered by the parent_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildSubmission requireOneBySubmitted(string $submitted) Return the first ChildSubmission filtered by the submitted column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildSubmission[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildSubmission objects based on current ModelCriteria
  * @method     ChildSubmission[]|ObjectCollection findById(int $id) Return ChildSubmission objects filtered by the id column
+ * @method     ChildSubmission[]|ObjectCollection findBySubmitted(string $submitted) Return ChildSubmission objects filtered by the submitted column
  * @method     ChildSubmission[]|ObjectCollection findByVisitorId(int $visitor_id) Return ChildSubmission objects filtered by the visitor_id column
  * @method     ChildSubmission[]|ObjectCollection findByFormId(int $form_id) Return ChildSubmission objects filtered by the form_id column
  * @method     ChildSubmission[]|ObjectCollection findByStatusId(int $status_id) Return ChildSubmission objects filtered by the status_id column
  * @method     ChildSubmission[]|ObjectCollection findByAssigneeId(int $assignee_id) Return ChildSubmission objects filtered by the assignee_id column
  * @method     ChildSubmission[]|ObjectCollection findByParentId(int $parent_id) Return ChildSubmission objects filtered by the parent_id column
- * @method     ChildSubmission[]|ObjectCollection findBySubmitted(string $submitted) Return ChildSubmission objects filtered by the submitted column
  * @method     ChildSubmission[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -171,7 +254,7 @@ abstract class SubmissionQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, visitor_id, form_id, status_id, assignee_id, parent_id, submitted FROM submission WHERE id = :p0';
+        $sql = 'SELECT id, submitted, visitor_id, form_id, status_id, assignee_id, parent_id FROM submission WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -303,6 +386,49 @@ abstract class SubmissionQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the submitted column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterBySubmitted('2011-03-14'); // WHERE submitted = '2011-03-14'
+     * $query->filterBySubmitted('now'); // WHERE submitted = '2011-03-14'
+     * $query->filterBySubmitted(array('max' => 'yesterday')); // WHERE submitted > '2011-03-13'
+     * </code>
+     *
+     * @param     mixed $submitted The value to use as filter.
+     *              Values can be integers (unix timestamps), DateTime objects, or strings.
+     *              Empty strings are treated as NULL.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterBySubmitted($submitted = null, $comparison = null)
+    {
+        if (is_array($submitted)) {
+            $useMinMax = false;
+            if (isset($submitted['min'])) {
+                $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($submitted['max'])) {
+                $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted, $comparison);
+    }
+
+    /**
      * Filter the query on the visitor_id column
      *
      * Example usage:
@@ -311,6 +437,8 @@ abstract class SubmissionQuery extends ModelCriteria
      * $query->filterByVisitorId(array(12, 34)); // WHERE visitor_id IN (12, 34)
      * $query->filterByVisitorId(array('min' => 12)); // WHERE visitor_id > 12
      * </code>
+     *
+     * @see       filterByVisitor()
      *
      * @param     mixed $visitorId The value to use as filter.
      *              Use scalar values for equality.
@@ -353,6 +481,8 @@ abstract class SubmissionQuery extends ModelCriteria
      * $query->filterByFormId(array('min' => 12)); // WHERE form_id > 12
      * </code>
      *
+     * @see       filterByForm()
+     *
      * @param     mixed $formId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -393,6 +523,8 @@ abstract class SubmissionQuery extends ModelCriteria
      * $query->filterByStatusId(array(12, 34)); // WHERE status_id IN (12, 34)
      * $query->filterByStatusId(array('min' => 12)); // WHERE status_id > 12
      * </code>
+     *
+     * @see       filterByStatus()
      *
      * @param     mixed $statusId The value to use as filter.
      *              Use scalar values for equality.
@@ -435,6 +567,8 @@ abstract class SubmissionQuery extends ModelCriteria
      * $query->filterByAssigneeId(array('min' => 12)); // WHERE assignee_id > 12
      * </code>
      *
+     * @see       filterByAssignee()
+     *
      * @param     mixed $assigneeId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -476,6 +610,8 @@ abstract class SubmissionQuery extends ModelCriteria
      * $query->filterByParentId(array('min' => 12)); // WHERE parent_id > 12
      * </code>
      *
+     * @see       filterBySubmissionRelatedByParentId()
+     *
      * @param     mixed $parentId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -508,46 +644,607 @@ abstract class SubmissionQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the submitted column
+     * Filter the query by a related \FormsAPI\Visitor object
      *
-     * Example usage:
-     * <code>
-     * $query->filterBySubmitted('2011-03-14'); // WHERE submitted = '2011-03-14'
-     * $query->filterBySubmitted('now'); // WHERE submitted = '2011-03-14'
-     * $query->filterBySubmitted(array('max' => 'yesterday')); // WHERE submitted > '2011-03-13'
-     * </code>
+     * @param \FormsAPI\Visitor|ObjectCollection $visitor The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @param     mixed $submitted The value to use as filter.
-     *              Values can be integers (unix timestamps), DateTime objects, or strings.
-     *              Empty strings are treated as NULL.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     * @return ChildSubmissionQuery The current query, for fluid interface
      */
-    public function filterBySubmitted($submitted = null, $comparison = null)
+    public function filterByVisitor($visitor, $comparison = null)
     {
-        if (is_array($submitted)) {
-            $useMinMax = false;
-            if (isset($submitted['min'])) {
-                $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($submitted['max'])) {
-                $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
+        if ($visitor instanceof \FormsAPI\Visitor) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_VISITOR_ID, $visitor->getId(), $comparison);
+        } elseif ($visitor instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_VISITOR_ID, $visitor->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByVisitor() only accepts arguments of type \FormsAPI\Visitor or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Visitor relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinVisitor($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Visitor');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
         }
 
-        return $this->addUsingAlias(SubmissionTableMap::COL_SUBMITTED, $submitted, $comparison);
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Visitor');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Visitor relation Visitor object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\VisitorQuery A secondary query class using the current class as primary query
+     */
+    public function useVisitorQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinVisitor($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Visitor', '\FormsAPI\VisitorQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Form object
+     *
+     * @param \FormsAPI\Form|ObjectCollection $form The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterByForm($form, $comparison = null)
+    {
+        if ($form instanceof \FormsAPI\Form) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_FORM_ID, $form->getId(), $comparison);
+        } elseif ($form instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_FORM_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Form relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Form');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Form');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Form relation Form object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\FormQuery A secondary query class using the current class as primary query
+     */
+    public function useFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinForm($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Form', '\FormsAPI\FormQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Status object
+     *
+     * @param \FormsAPI\Status|ObjectCollection $status The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterByStatus($status, $comparison = null)
+    {
+        if ($status instanceof \FormsAPI\Status) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_STATUS_ID, $status->getId(), $comparison);
+        } elseif ($status instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_STATUS_ID, $status->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByStatus() only accepts arguments of type \FormsAPI\Status or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Status relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinStatus($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Status');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Status');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Status relation Status object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\StatusQuery A secondary query class using the current class as primary query
+     */
+    public function useStatusQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinStatus($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Status', '\FormsAPI\StatusQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Visitor object
+     *
+     * @param \FormsAPI\Visitor|ObjectCollection $visitor The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterByAssignee($visitor, $comparison = null)
+    {
+        if ($visitor instanceof \FormsAPI\Visitor) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_ASSIGNEE_ID, $visitor->getId(), $comparison);
+        } elseif ($visitor instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_ASSIGNEE_ID, $visitor->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByAssignee() only accepts arguments of type \FormsAPI\Visitor or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Assignee relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinAssignee($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Assignee');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Assignee');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Assignee relation Visitor object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\VisitorQuery A secondary query class using the current class as primary query
+     */
+    public function useAssigneeQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinAssignee($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Assignee', '\FormsAPI\VisitorQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Submission object
+     *
+     * @param \FormsAPI\Submission|ObjectCollection $submission The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterBySubmissionRelatedByParentId($submission, $comparison = null)
+    {
+        if ($submission instanceof \FormsAPI\Submission) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_PARENT_ID, $submission->getId(), $comparison);
+        } elseif ($submission instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_PARENT_ID, $submission->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterBySubmissionRelatedByParentId() only accepts arguments of type \FormsAPI\Submission or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SubmissionRelatedByParentId relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinSubmissionRelatedByParentId($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SubmissionRelatedByParentId');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SubmissionRelatedByParentId');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SubmissionRelatedByParentId relation Submission object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\SubmissionQuery A secondary query class using the current class as primary query
+     */
+    public function useSubmissionRelatedByParentIdQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinSubmissionRelatedByParentId($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SubmissionRelatedByParentId', '\FormsAPI\SubmissionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Response object
+     *
+     * @param \FormsAPI\Response|ObjectCollection $response the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterByResponse($response, $comparison = null)
+    {
+        if ($response instanceof \FormsAPI\Response) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_ID, $response->getSubmissionId(), $comparison);
+        } elseif ($response instanceof ObjectCollection) {
+            return $this
+                ->useResponseQuery()
+                ->filterByPrimaryKeys($response->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByResponse() only accepts arguments of type \FormsAPI\Response or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Response relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinResponse($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Response');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Response');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Response relation Response object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ResponseQuery A secondary query class using the current class as primary query
+     */
+    public function useResponseQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinResponse($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Response', '\FormsAPI\ResponseQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Submission object
+     *
+     * @param \FormsAPI\Submission|ObjectCollection $submission the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterByAsParent($submission, $comparison = null)
+    {
+        if ($submission instanceof \FormsAPI\Submission) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_ID, $submission->getParentId(), $comparison);
+        } elseif ($submission instanceof ObjectCollection) {
+            return $this
+                ->useAsParentQuery()
+                ->filterByPrimaryKeys($submission->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByAsParent() only accepts arguments of type \FormsAPI\Submission or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the AsParent relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinAsParent($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('AsParent');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'AsParent');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the AsParent relation Submission object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\SubmissionQuery A secondary query class using the current class as primary query
+     */
+    public function useAsParentQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinAsParent($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'AsParent', '\FormsAPI\SubmissionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\SubmissionTag object
+     *
+     * @param \FormsAPI\SubmissionTag|ObjectCollection $submissionTag the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function filterBySubmissionTag($submissionTag, $comparison = null)
+    {
+        if ($submissionTag instanceof \FormsAPI\SubmissionTag) {
+            return $this
+                ->addUsingAlias(SubmissionTableMap::COL_ID, $submissionTag->getSubmissionId(), $comparison);
+        } elseif ($submissionTag instanceof ObjectCollection) {
+            return $this
+                ->useSubmissionTagQuery()
+                ->filterByPrimaryKeys($submissionTag->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySubmissionTag() only accepts arguments of type \FormsAPI\SubmissionTag or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SubmissionTag relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionQuery The current query, for fluid interface
+     */
+    public function joinSubmissionTag($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SubmissionTag');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SubmissionTag');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SubmissionTag relation SubmissionTag object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\SubmissionTagQuery A secondary query class using the current class as primary query
+     */
+    public function useSubmissionTagQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSubmissionTag($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SubmissionTag', '\FormsAPI\SubmissionTagQuery');
     }
 
     /**

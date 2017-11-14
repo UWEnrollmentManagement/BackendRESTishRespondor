@@ -140,6 +140,20 @@ class DashboardTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('DashboardElement', '\\FormsAPI\\DashboardElement', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':dashboard_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'DashboardElements', false);
+        $this->addRelation('DashboardForm', '\\FormsAPI\\DashboardForm', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':dashboard_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'DashboardForms', false);
     } // buildRelations()
 
     /**
@@ -154,6 +168,16 @@ class DashboardTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'name','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to dashboard     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        DashboardElementTableMap::clearInstancePool();
+        DashboardFormTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

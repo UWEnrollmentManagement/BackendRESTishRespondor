@@ -21,9 +21,11 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildRecipientQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildRecipientQuery orderByAddress($order = Criteria::ASC) Order by the address column
+ * @method     ChildRecipientQuery orderByNote($order = Criteria::ASC) Order by the note column
  *
  * @method     ChildRecipientQuery groupById() Group by the id column
  * @method     ChildRecipientQuery groupByAddress() Group by the address column
+ * @method     ChildRecipientQuery groupByNote() Group by the note column
  *
  * @method     ChildRecipientQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildRecipientQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -37,17 +39,20 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildRecipient findOneOrCreate(ConnectionInterface $con = null) Return the first ChildRecipient matching the query, or a new ChildRecipient object populated from the query conditions when no match is found
  *
  * @method     ChildRecipient findOneById(int $id) Return the first ChildRecipient filtered by the id column
- * @method     ChildRecipient findOneByAddress(int $address) Return the first ChildRecipient filtered by the address column *
+ * @method     ChildRecipient findOneByAddress(int $address) Return the first ChildRecipient filtered by the address column
+ * @method     ChildRecipient findOneByNote(string $note) Return the first ChildRecipient filtered by the note column *
 
  * @method     ChildRecipient requirePk($key, ConnectionInterface $con = null) Return the ChildRecipient by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOne(ConnectionInterface $con = null) Return the first ChildRecipient matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient requireOneById(int $id) Return the first ChildRecipient filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOneByAddress(int $address) Return the first ChildRecipient filtered by the address column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildRecipient requireOneByNote(string $note) Return the first ChildRecipient filtered by the note column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildRecipient objects based on current ModelCriteria
  * @method     ChildRecipient[]|ObjectCollection findById(int $id) Return ChildRecipient objects filtered by the id column
  * @method     ChildRecipient[]|ObjectCollection findByAddress(int $address) Return ChildRecipient objects filtered by the address column
+ * @method     ChildRecipient[]|ObjectCollection findByNote(string $note) Return ChildRecipient objects filtered by the note column
  * @method     ChildRecipient[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -146,7 +151,7 @@ abstract class RecipientQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, address FROM recipient WHERE id = :p0';
+        $sql = 'SELECT id, address, note FROM recipient WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -316,6 +321,31 @@ abstract class RecipientQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(RecipientTableMap::COL_ADDRESS, $address, $comparison);
+    }
+
+    /**
+     * Filter the query on the note column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByNote('fooValue');   // WHERE note = 'fooValue'
+     * $query->filterByNote('%fooValue%', Criteria::LIKE); // WHERE note LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $note The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildRecipientQuery The current query, for fluid interface
+     */
+    public function filterByNote($note = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($note)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(RecipientTableMap::COL_NOTE, $note, $comparison);
     }
 
     /**

@@ -164,6 +164,20 @@ class VisitorTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('SubmissionRelatedByVisitorId', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':visitor_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'SubmissionsRelatedByVisitorId', false);
+        $this->addRelation('AsAssignee', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':assignee_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, 'AsAssignees', false);
     } // buildRelations()
 
     /**
@@ -178,6 +192,15 @@ class VisitorTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'uw_net_id','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to visitor     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        SubmissionTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

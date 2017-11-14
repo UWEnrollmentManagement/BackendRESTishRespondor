@@ -2,8 +2,8 @@
 
 namespace FormsAPI\Map;
 
-use FormsAPI\Dependency;
-use FormsAPI\DependencyQuery;
+use FormsAPI\FormStatus;
+use FormsAPI\FormStatusQuery;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\InstancePoolTrait;
@@ -16,7 +16,7 @@ use Propel\Runtime\Map\TableMapTrait;
 
 
 /**
- * This class defines the structure of the 'dependency' table.
+ * This class defines the structure of the 'form_status' table.
  *
  *
  *
@@ -26,7 +26,7 @@ use Propel\Runtime\Map\TableMapTrait;
  * (i.e. if it's a text column type).
  *
  */
-class DependencyTableMap extends TableMap
+class FormStatusTableMap extends TableMap
 {
     use InstancePoolTrait;
     use TableMapTrait;
@@ -34,7 +34,7 @@ class DependencyTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'FormsAPI.Map.DependencyTableMap';
+    const CLASS_NAME = 'FormsAPI.Map.FormStatusTableMap';
 
     /**
      * The default database name for this class
@@ -44,17 +44,17 @@ class DependencyTableMap extends TableMap
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'dependency';
+    const TABLE_NAME = 'form_status';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\FormsAPI\\Dependency';
+    const OM_CLASS = '\\FormsAPI\\FormStatus';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'FormsAPI.Dependency';
+    const CLASS_DEFAULT = 'FormsAPI.FormStatus';
 
     /**
      * The total number of columns
@@ -74,22 +74,22 @@ class DependencyTableMap extends TableMap
     /**
      * the column name for the id field
      */
-    const COL_ID = 'dependency.id';
+    const COL_ID = 'form_status.id';
 
     /**
-     * the column name for the element_id field
+     * the column name for the message field
      */
-    const COL_ELEMENT_ID = 'dependency.element_id';
+    const COL_MESSAGE = 'form_status.message';
 
     /**
-     * the column name for the slave_id field
+     * the column name for the form_id field
      */
-    const COL_SLAVE_ID = 'dependency.slave_id';
+    const COL_FORM_ID = 'form_status.form_id';
 
     /**
-     * the column name for the condition_id field
+     * the column name for the status_id field
      */
-    const COL_CONDITION_ID = 'dependency.condition_id';
+    const COL_STATUS_ID = 'form_status.status_id';
 
     /**
      * The default string format for model objects of the related table
@@ -103,10 +103,10 @@ class DependencyTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'ElementId', 'SlaveId', 'ConditionId', ),
-        self::TYPE_CAMELNAME     => array('id', 'elementId', 'slaveId', 'conditionId', ),
-        self::TYPE_COLNAME       => array(DependencyTableMap::COL_ID, DependencyTableMap::COL_ELEMENT_ID, DependencyTableMap::COL_SLAVE_ID, DependencyTableMap::COL_CONDITION_ID, ),
-        self::TYPE_FIELDNAME     => array('id', 'element_id', 'slave_id', 'condition_id', ),
+        self::TYPE_PHPNAME       => array('Id', 'Message', 'FormId', 'StatusId', ),
+        self::TYPE_CAMELNAME     => array('id', 'message', 'formId', 'statusId', ),
+        self::TYPE_COLNAME       => array(FormStatusTableMap::COL_ID, FormStatusTableMap::COL_MESSAGE, FormStatusTableMap::COL_FORM_ID, FormStatusTableMap::COL_STATUS_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'message', 'form_id', 'status_id', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -117,10 +117,10 @@ class DependencyTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'ElementId' => 1, 'SlaveId' => 2, 'ConditionId' => 3, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'elementId' => 1, 'slaveId' => 2, 'conditionId' => 3, ),
-        self::TYPE_COLNAME       => array(DependencyTableMap::COL_ID => 0, DependencyTableMap::COL_ELEMENT_ID => 1, DependencyTableMap::COL_SLAVE_ID => 2, DependencyTableMap::COL_CONDITION_ID => 3, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'element_id' => 1, 'slave_id' => 2, 'condition_id' => 3, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Message' => 1, 'FormId' => 2, 'StatusId' => 3, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'message' => 1, 'formId' => 2, 'statusId' => 3, ),
+        self::TYPE_COLNAME       => array(FormStatusTableMap::COL_ID => 0, FormStatusTableMap::COL_MESSAGE => 1, FormStatusTableMap::COL_FORM_ID => 2, FormStatusTableMap::COL_STATUS_ID => 3, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'message' => 1, 'form_id' => 2, 'status_id' => 3, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -134,17 +134,17 @@ class DependencyTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('dependency');
-        $this->setPhpName('Dependency');
+        $this->setName('form_status');
+        $this->setPhpName('FormStatus');
         $this->setIdentifierQuoting(false);
-        $this->setClassName('\\FormsAPI\\Dependency');
+        $this->setClassName('\\FormsAPI\\FormStatus');
         $this->setPackage('FormsAPI');
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addForeignKey('element_id', 'ElementId', 'INTEGER', 'element', 'id', true, null, null);
-        $this->addForeignKey('slave_id', 'SlaveId', 'INTEGER', 'element', 'id', true, null, null);
-        $this->addForeignKey('condition_id', 'ConditionId', 'INTEGER', 'condition', 'id', true, null, null);
+        $this->addColumn('message', 'Message', 'VARCHAR', false, 63, null);
+        $this->addForeignKey('form_id', 'FormId', 'INTEGER', 'form', 'id', true, null, null);
+        $this->addForeignKey('status_id', 'StatusId', 'INTEGER', 'status', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -152,24 +152,17 @@ class DependencyTableMap extends TableMap
      */
     public function buildRelations()
     {
-        $this->addRelation('Element', '\\FormsAPI\\Element', RelationMap::MANY_TO_ONE, array (
+        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
   0 =>
   array (
-    0 => ':element_id',
+    0 => ':form_id',
     1 => ':id',
   ),
 ), 'CASCADE', null, null, false);
-        $this->addRelation('Slave', '\\FormsAPI\\Element', RelationMap::MANY_TO_ONE, array (
+        $this->addRelation('Status', '\\FormsAPI\\Status', RelationMap::MANY_TO_ONE, array (
   0 =>
   array (
-    0 => ':slave_id',
-    1 => ':id',
-  ),
-), 'CASCADE', null, null, false);
-        $this->addRelation('Condition', '\\FormsAPI\\Condition', RelationMap::MANY_TO_ONE, array (
-  0 =>
-  array (
-    0 => ':condition_id',
+    0 => ':status_id',
     1 => ':id',
   ),
 ), 'CASCADE', null, null, false);
@@ -184,7 +177,7 @@ class DependencyTableMap extends TableMap
     public function getBehaviors()
     {
         return array(
-            'validate' => array('rule1' => array ('column' => 'element_id','validator' => 'NotNull',), 'rule2' => array ('column' => 'slave_id','validator' => 'NotNull',), 'rule3' => array ('column' => 'condition_id','validator' => 'NotNull',), ),
+            'validate' => array('rule1' => array ('column' => 'form_id','validator' => 'NotNull',), 'rule2' => array ('column' => 'tag_id','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
 
@@ -245,7 +238,7 @@ class DependencyTableMap extends TableMap
      */
     public static function getOMClass($withPrefix = true)
     {
-        return $withPrefix ? DependencyTableMap::CLASS_DEFAULT : DependencyTableMap::OM_CLASS;
+        return $withPrefix ? FormStatusTableMap::CLASS_DEFAULT : FormStatusTableMap::OM_CLASS;
     }
 
     /**
@@ -259,22 +252,22 @@ class DependencyTableMap extends TableMap
      *
      * @throws PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Dependency object, last column rank)
+     * @return array           (FormStatus object, last column rank)
      */
     public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        $key = DependencyTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
-        if (null !== ($obj = DependencyTableMap::getInstanceFromPool($key))) {
+        $key = FormStatusTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
+        if (null !== ($obj = FormStatusTableMap::getInstanceFromPool($key))) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // $obj->hydrate($row, $offset, true); // rehydrate
-            $col = $offset + DependencyTableMap::NUM_HYDRATE_COLUMNS;
+            $col = $offset + FormStatusTableMap::NUM_HYDRATE_COLUMNS;
         } else {
-            $cls = DependencyTableMap::OM_CLASS;
-            /** @var Dependency $obj */
+            $cls = FormStatusTableMap::OM_CLASS;
+            /** @var FormStatus $obj */
             $obj = new $cls();
             $col = $obj->hydrate($row, $offset, false, $indexType);
-            DependencyTableMap::addInstanceToPool($obj, $key);
+            FormStatusTableMap::addInstanceToPool($obj, $key);
         }
 
         return array($obj, $col);
@@ -297,18 +290,18 @@ class DependencyTableMap extends TableMap
         $cls = static::getOMClass(false);
         // populate the object(s)
         while ($row = $dataFetcher->fetch()) {
-            $key = DependencyTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
-            if (null !== ($obj = DependencyTableMap::getInstanceFromPool($key))) {
+            $key = FormStatusTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
+            if (null !== ($obj = FormStatusTableMap::getInstanceFromPool($key))) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // $obj->hydrate($row, 0, true); // rehydrate
                 $results[] = $obj;
             } else {
-                /** @var Dependency $obj */
+                /** @var FormStatus $obj */
                 $obj = new $cls();
                 $obj->hydrate($row);
                 $results[] = $obj;
-                DependencyTableMap::addInstanceToPool($obj, $key);
+                FormStatusTableMap::addInstanceToPool($obj, $key);
             } // if key exists
         }
 
@@ -329,15 +322,15 @@ class DependencyTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(DependencyTableMap::COL_ID);
-            $criteria->addSelectColumn(DependencyTableMap::COL_ELEMENT_ID);
-            $criteria->addSelectColumn(DependencyTableMap::COL_SLAVE_ID);
-            $criteria->addSelectColumn(DependencyTableMap::COL_CONDITION_ID);
+            $criteria->addSelectColumn(FormStatusTableMap::COL_ID);
+            $criteria->addSelectColumn(FormStatusTableMap::COL_MESSAGE);
+            $criteria->addSelectColumn(FormStatusTableMap::COL_FORM_ID);
+            $criteria->addSelectColumn(FormStatusTableMap::COL_STATUS_ID);
         } else {
             $criteria->addSelectColumn($alias . '.id');
-            $criteria->addSelectColumn($alias . '.element_id');
-            $criteria->addSelectColumn($alias . '.slave_id');
-            $criteria->addSelectColumn($alias . '.condition_id');
+            $criteria->addSelectColumn($alias . '.message');
+            $criteria->addSelectColumn($alias . '.form_id');
+            $criteria->addSelectColumn($alias . '.status_id');
         }
     }
 
@@ -350,7 +343,7 @@ class DependencyTableMap extends TableMap
      */
     public static function getTableMap()
     {
-        return Propel::getServiceContainer()->getDatabaseMap(DependencyTableMap::DATABASE_NAME)->getTable(DependencyTableMap::TABLE_NAME);
+        return Propel::getServiceContainer()->getDatabaseMap(FormStatusTableMap::DATABASE_NAME)->getTable(FormStatusTableMap::TABLE_NAME);
     }
 
     /**
@@ -358,16 +351,16 @@ class DependencyTableMap extends TableMap
      */
     public static function buildTableMap()
     {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(DependencyTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(DependencyTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new DependencyTableMap());
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap(FormStatusTableMap::DATABASE_NAME);
+        if (!$dbMap->hasTable(FormStatusTableMap::TABLE_NAME)) {
+            $dbMap->addTableObject(new FormStatusTableMap());
         }
     }
 
     /**
-     * Performs a DELETE on the database, given a Dependency or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a FormStatus or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Dependency object or primary key or array of primary keys
+     * @param mixed               $values Criteria or FormStatus object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param  ConnectionInterface $con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -378,27 +371,27 @@ class DependencyTableMap extends TableMap
      public static function doDelete($values, ConnectionInterface $con = null)
      {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(DependencyTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         if ($values instanceof Criteria) {
             // rename for clarity
             $criteria = $values;
-        } elseif ($values instanceof \FormsAPI\Dependency) { // it's a model object
+        } elseif ($values instanceof \FormsAPI\FormStatus) { // it's a model object
             // create criteria based on pk values
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
-            $criteria = new Criteria(DependencyTableMap::DATABASE_NAME);
-            $criteria->add(DependencyTableMap::COL_ID, (array) $values, Criteria::IN);
+            $criteria = new Criteria(FormStatusTableMap::DATABASE_NAME);
+            $criteria->add(FormStatusTableMap::COL_ID, (array) $values, Criteria::IN);
         }
 
-        $query = DependencyQuery::create()->mergeWith($criteria);
+        $query = FormStatusQuery::create()->mergeWith($criteria);
 
         if ($values instanceof Criteria) {
-            DependencyTableMap::clearInstancePool();
+            FormStatusTableMap::clearInstancePool();
         } elseif (!is_object($values)) { // it's a primary key, or an array of pks
             foreach ((array) $values as $singleval) {
-                DependencyTableMap::removeInstanceFromPool($singleval);
+                FormStatusTableMap::removeInstanceFromPool($singleval);
             }
         }
 
@@ -406,20 +399,20 @@ class DependencyTableMap extends TableMap
     }
 
     /**
-     * Deletes all rows from the dependency table.
+     * Deletes all rows from the form_status table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(ConnectionInterface $con = null)
     {
-        return DependencyQuery::create()->doDeleteAll($con);
+        return FormStatusQuery::create()->doDeleteAll($con);
     }
 
     /**
-     * Performs an INSERT on the database, given a Dependency or Criteria object.
+     * Performs an INSERT on the database, given a FormStatus or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Dependency object containing data that is used to create the INSERT statement.
+     * @param mixed               $criteria Criteria or FormStatus object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
      * @return mixed           The new primary key.
      * @throws PropelException Any exceptions caught during processing will be
@@ -428,22 +421,22 @@ class DependencyTableMap extends TableMap
     public static function doInsert($criteria, ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(DependencyTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         if ($criteria instanceof Criteria) {
             $criteria = clone $criteria; // rename for clarity
         } else {
-            $criteria = $criteria->buildCriteria(); // build Criteria from Dependency object
+            $criteria = $criteria->buildCriteria(); // build Criteria from FormStatus object
         }
 
-        if ($criteria->containsKey(DependencyTableMap::COL_ID) && $criteria->keyContainsValue(DependencyTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.DependencyTableMap::COL_ID.')');
+        if ($criteria->containsKey(FormStatusTableMap::COL_ID) && $criteria->keyContainsValue(FormStatusTableMap::COL_ID) ) {
+            throw new PropelException('Cannot insert a value for auto-increment primary key ('.FormStatusTableMap::COL_ID.')');
         }
 
 
         // Set the correct dbName
-        $query = DependencyQuery::create()->mergeWith($criteria);
+        $query = FormStatusQuery::create()->mergeWith($criteria);
 
         // use transaction because $criteria could contain info
         // for more than one table (I guess, conceivably)
@@ -452,7 +445,7 @@ class DependencyTableMap extends TableMap
         });
     }
 
-} // DependencyTableMap
+} // FormStatusTableMap
 // This is the static code needed to register the TableMap for this table with the main Propel class.
 //
-DependencyTableMap::buildTableMap();
+FormStatusTableMap::buildTableMap();

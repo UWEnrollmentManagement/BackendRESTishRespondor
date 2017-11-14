@@ -10,6 +10,7 @@ use FormsAPI\Map\StatusTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -34,6 +35,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildStatusQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildStatusQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildStatusQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildStatusQuery leftJoinSubmission($relationAlias = null) Adds a LEFT JOIN clause to the query using the Submission relation
+ * @method     ChildStatusQuery rightJoinSubmission($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Submission relation
+ * @method     ChildStatusQuery innerJoinSubmission($relationAlias = null) Adds a INNER JOIN clause to the query using the Submission relation
+ *
+ * @method     ChildStatusQuery joinWithSubmission($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Submission relation
+ *
+ * @method     ChildStatusQuery leftJoinWithSubmission() Adds a LEFT JOIN clause and with to the query using the Submission relation
+ * @method     ChildStatusQuery rightJoinWithSubmission() Adds a RIGHT JOIN clause and with to the query using the Submission relation
+ * @method     ChildStatusQuery innerJoinWithSubmission() Adds a INNER JOIN clause and with to the query using the Submission relation
+ *
+ * @method     ChildStatusQuery leftJoinFormStatus($relationAlias = null) Adds a LEFT JOIN clause to the query using the FormStatus relation
+ * @method     ChildStatusQuery rightJoinFormStatus($relationAlias = null) Adds a RIGHT JOIN clause to the query using the FormStatus relation
+ * @method     ChildStatusQuery innerJoinFormStatus($relationAlias = null) Adds a INNER JOIN clause to the query using the FormStatus relation
+ *
+ * @method     ChildStatusQuery joinWithFormStatus($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the FormStatus relation
+ *
+ * @method     ChildStatusQuery leftJoinWithFormStatus() Adds a LEFT JOIN clause and with to the query using the FormStatus relation
+ * @method     ChildStatusQuery rightJoinWithFormStatus() Adds a RIGHT JOIN clause and with to the query using the FormStatus relation
+ * @method     ChildStatusQuery innerJoinWithFormStatus() Adds a INNER JOIN clause and with to the query using the FormStatus relation
+ *
+ * @method     \FormsAPI\SubmissionQuery|\FormsAPI\FormStatusQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildStatus findOne(ConnectionInterface $con = null) Return the first ChildStatus matching the query
  * @method     ChildStatus findOneOrCreate(ConnectionInterface $con = null) Return the first ChildStatus matching the query, or a new ChildStatus object populated from the query conditions when no match is found
@@ -330,6 +353,152 @@ abstract class StatusQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(StatusTableMap::COL_DEFAULT_MESSAGE, $defaultMessage, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Submission object
+     *
+     * @param \FormsAPI\Submission|ObjectCollection $submission the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildStatusQuery The current query, for fluid interface
+     */
+    public function filterBySubmission($submission, $comparison = null)
+    {
+        if ($submission instanceof \FormsAPI\Submission) {
+            return $this
+                ->addUsingAlias(StatusTableMap::COL_ID, $submission->getStatusId(), $comparison);
+        } elseif ($submission instanceof ObjectCollection) {
+            return $this
+                ->useSubmissionQuery()
+                ->filterByPrimaryKeys($submission->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySubmission() only accepts arguments of type \FormsAPI\Submission or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Submission relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildStatusQuery The current query, for fluid interface
+     */
+    public function joinSubmission($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Submission');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Submission');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Submission relation Submission object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\SubmissionQuery A secondary query class using the current class as primary query
+     */
+    public function useSubmissionQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinSubmission($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Submission', '\FormsAPI\SubmissionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\FormStatus object
+     *
+     * @param \FormsAPI\FormStatus|ObjectCollection $formStatus the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildStatusQuery The current query, for fluid interface
+     */
+    public function filterByFormStatus($formStatus, $comparison = null)
+    {
+        if ($formStatus instanceof \FormsAPI\FormStatus) {
+            return $this
+                ->addUsingAlias(StatusTableMap::COL_ID, $formStatus->getStatusId(), $comparison);
+        } elseif ($formStatus instanceof ObjectCollection) {
+            return $this
+                ->useFormStatusQuery()
+                ->filterByPrimaryKeys($formStatus->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByFormStatus() only accepts arguments of type \FormsAPI\FormStatus or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the FormStatus relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildStatusQuery The current query, for fluid interface
+     */
+    public function joinFormStatus($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('FormStatus');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'FormStatus');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the FormStatus relation FormStatus object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\FormStatusQuery A secondary query class using the current class as primary query
+     */
+    public function useFormStatusQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinFormStatus($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'FormStatus', '\FormsAPI\FormStatusQuery');
     }
 
     /**

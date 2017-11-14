@@ -4,13 +4,21 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\FormStatus as ChildFormStatus;
+use FormsAPI\FormStatusQuery as ChildFormStatusQuery;
+use FormsAPI\Status as ChildStatus;
 use FormsAPI\StatusQuery as ChildStatusQuery;
+use FormsAPI\Submission as ChildSubmission;
+use FormsAPI\SubmissionQuery as ChildSubmissionQuery;
+use FormsAPI\Map\FormStatusTableMap;
 use FormsAPI\Map\StatusTableMap;
+use FormsAPI\Map\SubmissionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -91,6 +99,18 @@ abstract class Status implements ActiveRecordInterface
     protected $default_message;
 
     /**
+     * @var        ObjectCollection|ChildSubmission[] Collection to store aggregation of ChildSubmission objects.
+     */
+    protected $collSubmissions;
+    protected $collSubmissionsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildFormStatus[] Collection to store aggregation of ChildFormStatus objects.
+     */
+    protected $collFormStatuses;
+    protected $collFormStatusesPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -114,6 +134,18 @@ abstract class Status implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSubmission[]
+     */
+    protected $submissionsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildFormStatus[]
+     */
+    protected $formStatusesScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Status object.
@@ -543,6 +575,10 @@ abstract class Status implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collSubmissions = null;
+
+            $this->collFormStatuses = null;
+
         } // if (deep)
     }
 
@@ -655,6 +691,41 @@ abstract class Status implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->submissionsScheduledForDeletion !== null) {
+                if (!$this->submissionsScheduledForDeletion->isEmpty()) {
+                    foreach ($this->submissionsScheduledForDeletion as $submission) {
+                        // need to save related object because we set the relation to null
+                        $submission->save($con);
+                    }
+                    $this->submissionsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSubmissions !== null) {
+                foreach ($this->collSubmissions as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->formStatusesScheduledForDeletion !== null) {
+                if (!$this->formStatusesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\FormStatusQuery::create()
+                        ->filterByPrimaryKeys($this->formStatusesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->formStatusesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collFormStatuses !== null) {
+                foreach ($this->collFormStatuses as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -800,10 +871,11 @@ abstract class Status implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Status'][$this->hashCode()])) {
@@ -821,6 +893,38 @@ abstract class Status implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collSubmissions) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submissions';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submissions';
+                        break;
+                    default:
+                        $key = 'Submissions';
+                }
+
+                $result[$key] = $this->collSubmissions->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collFormStatuses) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'formStatuses';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form_statuses';
+                        break;
+                    default:
+                        $key = 'FormStatuses';
+                }
+
+                $result[$key] = $this->collFormStatuses->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1036,6 +1140,26 @@ abstract class Status implements ActiveRecordInterface
     {
         $copyObj->setName($this->getName());
         $copyObj->setDefaultMessage($this->getDefaultMessage());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getSubmissions() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSubmission($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getFormStatuses() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addFormStatus($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1062,6 +1186,602 @@ abstract class Status implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('Submission' == $relationName) {
+            $this->initSubmissions();
+            return;
+        }
+        if ('FormStatus' == $relationName) {
+            $this->initFormStatuses();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collSubmissions collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSubmissions()
+     */
+    public function clearSubmissions()
+    {
+        $this->collSubmissions = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSubmissions collection loaded partially.
+     */
+    public function resetPartialSubmissions($v = true)
+    {
+        $this->collSubmissionsPartial = $v;
+    }
+
+    /**
+     * Initializes the collSubmissions collection.
+     *
+     * By default this just sets the collSubmissions collection to an empty array (like clearcollSubmissions());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSubmissions($overrideExisting = true)
+    {
+        if (null !== $this->collSubmissions && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SubmissionTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSubmissions = new $collectionClassName;
+        $this->collSubmissions->setModel('\FormsAPI\Submission');
+    }
+
+    /**
+     * Gets an array of ChildSubmission objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildStatus is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     * @throws PropelException
+     */
+    public function getSubmissions(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionsPartial && !$this->isNew();
+        if (null === $this->collSubmissions || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collSubmissions) {
+                // return empty collection
+                $this->initSubmissions();
+            } else {
+                $collSubmissions = ChildSubmissionQuery::create(null, $criteria)
+                    ->filterByStatus($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSubmissionsPartial && count($collSubmissions)) {
+                        $this->initSubmissions(false);
+
+                        foreach ($collSubmissions as $obj) {
+                            if (false == $this->collSubmissions->contains($obj)) {
+                                $this->collSubmissions->append($obj);
+                            }
+                        }
+
+                        $this->collSubmissionsPartial = true;
+                    }
+
+                    return $collSubmissions;
+                }
+
+                if ($partial && $this->collSubmissions) {
+                    foreach ($this->collSubmissions as $obj) {
+                        if ($obj->isNew()) {
+                            $collSubmissions[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSubmissions = $collSubmissions;
+                $this->collSubmissionsPartial = false;
+            }
+        }
+
+        return $this->collSubmissions;
+    }
+
+    /**
+     * Sets a collection of ChildSubmission objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $submissions A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildStatus The current object (for fluent API support)
+     */
+    public function setSubmissions(Collection $submissions, ConnectionInterface $con = null)
+    {
+        /** @var ChildSubmission[] $submissionsToDelete */
+        $submissionsToDelete = $this->getSubmissions(new Criteria(), $con)->diff($submissions);
+
+
+        $this->submissionsScheduledForDeletion = $submissionsToDelete;
+
+        foreach ($submissionsToDelete as $submissionRemoved) {
+            $submissionRemoved->setStatus(null);
+        }
+
+        $this->collSubmissions = null;
+        foreach ($submissions as $submission) {
+            $this->addSubmission($submission);
+        }
+
+        $this->collSubmissions = $submissions;
+        $this->collSubmissionsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Submission objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Submission objects.
+     * @throws PropelException
+     */
+    public function countSubmissions(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionsPartial && !$this->isNew();
+        if (null === $this->collSubmissions || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSubmissions) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSubmissions());
+            }
+
+            $query = ChildSubmissionQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByStatus($this)
+                ->count($con);
+        }
+
+        return count($this->collSubmissions);
+    }
+
+    /**
+     * Method called to associate a ChildSubmission object to this object
+     * through the ChildSubmission foreign key attribute.
+     *
+     * @param  ChildSubmission $l ChildSubmission
+     * @return $this|\FormsAPI\Status The current object (for fluent API support)
+     */
+    public function addSubmission(ChildSubmission $l)
+    {
+        if ($this->collSubmissions === null) {
+            $this->initSubmissions();
+            $this->collSubmissionsPartial = true;
+        }
+
+        if (!$this->collSubmissions->contains($l)) {
+            $this->doAddSubmission($l);
+
+            if ($this->submissionsScheduledForDeletion and $this->submissionsScheduledForDeletion->contains($l)) {
+                $this->submissionsScheduledForDeletion->remove($this->submissionsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSubmission $submission The ChildSubmission object to add.
+     */
+    protected function doAddSubmission(ChildSubmission $submission)
+    {
+        $this->collSubmissions[]= $submission;
+        $submission->setStatus($this);
+    }
+
+    /**
+     * @param  ChildSubmission $submission The ChildSubmission object to remove.
+     * @return $this|ChildStatus The current object (for fluent API support)
+     */
+    public function removeSubmission(ChildSubmission $submission)
+    {
+        if ($this->getSubmissions()->contains($submission)) {
+            $pos = $this->collSubmissions->search($submission);
+            $this->collSubmissions->remove($pos);
+            if (null === $this->submissionsScheduledForDeletion) {
+                $this->submissionsScheduledForDeletion = clone $this->collSubmissions;
+                $this->submissionsScheduledForDeletion->clear();
+            }
+            $this->submissionsScheduledForDeletion[]= $submission;
+            $submission->setStatus(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Status is new, it will return
+     * an empty collection; or if this Status has previously
+     * been saved, it will retrieve related Submissions from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Status.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getSubmissionsJoinVisitor(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Visitor', $joinBehavior);
+
+        return $this->getSubmissions($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Status is new, it will return
+     * an empty collection; or if this Status has previously
+     * been saved, it will retrieve related Submissions from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Status.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getSubmissionsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getSubmissions($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Status is new, it will return
+     * an empty collection; or if this Status has previously
+     * been saved, it will retrieve related Submissions from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Status.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getSubmissionsJoinAssignee(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('Assignee', $joinBehavior);
+
+        return $this->getSubmissions($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Status is new, it will return
+     * an empty collection; or if this Status has previously
+     * been saved, it will retrieve related Submissions from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Status.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmission[] List of ChildSubmission objects
+     */
+    public function getSubmissionsJoinSubmissionRelatedByParentId(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionQuery::create(null, $criteria);
+        $query->joinWith('SubmissionRelatedByParentId', $joinBehavior);
+
+        return $this->getSubmissions($query, $con);
+    }
+
+    /**
+     * Clears out the collFormStatuses collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addFormStatuses()
+     */
+    public function clearFormStatuses()
+    {
+        $this->collFormStatuses = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collFormStatuses collection loaded partially.
+     */
+    public function resetPartialFormStatuses($v = true)
+    {
+        $this->collFormStatusesPartial = $v;
+    }
+
+    /**
+     * Initializes the collFormStatuses collection.
+     *
+     * By default this just sets the collFormStatuses collection to an empty array (like clearcollFormStatuses());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initFormStatuses($overrideExisting = true)
+    {
+        if (null !== $this->collFormStatuses && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = FormStatusTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collFormStatuses = new $collectionClassName;
+        $this->collFormStatuses->setModel('\FormsAPI\FormStatus');
+    }
+
+    /**
+     * Gets an array of ChildFormStatus objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildStatus is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildFormStatus[] List of ChildFormStatus objects
+     * @throws PropelException
+     */
+    public function getFormStatuses(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormStatusesPartial && !$this->isNew();
+        if (null === $this->collFormStatuses || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collFormStatuses) {
+                // return empty collection
+                $this->initFormStatuses();
+            } else {
+                $collFormStatuses = ChildFormStatusQuery::create(null, $criteria)
+                    ->filterByStatus($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collFormStatusesPartial && count($collFormStatuses)) {
+                        $this->initFormStatuses(false);
+
+                        foreach ($collFormStatuses as $obj) {
+                            if (false == $this->collFormStatuses->contains($obj)) {
+                                $this->collFormStatuses->append($obj);
+                            }
+                        }
+
+                        $this->collFormStatusesPartial = true;
+                    }
+
+                    return $collFormStatuses;
+                }
+
+                if ($partial && $this->collFormStatuses) {
+                    foreach ($this->collFormStatuses as $obj) {
+                        if ($obj->isNew()) {
+                            $collFormStatuses[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collFormStatuses = $collFormStatuses;
+                $this->collFormStatusesPartial = false;
+            }
+        }
+
+        return $this->collFormStatuses;
+    }
+
+    /**
+     * Sets a collection of ChildFormStatus objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $formStatuses A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildStatus The current object (for fluent API support)
+     */
+    public function setFormStatuses(Collection $formStatuses, ConnectionInterface $con = null)
+    {
+        /** @var ChildFormStatus[] $formStatusesToDelete */
+        $formStatusesToDelete = $this->getFormStatuses(new Criteria(), $con)->diff($formStatuses);
+
+
+        $this->formStatusesScheduledForDeletion = $formStatusesToDelete;
+
+        foreach ($formStatusesToDelete as $formStatusRemoved) {
+            $formStatusRemoved->setStatus(null);
+        }
+
+        $this->collFormStatuses = null;
+        foreach ($formStatuses as $formStatus) {
+            $this->addFormStatus($formStatus);
+        }
+
+        $this->collFormStatuses = $formStatuses;
+        $this->collFormStatusesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related FormStatus objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related FormStatus objects.
+     * @throws PropelException
+     */
+    public function countFormStatuses(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormStatusesPartial && !$this->isNew();
+        if (null === $this->collFormStatuses || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collFormStatuses) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getFormStatuses());
+            }
+
+            $query = ChildFormStatusQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByStatus($this)
+                ->count($con);
+        }
+
+        return count($this->collFormStatuses);
+    }
+
+    /**
+     * Method called to associate a ChildFormStatus object to this object
+     * through the ChildFormStatus foreign key attribute.
+     *
+     * @param  ChildFormStatus $l ChildFormStatus
+     * @return $this|\FormsAPI\Status The current object (for fluent API support)
+     */
+    public function addFormStatus(ChildFormStatus $l)
+    {
+        if ($this->collFormStatuses === null) {
+            $this->initFormStatuses();
+            $this->collFormStatusesPartial = true;
+        }
+
+        if (!$this->collFormStatuses->contains($l)) {
+            $this->doAddFormStatus($l);
+
+            if ($this->formStatusesScheduledForDeletion and $this->formStatusesScheduledForDeletion->contains($l)) {
+                $this->formStatusesScheduledForDeletion->remove($this->formStatusesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildFormStatus $formStatus The ChildFormStatus object to add.
+     */
+    protected function doAddFormStatus(ChildFormStatus $formStatus)
+    {
+        $this->collFormStatuses[]= $formStatus;
+        $formStatus->setStatus($this);
+    }
+
+    /**
+     * @param  ChildFormStatus $formStatus The ChildFormStatus object to remove.
+     * @return $this|ChildStatus The current object (for fluent API support)
+     */
+    public function removeFormStatus(ChildFormStatus $formStatus)
+    {
+        if ($this->getFormStatuses()->contains($formStatus)) {
+            $pos = $this->collFormStatuses->search($formStatus);
+            $this->collFormStatuses->remove($pos);
+            if (null === $this->formStatusesScheduledForDeletion) {
+                $this->formStatusesScheduledForDeletion = clone $this->collFormStatuses;
+                $this->formStatusesScheduledForDeletion->clear();
+            }
+            $this->formStatusesScheduledForDeletion[]= clone $formStatus;
+            $formStatus->setStatus(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Status is new, it will return
+     * an empty collection; or if this Status has previously
+     * been saved, it will retrieve related FormStatuses from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Status.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildFormStatus[] List of ChildFormStatus objects
+     */
+    public function getFormStatusesJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildFormStatusQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getFormStatuses($query, $con);
     }
 
     /**
@@ -1092,8 +1812,20 @@ abstract class Status implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collSubmissions) {
+                foreach ($this->collSubmissions as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collFormStatuses) {
+                foreach ($this->collFormStatuses as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collSubmissions = null;
+        $this->collFormStatuses = null;
     }
 
     /**
@@ -1148,6 +1880,24 @@ abstract class Status implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collSubmissions) {
+                foreach ($this->collSubmissions as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collFormStatuses) {
+                foreach ($this->collFormStatuses as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

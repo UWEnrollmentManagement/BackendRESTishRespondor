@@ -10,6 +10,7 @@ use FormsAPI\Map\SubmissionTagTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -34,6 +35,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSubmissionTagQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildSubmissionTagQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildSubmissionTagQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildSubmissionTagQuery leftJoinSubmission($relationAlias = null) Adds a LEFT JOIN clause to the query using the Submission relation
+ * @method     ChildSubmissionTagQuery rightJoinSubmission($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Submission relation
+ * @method     ChildSubmissionTagQuery innerJoinSubmission($relationAlias = null) Adds a INNER JOIN clause to the query using the Submission relation
+ *
+ * @method     ChildSubmissionTagQuery joinWithSubmission($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Submission relation
+ *
+ * @method     ChildSubmissionTagQuery leftJoinWithSubmission() Adds a LEFT JOIN clause and with to the query using the Submission relation
+ * @method     ChildSubmissionTagQuery rightJoinWithSubmission() Adds a RIGHT JOIN clause and with to the query using the Submission relation
+ * @method     ChildSubmissionTagQuery innerJoinWithSubmission() Adds a INNER JOIN clause and with to the query using the Submission relation
+ *
+ * @method     ChildSubmissionTagQuery leftJoinTag($relationAlias = null) Adds a LEFT JOIN clause to the query using the Tag relation
+ * @method     ChildSubmissionTagQuery rightJoinTag($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Tag relation
+ * @method     ChildSubmissionTagQuery innerJoinTag($relationAlias = null) Adds a INNER JOIN clause to the query using the Tag relation
+ *
+ * @method     ChildSubmissionTagQuery joinWithTag($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Tag relation
+ *
+ * @method     ChildSubmissionTagQuery leftJoinWithTag() Adds a LEFT JOIN clause and with to the query using the Tag relation
+ * @method     ChildSubmissionTagQuery rightJoinWithTag() Adds a RIGHT JOIN clause and with to the query using the Tag relation
+ * @method     ChildSubmissionTagQuery innerJoinWithTag() Adds a INNER JOIN clause and with to the query using the Tag relation
+ *
+ * @method     \FormsAPI\SubmissionQuery|\FormsAPI\TagQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildSubmissionTag findOne(ConnectionInterface $con = null) Return the first ChildSubmissionTag matching the query
  * @method     ChildSubmissionTag findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSubmissionTag matching the query, or a new ChildSubmissionTag object populated from the query conditions when no match is found
@@ -292,6 +315,8 @@ abstract class SubmissionTagQuery extends ModelCriteria
      * $query->filterBySubmissionId(array('min' => 12)); // WHERE submission_id > 12
      * </code>
      *
+     * @see       filterBySubmission()
+     *
      * @param     mixed $submissionId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -333,6 +358,8 @@ abstract class SubmissionTagQuery extends ModelCriteria
      * $query->filterByTagId(array('min' => 12)); // WHERE tag_id > 12
      * </code>
      *
+     * @see       filterByTag()
+     *
      * @param     mixed $tagId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -362,6 +389,160 @@ abstract class SubmissionTagQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(SubmissionTagTableMap::COL_TAG_ID, $tagId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Submission object
+     *
+     * @param \FormsAPI\Submission|ObjectCollection $submission The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionTagQuery The current query, for fluid interface
+     */
+    public function filterBySubmission($submission, $comparison = null)
+    {
+        if ($submission instanceof \FormsAPI\Submission) {
+            return $this
+                ->addUsingAlias(SubmissionTagTableMap::COL_SUBMISSION_ID, $submission->getId(), $comparison);
+        } elseif ($submission instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTagTableMap::COL_SUBMISSION_ID, $submission->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterBySubmission() only accepts arguments of type \FormsAPI\Submission or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Submission relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionTagQuery The current query, for fluid interface
+     */
+    public function joinSubmission($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Submission');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Submission');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Submission relation Submission object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\SubmissionQuery A secondary query class using the current class as primary query
+     */
+    public function useSubmissionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSubmission($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Submission', '\FormsAPI\SubmissionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Tag object
+     *
+     * @param \FormsAPI\Tag|ObjectCollection $tag The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSubmissionTagQuery The current query, for fluid interface
+     */
+    public function filterByTag($tag, $comparison = null)
+    {
+        if ($tag instanceof \FormsAPI\Tag) {
+            return $this
+                ->addUsingAlias(SubmissionTagTableMap::COL_TAG_ID, $tag->getId(), $comparison);
+        } elseif ($tag instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SubmissionTagTableMap::COL_TAG_ID, $tag->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByTag() only accepts arguments of type \FormsAPI\Tag or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Tag relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSubmissionTagQuery The current query, for fluid interface
+     */
+    public function joinTag($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Tag');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Tag');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Tag relation Tag object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\TagQuery A secondary query class using the current class as primary query
+     */
+    public function useTagQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinTag($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Tag', '\FormsAPI\TagQuery');
     }
 
     /**

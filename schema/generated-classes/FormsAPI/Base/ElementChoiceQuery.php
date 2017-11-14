@@ -10,6 +10,7 @@ use FormsAPI\Map\ElementChoiceTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -34,6 +35,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElementChoiceQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildElementChoiceQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildElementChoiceQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildElementChoiceQuery leftJoinElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Element relation
+ * @method     ChildElementChoiceQuery rightJoinElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Element relation
+ * @method     ChildElementChoiceQuery innerJoinElement($relationAlias = null) Adds a INNER JOIN clause to the query using the Element relation
+ *
+ * @method     ChildElementChoiceQuery joinWithElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Element relation
+ *
+ * @method     ChildElementChoiceQuery leftJoinWithElement() Adds a LEFT JOIN clause and with to the query using the Element relation
+ * @method     ChildElementChoiceQuery rightJoinWithElement() Adds a RIGHT JOIN clause and with to the query using the Element relation
+ * @method     ChildElementChoiceQuery innerJoinWithElement() Adds a INNER JOIN clause and with to the query using the Element relation
+ *
+ * @method     ChildElementChoiceQuery leftJoinChoiceValue($relationAlias = null) Adds a LEFT JOIN clause to the query using the ChoiceValue relation
+ * @method     ChildElementChoiceQuery rightJoinChoiceValue($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ChoiceValue relation
+ * @method     ChildElementChoiceQuery innerJoinChoiceValue($relationAlias = null) Adds a INNER JOIN clause to the query using the ChoiceValue relation
+ *
+ * @method     ChildElementChoiceQuery joinWithChoiceValue($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ChoiceValue relation
+ *
+ * @method     ChildElementChoiceQuery leftJoinWithChoiceValue() Adds a LEFT JOIN clause and with to the query using the ChoiceValue relation
+ * @method     ChildElementChoiceQuery rightJoinWithChoiceValue() Adds a RIGHT JOIN clause and with to the query using the ChoiceValue relation
+ * @method     ChildElementChoiceQuery innerJoinWithChoiceValue() Adds a INNER JOIN clause and with to the query using the ChoiceValue relation
+ *
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\ChoiceValueQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildElementChoice findOne(ConnectionInterface $con = null) Return the first ChildElementChoice matching the query
  * @method     ChildElementChoice findOneOrCreate(ConnectionInterface $con = null) Return the first ChildElementChoice matching the query, or a new ChildElementChoice object populated from the query conditions when no match is found
@@ -292,6 +315,8 @@ abstract class ElementChoiceQuery extends ModelCriteria
      * $query->filterByElementId(array('min' => 12)); // WHERE element_id > 12
      * </code>
      *
+     * @see       filterByElement()
+     *
      * @param     mixed $elementId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -333,6 +358,8 @@ abstract class ElementChoiceQuery extends ModelCriteria
      * $query->filterByChoiceId(array('min' => 12)); // WHERE choice_id > 12
      * </code>
      *
+     * @see       filterByChoiceValue()
+     *
      * @param     mixed $choiceId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
@@ -362,6 +389,160 @@ abstract class ElementChoiceQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElementChoiceTableMap::COL_CHOICE_ID, $choiceId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Element object
+     *
+     * @param \FormsAPI\Element|ObjectCollection $element The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildElementChoiceQuery The current query, for fluid interface
+     */
+    public function filterByElement($element, $comparison = null)
+    {
+        if ($element instanceof \FormsAPI\Element) {
+            return $this
+                ->addUsingAlias(ElementChoiceTableMap::COL_ELEMENT_ID, $element->getId(), $comparison);
+        } elseif ($element instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(ElementChoiceTableMap::COL_ELEMENT_ID, $element->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByElement() only accepts arguments of type \FormsAPI\Element or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Element relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementChoiceQuery The current query, for fluid interface
+     */
+    public function joinElement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Element');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Element');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Element relation Element object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ElementQuery A secondary query class using the current class as primary query
+     */
+    public function useElementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinElement($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Element', '\FormsAPI\ElementQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\ChoiceValue object
+     *
+     * @param \FormsAPI\ChoiceValue|ObjectCollection $choiceValue The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildElementChoiceQuery The current query, for fluid interface
+     */
+    public function filterByChoiceValue($choiceValue, $comparison = null)
+    {
+        if ($choiceValue instanceof \FormsAPI\ChoiceValue) {
+            return $this
+                ->addUsingAlias(ElementChoiceTableMap::COL_CHOICE_ID, $choiceValue->getId(), $comparison);
+        } elseif ($choiceValue instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(ElementChoiceTableMap::COL_CHOICE_ID, $choiceValue->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByChoiceValue() only accepts arguments of type \FormsAPI\ChoiceValue or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ChoiceValue relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementChoiceQuery The current query, for fluid interface
+     */
+    public function joinChoiceValue($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ChoiceValue');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ChoiceValue');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ChoiceValue relation ChoiceValue object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ChoiceValueQuery A secondary query class using the current class as primary query
+     */
+    public function useChoiceValueQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinChoiceValue($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ChoiceValue', '\FormsAPI\ChoiceValueQuery');
     }
 
     /**

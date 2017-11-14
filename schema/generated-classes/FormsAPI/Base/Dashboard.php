@@ -4,13 +4,21 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Dashboard as ChildDashboard;
+use FormsAPI\DashboardElement as ChildDashboardElement;
+use FormsAPI\DashboardElementQuery as ChildDashboardElementQuery;
+use FormsAPI\DashboardForm as ChildDashboardForm;
+use FormsAPI\DashboardFormQuery as ChildDashboardFormQuery;
 use FormsAPI\DashboardQuery as ChildDashboardQuery;
+use FormsAPI\Map\DashboardElementTableMap;
+use FormsAPI\Map\DashboardFormTableMap;
 use FormsAPI\Map\DashboardTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -84,6 +92,18 @@ abstract class Dashboard implements ActiveRecordInterface
     protected $name;
 
     /**
+     * @var        ObjectCollection|ChildDashboardElement[] Collection to store aggregation of ChildDashboardElement objects.
+     */
+    protected $collDashboardElements;
+    protected $collDashboardElementsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildDashboardForm[] Collection to store aggregation of ChildDashboardForm objects.
+     */
+    protected $collDashboardForms;
+    protected $collDashboardFormsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -107,6 +127,18 @@ abstract class Dashboard implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDashboardElement[]
+     */
+    protected $dashboardElementsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDashboardForm[]
+     */
+    protected $dashboardFormsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Dashboard object.
@@ -503,6 +535,10 @@ abstract class Dashboard implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collDashboardElements = null;
+
+            $this->collDashboardForms = null;
+
         } // if (deep)
     }
 
@@ -615,6 +651,40 @@ abstract class Dashboard implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->dashboardElementsScheduledForDeletion !== null) {
+                if (!$this->dashboardElementsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DashboardElementQuery::create()
+                        ->filterByPrimaryKeys($this->dashboardElementsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->dashboardElementsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collDashboardElements !== null) {
+                foreach ($this->collDashboardElements as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->dashboardFormsScheduledForDeletion !== null) {
+                if (!$this->dashboardFormsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DashboardFormQuery::create()
+                        ->filterByPrimaryKeys($this->dashboardFormsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->dashboardFormsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collDashboardForms !== null) {
+                foreach ($this->collDashboardForms as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -751,10 +821,11 @@ abstract class Dashboard implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Dashboard'][$this->hashCode()])) {
@@ -771,6 +842,38 @@ abstract class Dashboard implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collDashboardElements) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dashboardElements';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dashboard_elements';
+                        break;
+                    default:
+                        $key = 'DashboardElements';
+                }
+
+                $result[$key] = $this->collDashboardElements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collDashboardForms) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dashboardForms';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dashboard_forms';
+                        break;
+                    default:
+                        $key = 'DashboardForms';
+                }
+
+                $result[$key] = $this->collDashboardForms->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -976,6 +1079,26 @@ abstract class Dashboard implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setName($this->getName());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getDashboardElements() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addDashboardElement($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getDashboardForms() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addDashboardForm($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1002,6 +1125,527 @@ abstract class Dashboard implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('DashboardElement' == $relationName) {
+            $this->initDashboardElements();
+            return;
+        }
+        if ('DashboardForm' == $relationName) {
+            $this->initDashboardForms();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collDashboardElements collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addDashboardElements()
+     */
+    public function clearDashboardElements()
+    {
+        $this->collDashboardElements = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collDashboardElements collection loaded partially.
+     */
+    public function resetPartialDashboardElements($v = true)
+    {
+        $this->collDashboardElementsPartial = $v;
+    }
+
+    /**
+     * Initializes the collDashboardElements collection.
+     *
+     * By default this just sets the collDashboardElements collection to an empty array (like clearcollDashboardElements());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initDashboardElements($overrideExisting = true)
+    {
+        if (null !== $this->collDashboardElements && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DashboardElementTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collDashboardElements = new $collectionClassName;
+        $this->collDashboardElements->setModel('\FormsAPI\DashboardElement');
+    }
+
+    /**
+     * Gets an array of ChildDashboardElement objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildDashboard is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDashboardElement[] List of ChildDashboardElement objects
+     * @throws PropelException
+     */
+    public function getDashboardElements(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardElementsPartial && !$this->isNew();
+        if (null === $this->collDashboardElements || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collDashboardElements) {
+                // return empty collection
+                $this->initDashboardElements();
+            } else {
+                $collDashboardElements = ChildDashboardElementQuery::create(null, $criteria)
+                    ->filterByDashboard($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collDashboardElementsPartial && count($collDashboardElements)) {
+                        $this->initDashboardElements(false);
+
+                        foreach ($collDashboardElements as $obj) {
+                            if (false == $this->collDashboardElements->contains($obj)) {
+                                $this->collDashboardElements->append($obj);
+                            }
+                        }
+
+                        $this->collDashboardElementsPartial = true;
+                    }
+
+                    return $collDashboardElements;
+                }
+
+                if ($partial && $this->collDashboardElements) {
+                    foreach ($this->collDashboardElements as $obj) {
+                        if ($obj->isNew()) {
+                            $collDashboardElements[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collDashboardElements = $collDashboardElements;
+                $this->collDashboardElementsPartial = false;
+            }
+        }
+
+        return $this->collDashboardElements;
+    }
+
+    /**
+     * Sets a collection of ChildDashboardElement objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $dashboardElements A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildDashboard The current object (for fluent API support)
+     */
+    public function setDashboardElements(Collection $dashboardElements, ConnectionInterface $con = null)
+    {
+        /** @var ChildDashboardElement[] $dashboardElementsToDelete */
+        $dashboardElementsToDelete = $this->getDashboardElements(new Criteria(), $con)->diff($dashboardElements);
+
+
+        $this->dashboardElementsScheduledForDeletion = $dashboardElementsToDelete;
+
+        foreach ($dashboardElementsToDelete as $dashboardElementRemoved) {
+            $dashboardElementRemoved->setDashboard(null);
+        }
+
+        $this->collDashboardElements = null;
+        foreach ($dashboardElements as $dashboardElement) {
+            $this->addDashboardElement($dashboardElement);
+        }
+
+        $this->collDashboardElements = $dashboardElements;
+        $this->collDashboardElementsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related DashboardElement objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related DashboardElement objects.
+     * @throws PropelException
+     */
+    public function countDashboardElements(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardElementsPartial && !$this->isNew();
+        if (null === $this->collDashboardElements || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collDashboardElements) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getDashboardElements());
+            }
+
+            $query = ChildDashboardElementQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByDashboard($this)
+                ->count($con);
+        }
+
+        return count($this->collDashboardElements);
+    }
+
+    /**
+     * Method called to associate a ChildDashboardElement object to this object
+     * through the ChildDashboardElement foreign key attribute.
+     *
+     * @param  ChildDashboardElement $l ChildDashboardElement
+     * @return $this|\FormsAPI\Dashboard The current object (for fluent API support)
+     */
+    public function addDashboardElement(ChildDashboardElement $l)
+    {
+        if ($this->collDashboardElements === null) {
+            $this->initDashboardElements();
+            $this->collDashboardElementsPartial = true;
+        }
+
+        if (!$this->collDashboardElements->contains($l)) {
+            $this->doAddDashboardElement($l);
+
+            if ($this->dashboardElementsScheduledForDeletion and $this->dashboardElementsScheduledForDeletion->contains($l)) {
+                $this->dashboardElementsScheduledForDeletion->remove($this->dashboardElementsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDashboardElement $dashboardElement The ChildDashboardElement object to add.
+     */
+    protected function doAddDashboardElement(ChildDashboardElement $dashboardElement)
+    {
+        $this->collDashboardElements[]= $dashboardElement;
+        $dashboardElement->setDashboard($this);
+    }
+
+    /**
+     * @param  ChildDashboardElement $dashboardElement The ChildDashboardElement object to remove.
+     * @return $this|ChildDashboard The current object (for fluent API support)
+     */
+    public function removeDashboardElement(ChildDashboardElement $dashboardElement)
+    {
+        if ($this->getDashboardElements()->contains($dashboardElement)) {
+            $pos = $this->collDashboardElements->search($dashboardElement);
+            $this->collDashboardElements->remove($pos);
+            if (null === $this->dashboardElementsScheduledForDeletion) {
+                $this->dashboardElementsScheduledForDeletion = clone $this->collDashboardElements;
+                $this->dashboardElementsScheduledForDeletion->clear();
+            }
+            $this->dashboardElementsScheduledForDeletion[]= clone $dashboardElement;
+            $dashboardElement->setDashboard(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Dashboard is new, it will return
+     * an empty collection; or if this Dashboard has previously
+     * been saved, it will retrieve related DashboardElements from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Dashboard.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDashboardElement[] List of ChildDashboardElement objects
+     */
+    public function getDashboardElementsJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDashboardElementQuery::create(null, $criteria);
+        $query->joinWith('Element', $joinBehavior);
+
+        return $this->getDashboardElements($query, $con);
+    }
+
+    /**
+     * Clears out the collDashboardForms collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addDashboardForms()
+     */
+    public function clearDashboardForms()
+    {
+        $this->collDashboardForms = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collDashboardForms collection loaded partially.
+     */
+    public function resetPartialDashboardForms($v = true)
+    {
+        $this->collDashboardFormsPartial = $v;
+    }
+
+    /**
+     * Initializes the collDashboardForms collection.
+     *
+     * By default this just sets the collDashboardForms collection to an empty array (like clearcollDashboardForms());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initDashboardForms($overrideExisting = true)
+    {
+        if (null !== $this->collDashboardForms && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DashboardFormTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collDashboardForms = new $collectionClassName;
+        $this->collDashboardForms->setModel('\FormsAPI\DashboardForm');
+    }
+
+    /**
+     * Gets an array of ChildDashboardForm objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildDashboard is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDashboardForm[] List of ChildDashboardForm objects
+     * @throws PropelException
+     */
+    public function getDashboardForms(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardFormsPartial && !$this->isNew();
+        if (null === $this->collDashboardForms || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collDashboardForms) {
+                // return empty collection
+                $this->initDashboardForms();
+            } else {
+                $collDashboardForms = ChildDashboardFormQuery::create(null, $criteria)
+                    ->filterByDashboard($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collDashboardFormsPartial && count($collDashboardForms)) {
+                        $this->initDashboardForms(false);
+
+                        foreach ($collDashboardForms as $obj) {
+                            if (false == $this->collDashboardForms->contains($obj)) {
+                                $this->collDashboardForms->append($obj);
+                            }
+                        }
+
+                        $this->collDashboardFormsPartial = true;
+                    }
+
+                    return $collDashboardForms;
+                }
+
+                if ($partial && $this->collDashboardForms) {
+                    foreach ($this->collDashboardForms as $obj) {
+                        if ($obj->isNew()) {
+                            $collDashboardForms[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collDashboardForms = $collDashboardForms;
+                $this->collDashboardFormsPartial = false;
+            }
+        }
+
+        return $this->collDashboardForms;
+    }
+
+    /**
+     * Sets a collection of ChildDashboardForm objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $dashboardForms A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildDashboard The current object (for fluent API support)
+     */
+    public function setDashboardForms(Collection $dashboardForms, ConnectionInterface $con = null)
+    {
+        /** @var ChildDashboardForm[] $dashboardFormsToDelete */
+        $dashboardFormsToDelete = $this->getDashboardForms(new Criteria(), $con)->diff($dashboardForms);
+
+
+        $this->dashboardFormsScheduledForDeletion = $dashboardFormsToDelete;
+
+        foreach ($dashboardFormsToDelete as $dashboardFormRemoved) {
+            $dashboardFormRemoved->setDashboard(null);
+        }
+
+        $this->collDashboardForms = null;
+        foreach ($dashboardForms as $dashboardForm) {
+            $this->addDashboardForm($dashboardForm);
+        }
+
+        $this->collDashboardForms = $dashboardForms;
+        $this->collDashboardFormsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related DashboardForm objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related DashboardForm objects.
+     * @throws PropelException
+     */
+    public function countDashboardForms(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDashboardFormsPartial && !$this->isNew();
+        if (null === $this->collDashboardForms || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collDashboardForms) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getDashboardForms());
+            }
+
+            $query = ChildDashboardFormQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByDashboard($this)
+                ->count($con);
+        }
+
+        return count($this->collDashboardForms);
+    }
+
+    /**
+     * Method called to associate a ChildDashboardForm object to this object
+     * through the ChildDashboardForm foreign key attribute.
+     *
+     * @param  ChildDashboardForm $l ChildDashboardForm
+     * @return $this|\FormsAPI\Dashboard The current object (for fluent API support)
+     */
+    public function addDashboardForm(ChildDashboardForm $l)
+    {
+        if ($this->collDashboardForms === null) {
+            $this->initDashboardForms();
+            $this->collDashboardFormsPartial = true;
+        }
+
+        if (!$this->collDashboardForms->contains($l)) {
+            $this->doAddDashboardForm($l);
+
+            if ($this->dashboardFormsScheduledForDeletion and $this->dashboardFormsScheduledForDeletion->contains($l)) {
+                $this->dashboardFormsScheduledForDeletion->remove($this->dashboardFormsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDashboardForm $dashboardForm The ChildDashboardForm object to add.
+     */
+    protected function doAddDashboardForm(ChildDashboardForm $dashboardForm)
+    {
+        $this->collDashboardForms[]= $dashboardForm;
+        $dashboardForm->setDashboard($this);
+    }
+
+    /**
+     * @param  ChildDashboardForm $dashboardForm The ChildDashboardForm object to remove.
+     * @return $this|ChildDashboard The current object (for fluent API support)
+     */
+    public function removeDashboardForm(ChildDashboardForm $dashboardForm)
+    {
+        if ($this->getDashboardForms()->contains($dashboardForm)) {
+            $pos = $this->collDashboardForms->search($dashboardForm);
+            $this->collDashboardForms->remove($pos);
+            if (null === $this->dashboardFormsScheduledForDeletion) {
+                $this->dashboardFormsScheduledForDeletion = clone $this->collDashboardForms;
+                $this->dashboardFormsScheduledForDeletion->clear();
+            }
+            $this->dashboardFormsScheduledForDeletion[]= clone $dashboardForm;
+            $dashboardForm->setDashboard(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Dashboard is new, it will return
+     * an empty collection; or if this Dashboard has previously
+     * been saved, it will retrieve related DashboardForms from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Dashboard.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDashboardForm[] List of ChildDashboardForm objects
+     */
+    public function getDashboardFormsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDashboardFormQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getDashboardForms($query, $con);
     }
 
     /**
@@ -1031,8 +1675,20 @@ abstract class Dashboard implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collDashboardElements) {
+                foreach ($this->collDashboardElements as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collDashboardForms) {
+                foreach ($this->collDashboardForms as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collDashboardElements = null;
+        $this->collDashboardForms = null;
     }
 
     /**
@@ -1087,6 +1743,24 @@ abstract class Dashboard implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collDashboardElements) {
+                foreach ($this->collDashboardElements as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collDashboardForms) {
+                foreach ($this->collDashboardForms as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

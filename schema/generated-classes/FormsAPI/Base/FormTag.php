@@ -4,7 +4,11 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Form as ChildForm;
+use FormsAPI\FormQuery as ChildFormQuery;
 use FormsAPI\FormTagQuery as ChildFormTagQuery;
+use FormsAPI\Tag as ChildTag;
+use FormsAPI\TagQuery as ChildTagQuery;
 use FormsAPI\Map\FormTagTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -96,6 +100,16 @@ abstract class FormTag implements ActiveRecordInterface
      * @var        string
      */
     protected $message;
+
+    /**
+     * @var        ChildForm
+     */
+    protected $aForm;
+
+    /**
+     * @var        ChildTag
+     */
+    protected $aTag;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -424,6 +438,10 @@ abstract class FormTag implements ActiveRecordInterface
             $this->modifiedColumns[FormTagTableMap::COL_FORM_ID] = true;
         }
 
+        if ($this->aForm !== null && $this->aForm->getId() !== $v) {
+            $this->aForm = null;
+        }
+
         return $this;
     } // setFormId()
 
@@ -442,6 +460,10 @@ abstract class FormTag implements ActiveRecordInterface
         if ($this->tag_id !== $v) {
             $this->tag_id = $v;
             $this->modifiedColumns[FormTagTableMap::COL_TAG_ID] = true;
+        }
+
+        if ($this->aTag !== null && $this->aTag->getId() !== $v) {
+            $this->aTag = null;
         }
 
         return $this;
@@ -544,6 +566,12 @@ abstract class FormTag implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aForm !== null && $this->form_id !== $this->aForm->getId()) {
+            $this->aForm = null;
+        }
+        if ($this->aTag !== null && $this->tag_id !== $this->aTag->getId()) {
+            $this->aTag = null;
+        }
     } // ensureConsistency
 
     /**
@@ -583,6 +611,8 @@ abstract class FormTag implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aForm = null;
+            $this->aTag = null;
         } // if (deep)
     }
 
@@ -685,6 +715,25 @@ abstract class FormTag implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aForm !== null) {
+                if ($this->aForm->isModified() || $this->aForm->isNew()) {
+                    $affectedRows += $this->aForm->save($con);
+                }
+                $this->setForm($this->aForm);
+            }
+
+            if ($this->aTag !== null) {
+                if ($this->aTag->isModified() || $this->aTag->isNew()) {
+                    $affectedRows += $this->aTag->save($con);
+                }
+                $this->setTag($this->aTag);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -849,10 +898,11 @@ abstract class FormTag implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['FormTag'][$this->hashCode()])) {
@@ -871,6 +921,38 @@ abstract class FormTag implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aForm) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'form';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form';
+                        break;
+                    default:
+                        $key = 'Form';
+                }
+
+                $result[$key] = $this->aForm->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aTag) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'tag';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'tag';
+                        break;
+                    default:
+                        $key = 'Tag';
+                }
+
+                $result[$key] = $this->aTag->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -1125,12 +1207,120 @@ abstract class FormTag implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildForm object.
+     *
+     * @param  ChildForm $v
+     * @return $this|\FormsAPI\FormTag The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setForm(ChildForm $v = null)
+    {
+        if ($v === null) {
+            $this->setFormId(NULL);
+        } else {
+            $this->setFormId($v->getId());
+        }
+
+        $this->aForm = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildForm object, it will not be re-added.
+        if ($v !== null) {
+            $v->addFormTag($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildForm object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildForm The associated ChildForm object.
+     * @throws PropelException
+     */
+    public function getForm(ConnectionInterface $con = null)
+    {
+        if ($this->aForm === null && ($this->form_id != 0)) {
+            $this->aForm = ChildFormQuery::create()->findPk($this->form_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aForm->addFormTags($this);
+             */
+        }
+
+        return $this->aForm;
+    }
+
+    /**
+     * Declares an association between this object and a ChildTag object.
+     *
+     * @param  ChildTag $v
+     * @return $this|\FormsAPI\FormTag The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setTag(ChildTag $v = null)
+    {
+        if ($v === null) {
+            $this->setTagId(NULL);
+        } else {
+            $this->setTagId($v->getId());
+        }
+
+        $this->aTag = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildTag object, it will not be re-added.
+        if ($v !== null) {
+            $v->addFormTag($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildTag object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildTag The associated ChildTag object.
+     * @throws PropelException
+     */
+    public function getTag(ConnectionInterface $con = null)
+    {
+        if ($this->aTag === null && ($this->tag_id != 0)) {
+            $this->aTag = ChildTagQuery::create()->findPk($this->tag_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aTag->addFormTags($this);
+             */
+        }
+
+        return $this->aTag;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aForm) {
+            $this->aForm->removeFormTag($this);
+        }
+        if (null !== $this->aTag) {
+            $this->aTag->removeFormTag($this);
+        }
         $this->id = null;
         $this->form_id = null;
         $this->tag_id = null;
@@ -1155,6 +1345,8 @@ abstract class FormTag implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aForm = null;
+        $this->aTag = null;
     }
 
     /**
@@ -1204,6 +1396,23 @@ abstract class FormTag implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aForm, 'validate')) {
+                if (!$this->aForm->validate($validator)) {
+                    $failureMap->addAll($this->aForm->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aTag, 'validate')) {
+                if (!$this->aTag->validate($validator)) {
+                    $failureMap->addAll($this->aTag->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

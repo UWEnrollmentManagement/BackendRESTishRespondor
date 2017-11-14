@@ -140,6 +140,13 @@ class ChoiceValueTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('ElementChoice', '\\FormsAPI\\ElementChoice', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':choice_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'ElementChoices', false);
     } // buildRelations()
 
     /**
@@ -154,6 +161,15 @@ class ChoiceValueTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'value','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to choice_value     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        ElementChoiceTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

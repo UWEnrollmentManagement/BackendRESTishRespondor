@@ -4,13 +4,24 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\ChildFormRelationship as ChildChildFormRelationship;
+use FormsAPI\ChildFormRelationshipQuery as ChildChildFormRelationshipQuery;
+use FormsAPI\FormTag as ChildFormTag;
+use FormsAPI\FormTagQuery as ChildFormTagQuery;
+use FormsAPI\SubmissionTag as ChildSubmissionTag;
+use FormsAPI\SubmissionTagQuery as ChildSubmissionTagQuery;
+use FormsAPI\Tag as ChildTag;
 use FormsAPI\TagQuery as ChildTagQuery;
+use FormsAPI\Map\ChildFormRelationshipTableMap;
+use FormsAPI\Map\FormTagTableMap;
+use FormsAPI\Map\SubmissionTagTableMap;
 use FormsAPI\Map\TagTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -91,6 +102,24 @@ abstract class Tag implements ActiveRecordInterface
     protected $default_message;
 
     /**
+     * @var        ObjectCollection|ChildChildFormRelationship[] Collection to store aggregation of ChildChildFormRelationship objects.
+     */
+    protected $collChildFormRelationships;
+    protected $collChildFormRelationshipsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSubmissionTag[] Collection to store aggregation of ChildSubmissionTag objects.
+     */
+    protected $collSubmissionTags;
+    protected $collSubmissionTagsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildFormTag[] Collection to store aggregation of ChildFormTag objects.
+     */
+    protected $collFormTags;
+    protected $collFormTagsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -114,6 +143,24 @@ abstract class Tag implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildChildFormRelationship[]
+     */
+    protected $childFormRelationshipsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSubmissionTag[]
+     */
+    protected $submissionTagsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildFormTag[]
+     */
+    protected $formTagsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Tag object.
@@ -543,6 +590,12 @@ abstract class Tag implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collChildFormRelationships = null;
+
+            $this->collSubmissionTags = null;
+
+            $this->collFormTags = null;
+
         } // if (deep)
     }
 
@@ -655,6 +708,58 @@ abstract class Tag implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->childFormRelationshipsScheduledForDeletion !== null) {
+                if (!$this->childFormRelationshipsScheduledForDeletion->isEmpty()) {
+                    foreach ($this->childFormRelationshipsScheduledForDeletion as $childFormRelationship) {
+                        // need to save related object because we set the relation to null
+                        $childFormRelationship->save($con);
+                    }
+                    $this->childFormRelationshipsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collChildFormRelationships !== null) {
+                foreach ($this->collChildFormRelationships as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->submissionTagsScheduledForDeletion !== null) {
+                if (!$this->submissionTagsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\SubmissionTagQuery::create()
+                        ->filterByPrimaryKeys($this->submissionTagsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->submissionTagsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSubmissionTags !== null) {
+                foreach ($this->collSubmissionTags as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->formTagsScheduledForDeletion !== null) {
+                if (!$this->formTagsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\FormTagQuery::create()
+                        ->filterByPrimaryKeys($this->formTagsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->formTagsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collFormTags !== null) {
+                foreach ($this->collFormTags as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -800,10 +905,11 @@ abstract class Tag implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Tag'][$this->hashCode()])) {
@@ -821,6 +927,53 @@ abstract class Tag implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collChildFormRelationships) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'childFormRelationships';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'child_form_relationships';
+                        break;
+                    default:
+                        $key = 'ChildFormRelationships';
+                }
+
+                $result[$key] = $this->collChildFormRelationships->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collSubmissionTags) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'submissionTags';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'submission_tags';
+                        break;
+                    default:
+                        $key = 'SubmissionTags';
+                }
+
+                $result[$key] = $this->collSubmissionTags->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collFormTags) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'formTags';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form_tags';
+                        break;
+                    default:
+                        $key = 'FormTags';
+                }
+
+                $result[$key] = $this->collFormTags->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1036,6 +1189,32 @@ abstract class Tag implements ActiveRecordInterface
     {
         $copyObj->setName($this->getName());
         $copyObj->setDefaultMessage($this->getDefaultMessage());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getChildFormRelationships() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addChildFormRelationship($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getSubmissionTags() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSubmissionTag($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getFormTags() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addFormTag($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1062,6 +1241,831 @@ abstract class Tag implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('ChildFormRelationship' == $relationName) {
+            $this->initChildFormRelationships();
+            return;
+        }
+        if ('SubmissionTag' == $relationName) {
+            $this->initSubmissionTags();
+            return;
+        }
+        if ('FormTag' == $relationName) {
+            $this->initFormTags();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collChildFormRelationships collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addChildFormRelationships()
+     */
+    public function clearChildFormRelationships()
+    {
+        $this->collChildFormRelationships = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collChildFormRelationships collection loaded partially.
+     */
+    public function resetPartialChildFormRelationships($v = true)
+    {
+        $this->collChildFormRelationshipsPartial = $v;
+    }
+
+    /**
+     * Initializes the collChildFormRelationships collection.
+     *
+     * By default this just sets the collChildFormRelationships collection to an empty array (like clearcollChildFormRelationships());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initChildFormRelationships($overrideExisting = true)
+    {
+        if (null !== $this->collChildFormRelationships && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ChildFormRelationshipTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collChildFormRelationships = new $collectionClassName;
+        $this->collChildFormRelationships->setModel('\FormsAPI\ChildFormRelationship');
+    }
+
+    /**
+     * Gets an array of ChildChildFormRelationship objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildTag is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     * @throws PropelException
+     */
+    public function getChildFormRelationships(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collChildFormRelationshipsPartial && !$this->isNew();
+        if (null === $this->collChildFormRelationships || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collChildFormRelationships) {
+                // return empty collection
+                $this->initChildFormRelationships();
+            } else {
+                $collChildFormRelationships = ChildChildFormRelationshipQuery::create(null, $criteria)
+                    ->filterByTag($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collChildFormRelationshipsPartial && count($collChildFormRelationships)) {
+                        $this->initChildFormRelationships(false);
+
+                        foreach ($collChildFormRelationships as $obj) {
+                            if (false == $this->collChildFormRelationships->contains($obj)) {
+                                $this->collChildFormRelationships->append($obj);
+                            }
+                        }
+
+                        $this->collChildFormRelationshipsPartial = true;
+                    }
+
+                    return $collChildFormRelationships;
+                }
+
+                if ($partial && $this->collChildFormRelationships) {
+                    foreach ($this->collChildFormRelationships as $obj) {
+                        if ($obj->isNew()) {
+                            $collChildFormRelationships[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collChildFormRelationships = $collChildFormRelationships;
+                $this->collChildFormRelationshipsPartial = false;
+            }
+        }
+
+        return $this->collChildFormRelationships;
+    }
+
+    /**
+     * Sets a collection of ChildChildFormRelationship objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $childFormRelationships A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function setChildFormRelationships(Collection $childFormRelationships, ConnectionInterface $con = null)
+    {
+        /** @var ChildChildFormRelationship[] $childFormRelationshipsToDelete */
+        $childFormRelationshipsToDelete = $this->getChildFormRelationships(new Criteria(), $con)->diff($childFormRelationships);
+
+
+        $this->childFormRelationshipsScheduledForDeletion = $childFormRelationshipsToDelete;
+
+        foreach ($childFormRelationshipsToDelete as $childFormRelationshipRemoved) {
+            $childFormRelationshipRemoved->setTag(null);
+        }
+
+        $this->collChildFormRelationships = null;
+        foreach ($childFormRelationships as $childFormRelationship) {
+            $this->addChildFormRelationship($childFormRelationship);
+        }
+
+        $this->collChildFormRelationships = $childFormRelationships;
+        $this->collChildFormRelationshipsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ChildFormRelationship objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related ChildFormRelationship objects.
+     * @throws PropelException
+     */
+    public function countChildFormRelationships(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collChildFormRelationshipsPartial && !$this->isNew();
+        if (null === $this->collChildFormRelationships || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collChildFormRelationships) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getChildFormRelationships());
+            }
+
+            $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByTag($this)
+                ->count($con);
+        }
+
+        return count($this->collChildFormRelationships);
+    }
+
+    /**
+     * Method called to associate a ChildChildFormRelationship object to this object
+     * through the ChildChildFormRelationship foreign key attribute.
+     *
+     * @param  ChildChildFormRelationship $l ChildChildFormRelationship
+     * @return $this|\FormsAPI\Tag The current object (for fluent API support)
+     */
+    public function addChildFormRelationship(ChildChildFormRelationship $l)
+    {
+        if ($this->collChildFormRelationships === null) {
+            $this->initChildFormRelationships();
+            $this->collChildFormRelationshipsPartial = true;
+        }
+
+        if (!$this->collChildFormRelationships->contains($l)) {
+            $this->doAddChildFormRelationship($l);
+
+            if ($this->childFormRelationshipsScheduledForDeletion and $this->childFormRelationshipsScheduledForDeletion->contains($l)) {
+                $this->childFormRelationshipsScheduledForDeletion->remove($this->childFormRelationshipsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildChildFormRelationship $childFormRelationship The ChildChildFormRelationship object to add.
+     */
+    protected function doAddChildFormRelationship(ChildChildFormRelationship $childFormRelationship)
+    {
+        $this->collChildFormRelationships[]= $childFormRelationship;
+        $childFormRelationship->setTag($this);
+    }
+
+    /**
+     * @param  ChildChildFormRelationship $childFormRelationship The ChildChildFormRelationship object to remove.
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function removeChildFormRelationship(ChildChildFormRelationship $childFormRelationship)
+    {
+        if ($this->getChildFormRelationships()->contains($childFormRelationship)) {
+            $pos = $this->collChildFormRelationships->search($childFormRelationship);
+            $this->collChildFormRelationships->remove($pos);
+            if (null === $this->childFormRelationshipsScheduledForDeletion) {
+                $this->childFormRelationshipsScheduledForDeletion = clone $this->collChildFormRelationships;
+                $this->childFormRelationshipsScheduledForDeletion->clear();
+            }
+            $this->childFormRelationshipsScheduledForDeletion[]= $childFormRelationship;
+            $childFormRelationship->setTag(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Tag.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinParent(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Parent', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Tag.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinChild(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Child', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Tag.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinReaction(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Reaction', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+    /**
+     * Clears out the collSubmissionTags collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSubmissionTags()
+     */
+    public function clearSubmissionTags()
+    {
+        $this->collSubmissionTags = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSubmissionTags collection loaded partially.
+     */
+    public function resetPartialSubmissionTags($v = true)
+    {
+        $this->collSubmissionTagsPartial = $v;
+    }
+
+    /**
+     * Initializes the collSubmissionTags collection.
+     *
+     * By default this just sets the collSubmissionTags collection to an empty array (like clearcollSubmissionTags());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSubmissionTags($overrideExisting = true)
+    {
+        if (null !== $this->collSubmissionTags && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SubmissionTagTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSubmissionTags = new $collectionClassName;
+        $this->collSubmissionTags->setModel('\FormsAPI\SubmissionTag');
+    }
+
+    /**
+     * Gets an array of ChildSubmissionTag objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildTag is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSubmissionTag[] List of ChildSubmissionTag objects
+     * @throws PropelException
+     */
+    public function getSubmissionTags(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionTagsPartial && !$this->isNew();
+        if (null === $this->collSubmissionTags || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collSubmissionTags) {
+                // return empty collection
+                $this->initSubmissionTags();
+            } else {
+                $collSubmissionTags = ChildSubmissionTagQuery::create(null, $criteria)
+                    ->filterByTag($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSubmissionTagsPartial && count($collSubmissionTags)) {
+                        $this->initSubmissionTags(false);
+
+                        foreach ($collSubmissionTags as $obj) {
+                            if (false == $this->collSubmissionTags->contains($obj)) {
+                                $this->collSubmissionTags->append($obj);
+                            }
+                        }
+
+                        $this->collSubmissionTagsPartial = true;
+                    }
+
+                    return $collSubmissionTags;
+                }
+
+                if ($partial && $this->collSubmissionTags) {
+                    foreach ($this->collSubmissionTags as $obj) {
+                        if ($obj->isNew()) {
+                            $collSubmissionTags[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSubmissionTags = $collSubmissionTags;
+                $this->collSubmissionTagsPartial = false;
+            }
+        }
+
+        return $this->collSubmissionTags;
+    }
+
+    /**
+     * Sets a collection of ChildSubmissionTag objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $submissionTags A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function setSubmissionTags(Collection $submissionTags, ConnectionInterface $con = null)
+    {
+        /** @var ChildSubmissionTag[] $submissionTagsToDelete */
+        $submissionTagsToDelete = $this->getSubmissionTags(new Criteria(), $con)->diff($submissionTags);
+
+
+        $this->submissionTagsScheduledForDeletion = $submissionTagsToDelete;
+
+        foreach ($submissionTagsToDelete as $submissionTagRemoved) {
+            $submissionTagRemoved->setTag(null);
+        }
+
+        $this->collSubmissionTags = null;
+        foreach ($submissionTags as $submissionTag) {
+            $this->addSubmissionTag($submissionTag);
+        }
+
+        $this->collSubmissionTags = $submissionTags;
+        $this->collSubmissionTagsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related SubmissionTag objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related SubmissionTag objects.
+     * @throws PropelException
+     */
+    public function countSubmissionTags(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSubmissionTagsPartial && !$this->isNew();
+        if (null === $this->collSubmissionTags || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSubmissionTags) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSubmissionTags());
+            }
+
+            $query = ChildSubmissionTagQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByTag($this)
+                ->count($con);
+        }
+
+        return count($this->collSubmissionTags);
+    }
+
+    /**
+     * Method called to associate a ChildSubmissionTag object to this object
+     * through the ChildSubmissionTag foreign key attribute.
+     *
+     * @param  ChildSubmissionTag $l ChildSubmissionTag
+     * @return $this|\FormsAPI\Tag The current object (for fluent API support)
+     */
+    public function addSubmissionTag(ChildSubmissionTag $l)
+    {
+        if ($this->collSubmissionTags === null) {
+            $this->initSubmissionTags();
+            $this->collSubmissionTagsPartial = true;
+        }
+
+        if (!$this->collSubmissionTags->contains($l)) {
+            $this->doAddSubmissionTag($l);
+
+            if ($this->submissionTagsScheduledForDeletion and $this->submissionTagsScheduledForDeletion->contains($l)) {
+                $this->submissionTagsScheduledForDeletion->remove($this->submissionTagsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSubmissionTag $submissionTag The ChildSubmissionTag object to add.
+     */
+    protected function doAddSubmissionTag(ChildSubmissionTag $submissionTag)
+    {
+        $this->collSubmissionTags[]= $submissionTag;
+        $submissionTag->setTag($this);
+    }
+
+    /**
+     * @param  ChildSubmissionTag $submissionTag The ChildSubmissionTag object to remove.
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function removeSubmissionTag(ChildSubmissionTag $submissionTag)
+    {
+        if ($this->getSubmissionTags()->contains($submissionTag)) {
+            $pos = $this->collSubmissionTags->search($submissionTag);
+            $this->collSubmissionTags->remove($pos);
+            if (null === $this->submissionTagsScheduledForDeletion) {
+                $this->submissionTagsScheduledForDeletion = clone $this->collSubmissionTags;
+                $this->submissionTagsScheduledForDeletion->clear();
+            }
+            $this->submissionTagsScheduledForDeletion[]= clone $submissionTag;
+            $submissionTag->setTag(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
+     * been saved, it will retrieve related SubmissionTags from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Tag.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSubmissionTag[] List of ChildSubmissionTag objects
+     */
+    public function getSubmissionTagsJoinSubmission(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSubmissionTagQuery::create(null, $criteria);
+        $query->joinWith('Submission', $joinBehavior);
+
+        return $this->getSubmissionTags($query, $con);
+    }
+
+    /**
+     * Clears out the collFormTags collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addFormTags()
+     */
+    public function clearFormTags()
+    {
+        $this->collFormTags = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collFormTags collection loaded partially.
+     */
+    public function resetPartialFormTags($v = true)
+    {
+        $this->collFormTagsPartial = $v;
+    }
+
+    /**
+     * Initializes the collFormTags collection.
+     *
+     * By default this just sets the collFormTags collection to an empty array (like clearcollFormTags());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initFormTags($overrideExisting = true)
+    {
+        if (null !== $this->collFormTags && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = FormTagTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collFormTags = new $collectionClassName;
+        $this->collFormTags->setModel('\FormsAPI\FormTag');
+    }
+
+    /**
+     * Gets an array of ChildFormTag objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildTag is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildFormTag[] List of ChildFormTag objects
+     * @throws PropelException
+     */
+    public function getFormTags(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormTagsPartial && !$this->isNew();
+        if (null === $this->collFormTags || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collFormTags) {
+                // return empty collection
+                $this->initFormTags();
+            } else {
+                $collFormTags = ChildFormTagQuery::create(null, $criteria)
+                    ->filterByTag($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collFormTagsPartial && count($collFormTags)) {
+                        $this->initFormTags(false);
+
+                        foreach ($collFormTags as $obj) {
+                            if (false == $this->collFormTags->contains($obj)) {
+                                $this->collFormTags->append($obj);
+                            }
+                        }
+
+                        $this->collFormTagsPartial = true;
+                    }
+
+                    return $collFormTags;
+                }
+
+                if ($partial && $this->collFormTags) {
+                    foreach ($this->collFormTags as $obj) {
+                        if ($obj->isNew()) {
+                            $collFormTags[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collFormTags = $collFormTags;
+                $this->collFormTagsPartial = false;
+            }
+        }
+
+        return $this->collFormTags;
+    }
+
+    /**
+     * Sets a collection of ChildFormTag objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $formTags A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function setFormTags(Collection $formTags, ConnectionInterface $con = null)
+    {
+        /** @var ChildFormTag[] $formTagsToDelete */
+        $formTagsToDelete = $this->getFormTags(new Criteria(), $con)->diff($formTags);
+
+
+        $this->formTagsScheduledForDeletion = $formTagsToDelete;
+
+        foreach ($formTagsToDelete as $formTagRemoved) {
+            $formTagRemoved->setTag(null);
+        }
+
+        $this->collFormTags = null;
+        foreach ($formTags as $formTag) {
+            $this->addFormTag($formTag);
+        }
+
+        $this->collFormTags = $formTags;
+        $this->collFormTagsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related FormTag objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related FormTag objects.
+     * @throws PropelException
+     */
+    public function countFormTags(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormTagsPartial && !$this->isNew();
+        if (null === $this->collFormTags || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collFormTags) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getFormTags());
+            }
+
+            $query = ChildFormTagQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByTag($this)
+                ->count($con);
+        }
+
+        return count($this->collFormTags);
+    }
+
+    /**
+     * Method called to associate a ChildFormTag object to this object
+     * through the ChildFormTag foreign key attribute.
+     *
+     * @param  ChildFormTag $l ChildFormTag
+     * @return $this|\FormsAPI\Tag The current object (for fluent API support)
+     */
+    public function addFormTag(ChildFormTag $l)
+    {
+        if ($this->collFormTags === null) {
+            $this->initFormTags();
+            $this->collFormTagsPartial = true;
+        }
+
+        if (!$this->collFormTags->contains($l)) {
+            $this->doAddFormTag($l);
+
+            if ($this->formTagsScheduledForDeletion and $this->formTagsScheduledForDeletion->contains($l)) {
+                $this->formTagsScheduledForDeletion->remove($this->formTagsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildFormTag $formTag The ChildFormTag object to add.
+     */
+    protected function doAddFormTag(ChildFormTag $formTag)
+    {
+        $this->collFormTags[]= $formTag;
+        $formTag->setTag($this);
+    }
+
+    /**
+     * @param  ChildFormTag $formTag The ChildFormTag object to remove.
+     * @return $this|ChildTag The current object (for fluent API support)
+     */
+    public function removeFormTag(ChildFormTag $formTag)
+    {
+        if ($this->getFormTags()->contains($formTag)) {
+            $pos = $this->collFormTags->search($formTag);
+            $this->collFormTags->remove($pos);
+            if (null === $this->formTagsScheduledForDeletion) {
+                $this->formTagsScheduledForDeletion = clone $this->collFormTags;
+                $this->formTagsScheduledForDeletion->clear();
+            }
+            $this->formTagsScheduledForDeletion[]= clone $formTag;
+            $formTag->setTag(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
+     * been saved, it will retrieve related FormTags from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Tag.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildFormTag[] List of ChildFormTag objects
+     */
+    public function getFormTagsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildFormTagQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getFormTags($query, $con);
     }
 
     /**
@@ -1092,8 +2096,26 @@ abstract class Tag implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collChildFormRelationships) {
+                foreach ($this->collChildFormRelationships as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collSubmissionTags) {
+                foreach ($this->collSubmissionTags as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collFormTags) {
+                foreach ($this->collFormTags as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collChildFormRelationships = null;
+        $this->collSubmissionTags = null;
+        $this->collFormTags = null;
     }
 
     /**
@@ -1148,6 +2170,33 @@ abstract class Tag implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collChildFormRelationships) {
+                foreach ($this->collChildFormRelationships as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collSubmissionTags) {
+                foreach ($this->collSubmissionTags as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collFormTags) {
+                foreach ($this->collFormTags as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

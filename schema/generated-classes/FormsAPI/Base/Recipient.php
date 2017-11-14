@@ -84,6 +84,13 @@ abstract class Recipient implements ActiveRecordInterface
     protected $address;
 
     /**
+     * The value for the note field.
+     *
+     * @var        string
+     */
+    protected $note;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -354,6 +361,16 @@ abstract class Recipient implements ActiveRecordInterface
     }
 
     /**
+     * Get the [note] column value.
+     *
+     * @return string
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
+
+    /**
      * Set the value of [id] column.
      *
      * @param int $v new value
@@ -392,6 +409,26 @@ abstract class Recipient implements ActiveRecordInterface
 
         return $this;
     } // setAddress()
+
+    /**
+     * Set the value of [note] column.
+     *
+     * @param string $v new value
+     * @return $this|\FormsAPI\Recipient The current object (for fluent API support)
+     */
+    public function setNote($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->note !== $v) {
+            $this->note = $v;
+            $this->modifiedColumns[RecipientTableMap::COL_NOTE] = true;
+        }
+
+        return $this;
+    } // setNote()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -434,6 +471,9 @@ abstract class Recipient implements ActiveRecordInterface
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : RecipientTableMap::translateFieldName('Address', TableMap::TYPE_PHPNAME, $indexType)];
             $this->address = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RecipientTableMap::translateFieldName('Note', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->note = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -442,7 +482,7 @@ abstract class Recipient implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 2; // 2 = RecipientTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 3; // 3 = RecipientTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\FormsAPI\\Recipient'), 0, $e);
@@ -649,6 +689,9 @@ abstract class Recipient implements ActiveRecordInterface
         if ($this->isColumnModified(RecipientTableMap::COL_ADDRESS)) {
             $modifiedColumns[':p' . $index++]  = 'address';
         }
+        if ($this->isColumnModified(RecipientTableMap::COL_NOTE)) {
+            $modifiedColumns[':p' . $index++]  = 'note';
+        }
 
         $sql = sprintf(
             'INSERT INTO recipient (%s) VALUES (%s)',
@@ -665,6 +708,9 @@ abstract class Recipient implements ActiveRecordInterface
                         break;
                     case 'address':
                         $stmt->bindValue($identifier, $this->address, PDO::PARAM_INT);
+                        break;
+                    case 'note':
+                        $stmt->bindValue($identifier, $this->note, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -734,6 +780,9 @@ abstract class Recipient implements ActiveRecordInterface
             case 1:
                 return $this->getAddress();
                 break;
+            case 2:
+                return $this->getNote();
+                break;
             default:
                 return null;
                 break;
@@ -765,6 +814,7 @@ abstract class Recipient implements ActiveRecordInterface
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getAddress(),
+            $keys[2] => $this->getNote(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -810,6 +860,9 @@ abstract class Recipient implements ActiveRecordInterface
             case 1:
                 $this->setAddress($value);
                 break;
+            case 2:
+                $this->setNote($value);
+                break;
         } // switch()
 
         return $this;
@@ -841,6 +894,9 @@ abstract class Recipient implements ActiveRecordInterface
         }
         if (array_key_exists($keys[1], $arr)) {
             $this->setAddress($arr[$keys[1]]);
+        }
+        if (array_key_exists($keys[2], $arr)) {
+            $this->setNote($arr[$keys[2]]);
         }
     }
 
@@ -888,6 +944,9 @@ abstract class Recipient implements ActiveRecordInterface
         }
         if ($this->isColumnModified(RecipientTableMap::COL_ADDRESS)) {
             $criteria->add(RecipientTableMap::COL_ADDRESS, $this->address);
+        }
+        if ($this->isColumnModified(RecipientTableMap::COL_NOTE)) {
+            $criteria->add(RecipientTableMap::COL_NOTE, $this->note);
         }
 
         return $criteria;
@@ -976,6 +1035,7 @@ abstract class Recipient implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setAddress($this->getAddress());
+        $copyObj->setNote($this->getNote());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1013,6 +1073,7 @@ abstract class Recipient implements ActiveRecordInterface
     {
         $this->id = null;
         $this->address = null;
+        $this->note = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

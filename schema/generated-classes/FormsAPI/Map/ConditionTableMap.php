@@ -146,6 +146,13 @@ class ConditionTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Dependency', '\\FormsAPI\\Dependency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':condition_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Dependencies', false);
     } // buildRelations()
 
     /**
@@ -160,6 +167,15 @@ class ConditionTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'operator','validator' => 'Choice','options' => array ('choices' => array (0 => 'is',1 => 'is not',2 => 'less than',3 => 'greater than',4 => 'less than or equal to',5 => 'greater than or equal to',6 => 'maximum length',7 => 'minimum length',8 => 'exact length',9 => 'regex',),),), 'rule2' => array ('column' => 'operator','validator' => 'NotNull',), 'rule3' => array ('column' => 'value','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to condition     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        DependencyTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

@@ -4,9 +4,9 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
-use FormsAPI\FormTag as ChildFormTag;
-use FormsAPI\FormTagQuery as ChildFormTagQuery;
-use FormsAPI\Map\FormTagTableMap;
+use FormsAPI\FormStatus as ChildFormStatus;
+use FormsAPI\FormStatusQuery as ChildFormStatusQuery;
+use FormsAPI\Map\FormStatusTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -16,104 +16,104 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'form_tag' table.
+ * Base class that represents a query for the 'form_status' table.
  *
  *
  *
- * @method     ChildFormTagQuery orderById($order = Criteria::ASC) Order by the id column
- * @method     ChildFormTagQuery orderByFormId($order = Criteria::ASC) Order by the form_id column
- * @method     ChildFormTagQuery orderByTagId($order = Criteria::ASC) Order by the tag_id column
- * @method     ChildFormTagQuery orderByMessage($order = Criteria::ASC) Order by the message column
+ * @method     ChildFormStatusQuery orderById($order = Criteria::ASC) Order by the id column
+ * @method     ChildFormStatusQuery orderByMessage($order = Criteria::ASC) Order by the message column
+ * @method     ChildFormStatusQuery orderByFormId($order = Criteria::ASC) Order by the form_id column
+ * @method     ChildFormStatusQuery orderByStatusId($order = Criteria::ASC) Order by the status_id column
  *
- * @method     ChildFormTagQuery groupById() Group by the id column
- * @method     ChildFormTagQuery groupByFormId() Group by the form_id column
- * @method     ChildFormTagQuery groupByTagId() Group by the tag_id column
- * @method     ChildFormTagQuery groupByMessage() Group by the message column
+ * @method     ChildFormStatusQuery groupById() Group by the id column
+ * @method     ChildFormStatusQuery groupByMessage() Group by the message column
+ * @method     ChildFormStatusQuery groupByFormId() Group by the form_id column
+ * @method     ChildFormStatusQuery groupByStatusId() Group by the status_id column
  *
- * @method     ChildFormTagQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
- * @method     ChildFormTagQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
- * @method     ChildFormTagQuery innerJoin($relation) Adds a INNER JOIN clause to the query
+ * @method     ChildFormStatusQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
+ * @method     ChildFormStatusQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
+ * @method     ChildFormStatusQuery innerJoin($relation) Adds a INNER JOIN clause to the query
  *
- * @method     ChildFormTagQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
- * @method     ChildFormTagQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
- * @method     ChildFormTagQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ * @method     ChildFormStatusQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
+ * @method     ChildFormStatusQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
+ * @method     ChildFormStatusQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
- * @method     ChildFormTagQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
- * @method     ChildFormTagQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
- * @method     ChildFormTagQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ * @method     ChildFormStatusQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
+ * @method     ChildFormStatusQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
+ * @method     ChildFormStatusQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
  *
- * @method     ChildFormTagQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ * @method     ChildFormStatusQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
  *
- * @method     ChildFormTagQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
- * @method     ChildFormTagQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
- * @method     ChildFormTagQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ * @method     ChildFormStatusQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
+ * @method     ChildFormStatusQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
+ * @method     ChildFormStatusQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
  *
- * @method     ChildFormTagQuery leftJoinTag($relationAlias = null) Adds a LEFT JOIN clause to the query using the Tag relation
- * @method     ChildFormTagQuery rightJoinTag($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Tag relation
- * @method     ChildFormTagQuery innerJoinTag($relationAlias = null) Adds a INNER JOIN clause to the query using the Tag relation
+ * @method     ChildFormStatusQuery leftJoinStatus($relationAlias = null) Adds a LEFT JOIN clause to the query using the Status relation
+ * @method     ChildFormStatusQuery rightJoinStatus($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Status relation
+ * @method     ChildFormStatusQuery innerJoinStatus($relationAlias = null) Adds a INNER JOIN clause to the query using the Status relation
  *
- * @method     ChildFormTagQuery joinWithTag($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Tag relation
+ * @method     ChildFormStatusQuery joinWithStatus($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Status relation
  *
- * @method     ChildFormTagQuery leftJoinWithTag() Adds a LEFT JOIN clause and with to the query using the Tag relation
- * @method     ChildFormTagQuery rightJoinWithTag() Adds a RIGHT JOIN clause and with to the query using the Tag relation
- * @method     ChildFormTagQuery innerJoinWithTag() Adds a INNER JOIN clause and with to the query using the Tag relation
+ * @method     ChildFormStatusQuery leftJoinWithStatus() Adds a LEFT JOIN clause and with to the query using the Status relation
+ * @method     ChildFormStatusQuery rightJoinWithStatus() Adds a RIGHT JOIN clause and with to the query using the Status relation
+ * @method     ChildFormStatusQuery innerJoinWithStatus() Adds a INNER JOIN clause and with to the query using the Status relation
  *
- * @method     \FormsAPI\FormQuery|\FormsAPI\TagQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \FormsAPI\FormQuery|\FormsAPI\StatusQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
- * @method     ChildFormTag findOne(ConnectionInterface $con = null) Return the first ChildFormTag matching the query
- * @method     ChildFormTag findOneOrCreate(ConnectionInterface $con = null) Return the first ChildFormTag matching the query, or a new ChildFormTag object populated from the query conditions when no match is found
+ * @method     ChildFormStatus findOne(ConnectionInterface $con = null) Return the first ChildFormStatus matching the query
+ * @method     ChildFormStatus findOneOrCreate(ConnectionInterface $con = null) Return the first ChildFormStatus matching the query, or a new ChildFormStatus object populated from the query conditions when no match is found
  *
- * @method     ChildFormTag findOneById(int $id) Return the first ChildFormTag filtered by the id column
- * @method     ChildFormTag findOneByFormId(int $form_id) Return the first ChildFormTag filtered by the form_id column
- * @method     ChildFormTag findOneByTagId(int $tag_id) Return the first ChildFormTag filtered by the tag_id column
- * @method     ChildFormTag findOneByMessage(string $message) Return the first ChildFormTag filtered by the message column *
+ * @method     ChildFormStatus findOneById(int $id) Return the first ChildFormStatus filtered by the id column
+ * @method     ChildFormStatus findOneByMessage(string $message) Return the first ChildFormStatus filtered by the message column
+ * @method     ChildFormStatus findOneByFormId(int $form_id) Return the first ChildFormStatus filtered by the form_id column
+ * @method     ChildFormStatus findOneByStatusId(int $status_id) Return the first ChildFormStatus filtered by the status_id column *
 
- * @method     ChildFormTag requirePk($key, ConnectionInterface $con = null) Return the ChildFormTag by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildFormTag requireOne(ConnectionInterface $con = null) Return the first ChildFormTag matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requirePk($key, ConnectionInterface $con = null) Return the ChildFormStatus by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requireOne(ConnectionInterface $con = null) Return the first ChildFormStatus matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildFormTag requireOneById(int $id) Return the first ChildFormTag filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildFormTag requireOneByFormId(int $form_id) Return the first ChildFormTag filtered by the form_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildFormTag requireOneByTagId(int $tag_id) Return the first ChildFormTag filtered by the tag_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildFormTag requireOneByMessage(string $message) Return the first ChildFormTag filtered by the message column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requireOneById(int $id) Return the first ChildFormStatus filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requireOneByMessage(string $message) Return the first ChildFormStatus filtered by the message column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requireOneByFormId(int $form_id) Return the first ChildFormStatus filtered by the form_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildFormStatus requireOneByStatusId(int $status_id) Return the first ChildFormStatus filtered by the status_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildFormTag[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildFormTag objects based on current ModelCriteria
- * @method     ChildFormTag[]|ObjectCollection findById(int $id) Return ChildFormTag objects filtered by the id column
- * @method     ChildFormTag[]|ObjectCollection findByFormId(int $form_id) Return ChildFormTag objects filtered by the form_id column
- * @method     ChildFormTag[]|ObjectCollection findByTagId(int $tag_id) Return ChildFormTag objects filtered by the tag_id column
- * @method     ChildFormTag[]|ObjectCollection findByMessage(string $message) Return ChildFormTag objects filtered by the message column
- * @method     ChildFormTag[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildFormStatus[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildFormStatus objects based on current ModelCriteria
+ * @method     ChildFormStatus[]|ObjectCollection findById(int $id) Return ChildFormStatus objects filtered by the id column
+ * @method     ChildFormStatus[]|ObjectCollection findByMessage(string $message) Return ChildFormStatus objects filtered by the message column
+ * @method     ChildFormStatus[]|ObjectCollection findByFormId(int $form_id) Return ChildFormStatus objects filtered by the form_id column
+ * @method     ChildFormStatus[]|ObjectCollection findByStatusId(int $status_id) Return ChildFormStatus objects filtered by the status_id column
+ * @method     ChildFormStatus[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
-abstract class FormTagQuery extends ModelCriteria
+abstract class FormStatusQuery extends ModelCriteria
 {
     protected $entityNotFoundExceptionClass = '\\Propel\\Runtime\\Exception\\EntityNotFoundException';
 
     /**
-     * Initializes internal state of \FormsAPI\Base\FormTagQuery object.
+     * Initializes internal state of \FormsAPI\Base\FormStatusQuery object.
      *
      * @param     string $dbName The database name
      * @param     string $modelName The phpName of a model, e.g. 'Book'
      * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
      */
-    public function __construct($dbName = 'default', $modelName = '\\FormsAPI\\FormTag', $modelAlias = null)
+    public function __construct($dbName = 'default', $modelName = '\\FormsAPI\\FormStatus', $modelAlias = null)
     {
         parent::__construct($dbName, $modelName, $modelAlias);
     }
 
     /**
-     * Returns a new ChildFormTagQuery object.
+     * Returns a new ChildFormStatusQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
      * @param     Criteria $criteria Optional Criteria to build the query from
      *
-     * @return ChildFormTagQuery
+     * @return ChildFormStatusQuery
      */
     public static function create($modelAlias = null, Criteria $criteria = null)
     {
-        if ($criteria instanceof ChildFormTagQuery) {
+        if ($criteria instanceof ChildFormStatusQuery) {
             return $criteria;
         }
-        $query = new ChildFormTagQuery();
+        $query = new ChildFormStatusQuery();
         if (null !== $modelAlias) {
             $query->setModelAlias($modelAlias);
         }
@@ -136,7 +136,7 @@ abstract class FormTagQuery extends ModelCriteria
      * @param mixed $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
-     * @return ChildFormTag|array|mixed the result, formatted by the current formatter
+     * @return ChildFormStatus|array|mixed the result, formatted by the current formatter
      */
     public function findPk($key, ConnectionInterface $con = null)
     {
@@ -145,7 +145,7 @@ abstract class FormTagQuery extends ModelCriteria
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(FormTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         $this->basePreSelect($con);
@@ -158,7 +158,7 @@ abstract class FormTagQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = FormTagTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
+        if ((null !== ($obj = FormStatusTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -175,11 +175,11 @@ abstract class FormTagQuery extends ModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildFormTag A model object, or null if the key is not found
+     * @return ChildFormStatus A model object, or null if the key is not found
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, form_id, tag_id, message FROM form_tag WHERE id = :p0';
+        $sql = 'SELECT id, message, form_id, status_id FROM form_status WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -190,10 +190,10 @@ abstract class FormTagQuery extends ModelCriteria
         }
         $obj = null;
         if ($row = $stmt->fetch(\PDO::FETCH_NUM)) {
-            /** @var ChildFormTag $obj */
-            $obj = new ChildFormTag();
+            /** @var ChildFormStatus $obj */
+            $obj = new ChildFormStatus();
             $obj->hydrate($row);
-            FormTagTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
+            FormStatusTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
         }
         $stmt->closeCursor();
 
@@ -206,7 +206,7 @@ abstract class FormTagQuery extends ModelCriteria
      * @param     mixed $key Primary key to use for the query
      * @param     ConnectionInterface $con A connection object
      *
-     * @return ChildFormTag|array|mixed the result, formatted by the current formatter
+     * @return ChildFormStatus|array|mixed the result, formatted by the current formatter
      */
     protected function findPkComplex($key, ConnectionInterface $con)
     {
@@ -248,12 +248,12 @@ abstract class FormTagQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
 
-        return $this->addUsingAlias(FormTagTableMap::COL_ID, $key, Criteria::EQUAL);
+        return $this->addUsingAlias(FormStatusTableMap::COL_ID, $key, Criteria::EQUAL);
     }
 
     /**
@@ -261,12 +261,12 @@ abstract class FormTagQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
 
-        return $this->addUsingAlias(FormTagTableMap::COL_ID, $keys, Criteria::IN);
+        return $this->addUsingAlias(FormStatusTableMap::COL_ID, $keys, Criteria::IN);
     }
 
     /**
@@ -285,18 +285,18 @@ abstract class FormTagQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id)) {
             $useMinMax = false;
             if (isset($id['min'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
+                $this->addUsingAlias(FormStatusTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
             if (isset($id['max'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
+                $this->addUsingAlias(FormStatusTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -307,7 +307,32 @@ abstract class FormTagQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(FormTagTableMap::COL_ID, $id, $comparison);
+        return $this->addUsingAlias(FormStatusTableMap::COL_ID, $id, $comparison);
+    }
+
+    /**
+     * Filter the query on the message column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByMessage('fooValue');   // WHERE message = 'fooValue'
+     * $query->filterByMessage('%fooValue%', Criteria::LIKE); // WHERE message LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $message The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
+     */
+    public function filterByMessage($message = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($message)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(FormStatusTableMap::COL_MESSAGE, $message, $comparison);
     }
 
     /**
@@ -328,18 +353,18 @@ abstract class FormTagQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
     public function filterByFormId($formId = null, $comparison = null)
     {
         if (is_array($formId)) {
             $useMinMax = false;
             if (isset($formId['min'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_FORM_ID, $formId['min'], Criteria::GREATER_EQUAL);
+                $this->addUsingAlias(FormStatusTableMap::COL_FORM_ID, $formId['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
             if (isset($formId['max'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_FORM_ID, $formId['max'], Criteria::LESS_EQUAL);
+                $this->addUsingAlias(FormStatusTableMap::COL_FORM_ID, $formId['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -350,39 +375,39 @@ abstract class FormTagQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(FormTagTableMap::COL_FORM_ID, $formId, $comparison);
+        return $this->addUsingAlias(FormStatusTableMap::COL_FORM_ID, $formId, $comparison);
     }
 
     /**
-     * Filter the query on the tag_id column
+     * Filter the query on the status_id column
      *
      * Example usage:
      * <code>
-     * $query->filterByTagId(1234); // WHERE tag_id = 1234
-     * $query->filterByTagId(array(12, 34)); // WHERE tag_id IN (12, 34)
-     * $query->filterByTagId(array('min' => 12)); // WHERE tag_id > 12
+     * $query->filterByStatusId(1234); // WHERE status_id = 1234
+     * $query->filterByStatusId(array(12, 34)); // WHERE status_id IN (12, 34)
+     * $query->filterByStatusId(array('min' => 12)); // WHERE status_id > 12
      * </code>
      *
-     * @see       filterByTag()
+     * @see       filterByStatus()
      *
-     * @param     mixed $tagId The value to use as filter.
+     * @param     mixed $statusId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
-    public function filterByTagId($tagId = null, $comparison = null)
+    public function filterByStatusId($statusId = null, $comparison = null)
     {
-        if (is_array($tagId)) {
+        if (is_array($statusId)) {
             $useMinMax = false;
-            if (isset($tagId['min'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_TAG_ID, $tagId['min'], Criteria::GREATER_EQUAL);
+            if (isset($statusId['min'])) {
+                $this->addUsingAlias(FormStatusTableMap::COL_STATUS_ID, $statusId['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
-            if (isset($tagId['max'])) {
-                $this->addUsingAlias(FormTagTableMap::COL_TAG_ID, $tagId['max'], Criteria::LESS_EQUAL);
+            if (isset($statusId['max'])) {
+                $this->addUsingAlias(FormStatusTableMap::COL_STATUS_ID, $statusId['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -393,32 +418,7 @@ abstract class FormTagQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(FormTagTableMap::COL_TAG_ID, $tagId, $comparison);
-    }
-
-    /**
-     * Filter the query on the message column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByMessage('fooValue');   // WHERE message = 'fooValue'
-     * $query->filterByMessage('%fooValue%', Criteria::LIKE); // WHERE message LIKE '%fooValue%'
-     * </code>
-     *
-     * @param     string $message The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
-     */
-    public function filterByMessage($message = null, $comparison = null)
-    {
-        if (null === $comparison) {
-            if (is_array($message)) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(FormTagTableMap::COL_MESSAGE, $message, $comparison);
+        return $this->addUsingAlias(FormStatusTableMap::COL_STATUS_ID, $statusId, $comparison);
     }
 
     /**
@@ -429,20 +429,20 @@ abstract class FormTagQuery extends ModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildFormTagQuery The current query, for fluid interface
+     * @return ChildFormStatusQuery The current query, for fluid interface
      */
     public function filterByForm($form, $comparison = null)
     {
         if ($form instanceof \FormsAPI\Form) {
             return $this
-                ->addUsingAlias(FormTagTableMap::COL_FORM_ID, $form->getId(), $comparison);
+                ->addUsingAlias(FormStatusTableMap::COL_FORM_ID, $form->getId(), $comparison);
         } elseif ($form instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
 
             return $this
-                ->addUsingAlias(FormTagTableMap::COL_FORM_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+                ->addUsingAlias(FormStatusTableMap::COL_FORM_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
             throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
         }
@@ -454,7 +454,7 @@ abstract class FormTagQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
     public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -499,44 +499,44 @@ abstract class FormTagQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query by a related \FormsAPI\Tag object
+     * Filter the query by a related \FormsAPI\Status object
      *
-     * @param \FormsAPI\Tag|ObjectCollection $tag The related object(s) to use as filter
+     * @param \FormsAPI\Status|ObjectCollection $status The related object(s) to use as filter
      * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildFormTagQuery The current query, for fluid interface
+     * @return ChildFormStatusQuery The current query, for fluid interface
      */
-    public function filterByTag($tag, $comparison = null)
+    public function filterByStatus($status, $comparison = null)
     {
-        if ($tag instanceof \FormsAPI\Tag) {
+        if ($status instanceof \FormsAPI\Status) {
             return $this
-                ->addUsingAlias(FormTagTableMap::COL_TAG_ID, $tag->getId(), $comparison);
-        } elseif ($tag instanceof ObjectCollection) {
+                ->addUsingAlias(FormStatusTableMap::COL_STATUS_ID, $status->getId(), $comparison);
+        } elseif ($status instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
 
             return $this
-                ->addUsingAlias(FormTagTableMap::COL_TAG_ID, $tag->toKeyValue('PrimaryKey', 'Id'), $comparison);
+                ->addUsingAlias(FormStatusTableMap::COL_STATUS_ID, $status->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
-            throw new PropelException('filterByTag() only accepts arguments of type \FormsAPI\Tag or Collection');
+            throw new PropelException('filterByStatus() only accepts arguments of type \FormsAPI\Status or Collection');
         }
     }
 
     /**
-     * Adds a JOIN clause to the query using the Tag relation
+     * Adds a JOIN clause to the query using the Status relation
      *
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
-    public function joinTag($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinStatus($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('Tag');
+        $relationMap = $tableMap->getRelation('Status');
 
         // create a ModelJoin object for this join
         $join = new ModelJoin();
@@ -551,14 +551,14 @@ abstract class FormTagQuery extends ModelCriteria
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
-            $this->addJoinObject($join, 'Tag');
+            $this->addJoinObject($join, 'Status');
         }
 
         return $this;
     }
 
     /**
-     * Use the Tag relation Tag object
+     * Use the Status relation Status object
      *
      * @see useQuery()
      *
@@ -566,33 +566,33 @@ abstract class FormTagQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return \FormsAPI\TagQuery A secondary query class using the current class as primary query
+     * @return \FormsAPI\StatusQuery A secondary query class using the current class as primary query
      */
-    public function useTagQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function useStatusQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         return $this
-            ->joinTag($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'Tag', '\FormsAPI\TagQuery');
+            ->joinStatus($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Status', '\FormsAPI\StatusQuery');
     }
 
     /**
      * Exclude object from result
      *
-     * @param   ChildFormTag $formTag Object to remove from the list of results
+     * @param   ChildFormStatus $formStatus Object to remove from the list of results
      *
-     * @return $this|ChildFormTagQuery The current query, for fluid interface
+     * @return $this|ChildFormStatusQuery The current query, for fluid interface
      */
-    public function prune($formTag = null)
+    public function prune($formStatus = null)
     {
-        if ($formTag) {
-            $this->addUsingAlias(FormTagTableMap::COL_ID, $formTag->getId(), Criteria::NOT_EQUAL);
+        if ($formStatus) {
+            $this->addUsingAlias(FormStatusTableMap::COL_ID, $formStatus->getId(), Criteria::NOT_EQUAL);
         }
 
         return $this;
     }
 
     /**
-     * Deletes all rows from the form_tag table.
+     * Deletes all rows from the form_status table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
@@ -600,7 +600,7 @@ abstract class FormTagQuery extends ModelCriteria
     public function doDeleteAll(ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(FormTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         // use transaction because $criteria could contain info
@@ -611,8 +611,8 @@ abstract class FormTagQuery extends ModelCriteria
             // Because this db requires some delete cascade/set null emulation, we have to
             // clear the cached instance *after* the emulation has happened (since
             // instances get re-added by the select statement contained therein).
-            FormTagTableMap::clearInstancePool();
-            FormTagTableMap::clearRelatedInstancePool();
+            FormStatusTableMap::clearInstancePool();
+            FormStatusTableMap::clearRelatedInstancePool();
 
             return $affectedRows;
         });
@@ -630,26 +630,26 @@ abstract class FormTagQuery extends ModelCriteria
     public function delete(ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(FormTagTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(FormStatusTableMap::DATABASE_NAME);
         }
 
         $criteria = $this;
 
         // Set the correct dbName
-        $criteria->setDbName(FormTagTableMap::DATABASE_NAME);
+        $criteria->setDbName(FormStatusTableMap::DATABASE_NAME);
 
         // use transaction because $criteria could contain info
         // for more than one table or we could emulating ON DELETE CASCADE, etc.
         return $con->transaction(function () use ($con, $criteria) {
             $affectedRows = 0; // initialize var to track total num of affected rows
 
-            FormTagTableMap::removeInstanceFromPool($criteria);
+            FormStatusTableMap::removeInstanceFromPool($criteria);
 
             $affectedRows += ModelCriteria::delete($con);
-            FormTagTableMap::clearRelatedInstancePool();
+            FormStatusTableMap::clearRelatedInstancePool();
 
             return $affectedRows;
         });
     }
 
-} // FormTagQuery
+} // FormStatusQuery

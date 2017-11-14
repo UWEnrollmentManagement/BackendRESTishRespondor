@@ -5,6 +5,12 @@ namespace FormsAPI\Base;
 use \Exception;
 use \PDO;
 use FormsAPI\ChildFormRelationshipQuery as ChildChildFormRelationshipQuery;
+use FormsAPI\Form as ChildForm;
+use FormsAPI\FormQuery as ChildFormQuery;
+use FormsAPI\Reaction as ChildReaction;
+use FormsAPI\ReactionQuery as ChildReactionQuery;
+use FormsAPI\Tag as ChildTag;
+use FormsAPI\TagQuery as ChildTagQuery;
 use FormsAPI\Map\ChildFormRelationshipTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -103,6 +109,26 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
      * @var        int
      */
     protected $reaction_id;
+
+    /**
+     * @var        ChildForm
+     */
+    protected $aParent;
+
+    /**
+     * @var        ChildForm
+     */
+    protected $aChild;
+
+    /**
+     * @var        ChildTag
+     */
+    protected $aTag;
+
+    /**
+     * @var        ChildReaction
+     */
+    protected $aReaction;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -441,6 +467,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
             $this->modifiedColumns[ChildFormRelationshipTableMap::COL_PARENT_ID] = true;
         }
 
+        if ($this->aParent !== null && $this->aParent->getId() !== $v) {
+            $this->aParent = null;
+        }
+
         return $this;
     } // setparentName()
 
@@ -459,6 +489,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
         if ($this->child_id !== $v) {
             $this->child_id = $v;
             $this->modifiedColumns[ChildFormRelationshipTableMap::COL_CHILD_ID] = true;
+        }
+
+        if ($this->aChild !== null && $this->aChild->getId() !== $v) {
+            $this->aChild = null;
         }
 
         return $this;
@@ -481,6 +515,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
             $this->modifiedColumns[ChildFormRelationshipTableMap::COL_TAG_ID] = true;
         }
 
+        if ($this->aTag !== null && $this->aTag->getId() !== $v) {
+            $this->aTag = null;
+        }
+
         return $this;
     } // setTagId()
 
@@ -499,6 +537,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
         if ($this->reaction_id !== $v) {
             $this->reaction_id = $v;
             $this->modifiedColumns[ChildFormRelationshipTableMap::COL_REACTION_ID] = true;
+        }
+
+        if ($this->aReaction !== null && $this->aReaction->getId() !== $v) {
+            $this->aReaction = null;
         }
 
         return $this;
@@ -584,6 +626,18 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aParent !== null && $this->parent_id !== $this->aParent->getId()) {
+            $this->aParent = null;
+        }
+        if ($this->aChild !== null && $this->child_id !== $this->aChild->getId()) {
+            $this->aChild = null;
+        }
+        if ($this->aTag !== null && $this->tag_id !== $this->aTag->getId()) {
+            $this->aTag = null;
+        }
+        if ($this->aReaction !== null && $this->reaction_id !== $this->aReaction->getId()) {
+            $this->aReaction = null;
+        }
     } // ensureConsistency
 
     /**
@@ -623,6 +677,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aParent = null;
+            $this->aChild = null;
+            $this->aTag = null;
+            $this->aReaction = null;
         } // if (deep)
     }
 
@@ -725,6 +783,39 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aParent !== null) {
+                if ($this->aParent->isModified() || $this->aParent->isNew()) {
+                    $affectedRows += $this->aParent->save($con);
+                }
+                $this->setParent($this->aParent);
+            }
+
+            if ($this->aChild !== null) {
+                if ($this->aChild->isModified() || $this->aChild->isNew()) {
+                    $affectedRows += $this->aChild->save($con);
+                }
+                $this->setChild($this->aChild);
+            }
+
+            if ($this->aTag !== null) {
+                if ($this->aTag->isModified() || $this->aTag->isNew()) {
+                    $affectedRows += $this->aTag->save($con);
+                }
+                $this->setTag($this->aTag);
+            }
+
+            if ($this->aReaction !== null) {
+                if ($this->aReaction->isModified() || $this->aReaction->isNew()) {
+                    $affectedRows += $this->aReaction->save($con);
+                }
+                $this->setReaction($this->aReaction);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -898,10 +989,11 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['ChildFormRelationship'][$this->hashCode()])) {
@@ -921,6 +1013,68 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aParent) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'form';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form';
+                        break;
+                    default:
+                        $key = 'Parent';
+                }
+
+                $result[$key] = $this->aParent->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aChild) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'form';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form';
+                        break;
+                    default:
+                        $key = 'Child';
+                }
+
+                $result[$key] = $this->aChild->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aTag) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'tag';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'tag';
+                        break;
+                    default:
+                        $key = 'Tag';
+                }
+
+                $result[$key] = $this->aTag->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aReaction) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'reaction';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'reaction';
+                        break;
+                    default:
+                        $key = 'Reaction';
+                }
+
+                $result[$key] = $this->aReaction->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -1185,12 +1339,228 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildForm object.
+     *
+     * @param  ChildForm $v
+     * @return $this|\FormsAPI\ChildFormRelationship The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setParent(ChildForm $v = null)
+    {
+        if ($v === null) {
+            $this->setparentName(NULL);
+        } else {
+            $this->setparentName($v->getId());
+        }
+
+        $this->aParent = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildForm object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsParent($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildForm object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildForm The associated ChildForm object.
+     * @throws PropelException
+     */
+    public function getParent(ConnectionInterface $con = null)
+    {
+        if ($this->aParent === null && ($this->parent_id != 0)) {
+            $this->aParent = ChildFormQuery::create()->findPk($this->parent_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aParent->addAsParents($this);
+             */
+        }
+
+        return $this->aParent;
+    }
+
+    /**
+     * Declares an association between this object and a ChildForm object.
+     *
+     * @param  ChildForm $v
+     * @return $this|\FormsAPI\ChildFormRelationship The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setChild(ChildForm $v = null)
+    {
+        if ($v === null) {
+            $this->setChildId(NULL);
+        } else {
+            $this->setChildId($v->getId());
+        }
+
+        $this->aChild = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildForm object, it will not be re-added.
+        if ($v !== null) {
+            $v->addAsChild($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildForm object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildForm The associated ChildForm object.
+     * @throws PropelException
+     */
+    public function getChild(ConnectionInterface $con = null)
+    {
+        if ($this->aChild === null && ($this->child_id != 0)) {
+            $this->aChild = ChildFormQuery::create()->findPk($this->child_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aChild->addAschildren($this);
+             */
+        }
+
+        return $this->aChild;
+    }
+
+    /**
+     * Declares an association between this object and a ChildTag object.
+     *
+     * @param  ChildTag $v
+     * @return $this|\FormsAPI\ChildFormRelationship The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setTag(ChildTag $v = null)
+    {
+        if ($v === null) {
+            $this->setTagId(NULL);
+        } else {
+            $this->setTagId($v->getId());
+        }
+
+        $this->aTag = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildTag object, it will not be re-added.
+        if ($v !== null) {
+            $v->addChildFormRelationship($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildTag object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildTag The associated ChildTag object.
+     * @throws PropelException
+     */
+    public function getTag(ConnectionInterface $con = null)
+    {
+        if ($this->aTag === null && ($this->tag_id != 0)) {
+            $this->aTag = ChildTagQuery::create()->findPk($this->tag_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aTag->addChildFormRelationships($this);
+             */
+        }
+
+        return $this->aTag;
+    }
+
+    /**
+     * Declares an association between this object and a ChildReaction object.
+     *
+     * @param  ChildReaction $v
+     * @return $this|\FormsAPI\ChildFormRelationship The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setReaction(ChildReaction $v = null)
+    {
+        if ($v === null) {
+            $this->setReactionId(NULL);
+        } else {
+            $this->setReactionId($v->getId());
+        }
+
+        $this->aReaction = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildReaction object, it will not be re-added.
+        if ($v !== null) {
+            $v->addChildFormRelationship($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildReaction object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildReaction The associated ChildReaction object.
+     * @throws PropelException
+     */
+    public function getReaction(ConnectionInterface $con = null)
+    {
+        if ($this->aReaction === null && ($this->reaction_id != 0)) {
+            $this->aReaction = ChildReactionQuery::create()->findPk($this->reaction_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aReaction->addChildFormRelationships($this);
+             */
+        }
+
+        return $this->aReaction;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aParent) {
+            $this->aParent->removeAsParent($this);
+        }
+        if (null !== $this->aChild) {
+            $this->aChild->removeAsChild($this);
+        }
+        if (null !== $this->aTag) {
+            $this->aTag->removeChildFormRelationship($this);
+        }
+        if (null !== $this->aReaction) {
+            $this->aReaction->removeChildFormRelationship($this);
+        }
         $this->id = null;
         $this->parent_id = null;
         $this->child_id = null;
@@ -1216,6 +1586,10 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aParent = null;
+        $this->aChild = null;
+        $this->aTag = null;
+        $this->aReaction = null;
     }
 
     /**
@@ -1265,6 +1639,35 @@ abstract class ChildFormRelationship implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aParent, 'validate')) {
+                if (!$this->aParent->validate($validator)) {
+                    $failureMap->addAll($this->aParent->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aChild, 'validate')) {
+                if (!$this->aChild->validate($validator)) {
+                    $failureMap->addAll($this->aChild->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aTag, 'validate')) {
+                if (!$this->aTag->validate($validator)) {
+                    $failureMap->addAll($this->aTag->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aReaction, 'validate')) {
+                if (!$this->aReaction->validate($validator)) {
+                    $failureMap->addAll($this->aReaction->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

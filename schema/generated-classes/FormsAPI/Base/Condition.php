@@ -4,13 +4,18 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Condition as ChildCondition;
 use FormsAPI\ConditionQuery as ChildConditionQuery;
+use FormsAPI\Dependency as ChildDependency;
+use FormsAPI\DependencyQuery as ChildDependencyQuery;
 use FormsAPI\Map\ConditionTableMap;
+use FormsAPI\Map\DependencyTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -92,6 +97,12 @@ abstract class Condition implements ActiveRecordInterface
     protected $value;
 
     /**
+     * @var        ObjectCollection|ChildDependency[] Collection to store aggregation of ChildDependency objects.
+     */
+    protected $collDependencies;
+    protected $collDependenciesPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -115,6 +126,12 @@ abstract class Condition implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildDependency[]
+     */
+    protected $dependenciesScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Condition object.
@@ -544,6 +561,8 @@ abstract class Condition implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collDependencies = null;
+
         } // if (deep)
     }
 
@@ -656,6 +675,23 @@ abstract class Condition implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->dependenciesScheduledForDeletion !== null) {
+                if (!$this->dependenciesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\DependencyQuery::create()
+                        ->filterByPrimaryKeys($this->dependenciesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->dependenciesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collDependencies !== null) {
+                foreach ($this->collDependencies as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -801,10 +837,11 @@ abstract class Condition implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Condition'][$this->hashCode()])) {
@@ -822,6 +859,23 @@ abstract class Condition implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collDependencies) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dependencies';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dependencies';
+                        break;
+                    default:
+                        $key = 'Dependencies';
+                }
+
+                $result[$key] = $this->collDependencies->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1037,6 +1091,20 @@ abstract class Condition implements ActiveRecordInterface
     {
         $copyObj->setOperator($this->getOperator());
         $copyObj->setValue($this->getValue());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getDependencies() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addDependency($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1063,6 +1131,298 @@ abstract class Condition implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('Dependency' == $relationName) {
+            $this->initDependencies();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collDependencies collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addDependencies()
+     */
+    public function clearDependencies()
+    {
+        $this->collDependencies = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collDependencies collection loaded partially.
+     */
+    public function resetPartialDependencies($v = true)
+    {
+        $this->collDependenciesPartial = $v;
+    }
+
+    /**
+     * Initializes the collDependencies collection.
+     *
+     * By default this just sets the collDependencies collection to an empty array (like clearcollDependencies());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initDependencies($overrideExisting = true)
+    {
+        if (null !== $this->collDependencies && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = DependencyTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collDependencies = new $collectionClassName;
+        $this->collDependencies->setModel('\FormsAPI\Dependency');
+    }
+
+    /**
+     * Gets an array of ChildDependency objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildCondition is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     * @throws PropelException
+     */
+    public function getDependencies(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDependenciesPartial && !$this->isNew();
+        if (null === $this->collDependencies || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collDependencies) {
+                // return empty collection
+                $this->initDependencies();
+            } else {
+                $collDependencies = ChildDependencyQuery::create(null, $criteria)
+                    ->filterByCondition($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collDependenciesPartial && count($collDependencies)) {
+                        $this->initDependencies(false);
+
+                        foreach ($collDependencies as $obj) {
+                            if (false == $this->collDependencies->contains($obj)) {
+                                $this->collDependencies->append($obj);
+                            }
+                        }
+
+                        $this->collDependenciesPartial = true;
+                    }
+
+                    return $collDependencies;
+                }
+
+                if ($partial && $this->collDependencies) {
+                    foreach ($this->collDependencies as $obj) {
+                        if ($obj->isNew()) {
+                            $collDependencies[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collDependencies = $collDependencies;
+                $this->collDependenciesPartial = false;
+            }
+        }
+
+        return $this->collDependencies;
+    }
+
+    /**
+     * Sets a collection of ChildDependency objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $dependencies A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildCondition The current object (for fluent API support)
+     */
+    public function setDependencies(Collection $dependencies, ConnectionInterface $con = null)
+    {
+        /** @var ChildDependency[] $dependenciesToDelete */
+        $dependenciesToDelete = $this->getDependencies(new Criteria(), $con)->diff($dependencies);
+
+
+        $this->dependenciesScheduledForDeletion = $dependenciesToDelete;
+
+        foreach ($dependenciesToDelete as $dependencyRemoved) {
+            $dependencyRemoved->setCondition(null);
+        }
+
+        $this->collDependencies = null;
+        foreach ($dependencies as $dependency) {
+            $this->addDependency($dependency);
+        }
+
+        $this->collDependencies = $dependencies;
+        $this->collDependenciesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Dependency objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Dependency objects.
+     * @throws PropelException
+     */
+    public function countDependencies(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collDependenciesPartial && !$this->isNew();
+        if (null === $this->collDependencies || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collDependencies) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getDependencies());
+            }
+
+            $query = ChildDependencyQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByCondition($this)
+                ->count($con);
+        }
+
+        return count($this->collDependencies);
+    }
+
+    /**
+     * Method called to associate a ChildDependency object to this object
+     * through the ChildDependency foreign key attribute.
+     *
+     * @param  ChildDependency $l ChildDependency
+     * @return $this|\FormsAPI\Condition The current object (for fluent API support)
+     */
+    public function addDependency(ChildDependency $l)
+    {
+        if ($this->collDependencies === null) {
+            $this->initDependencies();
+            $this->collDependenciesPartial = true;
+        }
+
+        if (!$this->collDependencies->contains($l)) {
+            $this->doAddDependency($l);
+
+            if ($this->dependenciesScheduledForDeletion and $this->dependenciesScheduledForDeletion->contains($l)) {
+                $this->dependenciesScheduledForDeletion->remove($this->dependenciesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildDependency $dependency The ChildDependency object to add.
+     */
+    protected function doAddDependency(ChildDependency $dependency)
+    {
+        $this->collDependencies[]= $dependency;
+        $dependency->setCondition($this);
+    }
+
+    /**
+     * @param  ChildDependency $dependency The ChildDependency object to remove.
+     * @return $this|ChildCondition The current object (for fluent API support)
+     */
+    public function removeDependency(ChildDependency $dependency)
+    {
+        if ($this->getDependencies()->contains($dependency)) {
+            $pos = $this->collDependencies->search($dependency);
+            $this->collDependencies->remove($pos);
+            if (null === $this->dependenciesScheduledForDeletion) {
+                $this->dependenciesScheduledForDeletion = clone $this->collDependencies;
+                $this->dependenciesScheduledForDeletion->clear();
+            }
+            $this->dependenciesScheduledForDeletion[]= clone $dependency;
+            $dependency->setCondition(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Condition is new, it will return
+     * an empty collection; or if this Condition has previously
+     * been saved, it will retrieve related Dependencies from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Condition.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     */
+    public function getDependenciesJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDependencyQuery::create(null, $criteria);
+        $query->joinWith('Element', $joinBehavior);
+
+        return $this->getDependencies($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Condition is new, it will return
+     * an empty collection; or if this Condition has previously
+     * been saved, it will retrieve related Dependencies from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Condition.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildDependency[] List of ChildDependency objects
+     */
+    public function getDependenciesJoinSlave(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildDependencyQuery::create(null, $criteria);
+        $query->joinWith('Slave', $joinBehavior);
+
+        return $this->getDependencies($query, $con);
     }
 
     /**
@@ -1093,8 +1453,14 @@ abstract class Condition implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collDependencies) {
+                foreach ($this->collDependencies as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collDependencies = null;
     }
 
     /**
@@ -1151,6 +1517,15 @@ abstract class Condition implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collDependencies) {
+                foreach ($this->collDependencies as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

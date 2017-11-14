@@ -77,6 +77,11 @@ class RequirementTableMap extends TableMap
     const COL_ID = 'requirement.id';
 
     /**
+     * the column name for the failure_message field
+     */
+    const COL_FAILURE_MESSAGE = 'requirement.failure_message';
+
+    /**
      * the column name for the element_id field
      */
     const COL_ELEMENT_ID = 'requirement.element_id';
@@ -85,11 +90,6 @@ class RequirementTableMap extends TableMap
      * the column name for the condition_id field
      */
     const COL_CONDITION_ID = 'requirement.condition_id';
-
-    /**
-     * the column name for the failure_message field
-     */
-    const COL_FAILURE_MESSAGE = 'requirement.failure_message';
 
     /**
      * The default string format for model objects of the related table
@@ -103,10 +103,10 @@ class RequirementTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'ElementId', 'ConditionId', 'FailureMessage', ),
-        self::TYPE_CAMELNAME     => array('id', 'elementId', 'conditionId', 'failureMessage', ),
-        self::TYPE_COLNAME       => array(RequirementTableMap::COL_ID, RequirementTableMap::COL_ELEMENT_ID, RequirementTableMap::COL_CONDITION_ID, RequirementTableMap::COL_FAILURE_MESSAGE, ),
-        self::TYPE_FIELDNAME     => array('id', 'element_id', 'condition_id', 'failure_message', ),
+        self::TYPE_PHPNAME       => array('Id', 'FailureMessage', 'ElementId', 'ConditionId', ),
+        self::TYPE_CAMELNAME     => array('id', 'failureMessage', 'elementId', 'conditionId', ),
+        self::TYPE_COLNAME       => array(RequirementTableMap::COL_ID, RequirementTableMap::COL_FAILURE_MESSAGE, RequirementTableMap::COL_ELEMENT_ID, RequirementTableMap::COL_CONDITION_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'failure_message', 'element_id', 'condition_id', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -117,10 +117,10 @@ class RequirementTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'ElementId' => 1, 'ConditionId' => 2, 'FailureMessage' => 3, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'elementId' => 1, 'conditionId' => 2, 'failureMessage' => 3, ),
-        self::TYPE_COLNAME       => array(RequirementTableMap::COL_ID => 0, RequirementTableMap::COL_ELEMENT_ID => 1, RequirementTableMap::COL_CONDITION_ID => 2, RequirementTableMap::COL_FAILURE_MESSAGE => 3, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'element_id' => 1, 'condition_id' => 2, 'failure_message' => 3, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'FailureMessage' => 1, 'ElementId' => 2, 'ConditionId' => 3, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'failureMessage' => 1, 'elementId' => 2, 'conditionId' => 3, ),
+        self::TYPE_COLNAME       => array(RequirementTableMap::COL_ID => 0, RequirementTableMap::COL_FAILURE_MESSAGE => 1, RequirementTableMap::COL_ELEMENT_ID => 2, RequirementTableMap::COL_CONDITION_ID => 3, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'failure_message' => 1, 'element_id' => 2, 'condition_id' => 3, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -142,9 +142,9 @@ class RequirementTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('element_id', 'ElementId', 'INTEGER', true, null, null);
-        $this->addColumn('condition_id', 'ConditionId', 'INTEGER', true, null, null);
         $this->addColumn('failure_message', 'FailureMessage', 'VARCHAR', false, 255, null);
+        $this->addForeignKey('element_id', 'ElementId', 'INTEGER', 'element', 'id', true, null, null);
+        $this->addForeignKey('condition_id', 'ConditionId', 'INTEGER', 'form', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -152,6 +152,20 @@ class RequirementTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Element', '\\FormsAPI\\Element', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':condition_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**
@@ -309,14 +323,14 @@ class RequirementTableMap extends TableMap
     {
         if (null === $alias) {
             $criteria->addSelectColumn(RequirementTableMap::COL_ID);
+            $criteria->addSelectColumn(RequirementTableMap::COL_FAILURE_MESSAGE);
             $criteria->addSelectColumn(RequirementTableMap::COL_ELEMENT_ID);
             $criteria->addSelectColumn(RequirementTableMap::COL_CONDITION_ID);
-            $criteria->addSelectColumn(RequirementTableMap::COL_FAILURE_MESSAGE);
         } else {
             $criteria->addSelectColumn($alias . '.id');
+            $criteria->addSelectColumn($alias . '.failure_message');
             $criteria->addSelectColumn($alias . '.element_id');
             $criteria->addSelectColumn($alias . '.condition_id');
-            $criteria->addSelectColumn($alias . '.failure_message');
         }
     }
 

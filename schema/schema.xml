@@ -47,6 +47,27 @@
 
     </table>
 
+    <table name="response">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="content" type="varchar" size="16383" required="false"/>
+
+        <column name="element_id" type="integer" required="true"/>
+        <foreign-key foreignTable="element" onDelete="cascade">
+            <reference local="element_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="submission_id" type="integer" required="true"/>
+        <foreign-key foreignTable="submission" onDelete="cascade">
+            <reference local="submission_id" foreign="id"/>
+        </foreign-key>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: content, validator: NotNull}" />
+            <parameter name="rule2" value="{column: element_id, validator: NotNull}" />
+            <parameter name="rule3" value="{column: submission_id, validator: NotNull}" />
+        </behavior>
+    </table>
+    
     <table name="form">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
 
@@ -84,10 +105,26 @@
 
     <table name="child_form_relationship">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="parent_id" type="integer" required="true" phpName="parentName" />
+        <foreign-key foreignTable="form" refPhpName="AsParent" phpName="Parent" onDelete="cascade">
+            <reference local="parent_id" foreign="id"/>
+        </foreign-key>
+
         <column name="child_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" refPhpName="AsChild" phpName="Child" onDelete="cascade">
+            <reference local="child_id" foreign="id"/>
+        </foreign-key>
+
         <column name="tag_id" type="integer" required="false"/>
+        <foreign-key foreignTable="tag" onDelete="setnull">
+            <reference local="tag_id" foreign="id"/>
+        </foreign-key>
+
         <column name="reaction_id" type="integer" required="false"/>
+        <foreign-key foreignTable="reaction" onDelete="setnull">
+            <reference local="reaction_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: parent_id, validator: NotNull}" />
@@ -118,9 +155,21 @@
 
     <table name="dependency">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="element_id" type="integer" required="true" />
+        <foreign-key foreignTable="element" phpName="Element" refPhpName="AsMaster" onDelete="cascade">
+            <reference local="element_id" foreign="id"/>
+        </foreign-key>
+
         <column name="slave_id" type="integer" required="true"/>
+        <foreign-key foreignTable="element" phpName="Slave" refPhpName="AsSlave" onDelete="cascade">
+            <reference local="slave_id" foreign="id"/>
+        </foreign-key>
+
         <column name="condition_id" type="integer" required="true"/>
+        <foreign-key foreignTable="condition" onDelete="cascade">
+            <reference local="condition_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
@@ -131,9 +180,17 @@
 
     <table name="requirement">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="element_id" type="integer" required="true" />
-        <column name="condition_id" type="integer" required="true"/>
         <column name="failure_message" type="varchar" required="false"/>
+
+        <column name="element_id" type="integer" required="true" />
+        <foreign-key foreignTable="element" onDelete="cascade">
+            <reference local="element_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="condition_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="condition_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
@@ -143,12 +200,32 @@
 
     <table name="submission">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="visitor_id" type="integer" required="true" />
-        <column name="form_id" type="integer" required="true"/>
-        <column name="status_id" type="integer" required="false"/>
-        <column name="assignee_id" type="integer" required="false"/>
-        <column name="parent_id" type="integer" required="false"/>
         <column name="submitted" type="timestamp" required="false" />
+
+        <column name="visitor_id" type="integer" required="true" />
+        <foreign-key foreignTable="visitor" phpName="Visitor" onDelete="cascade">
+            <reference local="visitor_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="form_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="status_id" type="integer" required="false"/>
+        <foreign-key foreignTable="status" onDelete="setnull">
+            <reference local="status_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="assignee_id" type="integer" required="false"/>
+        <foreign-key foreignTable="visitor" phpName="Assignee" refPhpName="AsAssignee" onDelete="setnull">
+            <reference local="assignee_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="parent_id" type="integer" required="false"/>
+        <foreign-key foreignTable="submission" refPhpName="AsParent" onDelete="setnull">
+            <reference local="parent_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
@@ -230,7 +307,6 @@
         </behavior>
     </table>
 
-    <!-- double check sizes for value? -->
     <table name="setting">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="key" type="varchar" required="true" />
@@ -253,8 +329,16 @@
 
     <table name="element_choice">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="element_id" type="integer" required="true" />
+        <foreign-key foreignTable="element" onDelete="cascade">
+            <reference local="element_id" foreign="id"/>
+        </foreign-key>
+
         <column name="choice_id" type="integer" required="true"/>
+        <foreign-key foreignTable="choice_value" onDelete="cascade">
+            <reference local="choice_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: element_id, validator: NotNull}" />
@@ -264,8 +348,16 @@
 
     <table name="submission_tag">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="submission_id" type="integer" required="true" />
+        <foreign-key foreignTable="submission" onDelete="cascade">
+            <reference local="submission_id" foreign="id"/>
+        </foreign-key>
+
         <column name="tag_id" type="integer" required="true"/>
+        <foreign-key foreignTable="tag" onDelete="cascade">
+            <reference local="tag_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: submission_id, validator: NotNull}" />
@@ -273,10 +365,38 @@
         </behavior>
     </table>
 
+    <table name="form_status">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+        <column name="message" type="varchar" size="63" required="false"/>
+
+        <column name="form_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
+
+        <column name="status_id" type="integer" required="true"/>
+        <foreign-key foreignTable="status" onDelete="cascade">
+            <reference local="status_id" foreign="id"/>
+        </foreign-key>
+
+        <behavior name="validate">
+            <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: tag_id, validator: NotNull}" />
+        </behavior>
+    </table>
+
     <table name="form_tag">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="form_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
+
         <column name="tag_id" type="integer" required="true"/>
+        <foreign-key foreignTable="tag" onDelete="cascade">
+            <reference local="tag_id" foreign="id"/>
+        </foreign-key>
         <column name="message" type="varchar" size="63" required="false"/>
 
         <behavior name="validate">
@@ -284,11 +404,19 @@
             <parameter name="rule2" value="{column: tag_id, validator: NotNull}" />
         </behavior>
     </table>
-    <!-- Liz left off here -->
+
     <table name="form_reaction">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="reaction_id" type="integer" required="true" />
+        <foreign-key foreignTable="reaction" onDelete="cascade">
+            <reference local="reaction_id" foreign="id"/>
+        </foreign-key>
+
         <column name="form_id" type="integer" required="true"/>
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: reaction_id, validator: NotNull}" />
@@ -296,11 +424,18 @@
         </behavior>
     </table>
 
-    <!-- The rest of the columns get added in generation - href, dashboard, element -->
     <table name="dashboard_element">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="dashboard_id" type="integer" required="true" />
+        <foreign-key foreignTable="dashboard" onDelete="cascade">
+            <reference local="dashboard_id" foreign="id"/>
+        </foreign-key>
+
         <column name="element_id" type="integer" required="true" />
+        <foreign-key foreignTable="element"  onDelete="cascade">
+            <reference local="element_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: dashboard_id, validator: NotNull}" />
@@ -310,8 +445,16 @@
 
     <table name="dashboard_form">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+
         <column name="dashboard_id" type="integer" required="true" />
+        <foreign-key foreignTable="dashboard"  onDelete="cascade">
+            <reference local="dashboard_id" foreign="id"/>
+        </foreign-key>
+
         <column name="form_id" type="integer" required="true" />
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: dashboard_id, validator: NotNull}" />

@@ -4,13 +4,21 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\ChildFormRelationship as ChildChildFormRelationship;
+use FormsAPI\ChildFormRelationshipQuery as ChildChildFormRelationshipQuery;
+use FormsAPI\FormReaction as ChildFormReaction;
+use FormsAPI\FormReactionQuery as ChildFormReactionQuery;
+use FormsAPI\Reaction as ChildReaction;
 use FormsAPI\ReactionQuery as ChildReactionQuery;
+use FormsAPI\Map\ChildFormRelationshipTableMap;
+use FormsAPI\Map\FormReactionTableMap;
 use FormsAPI\Map\ReactionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -133,6 +141,18 @@ abstract class Reaction implements ActiveRecordInterface
     protected $content;
 
     /**
+     * @var        ObjectCollection|ChildChildFormRelationship[] Collection to store aggregation of ChildChildFormRelationship objects.
+     */
+    protected $collChildFormRelationships;
+    protected $collChildFormRelationshipsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildFormReaction[] Collection to store aggregation of ChildFormReaction objects.
+     */
+    protected $collFormReactions;
+    protected $collFormReactionsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -156,6 +176,18 @@ abstract class Reaction implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildChildFormRelationship[]
+     */
+    protected $childFormRelationshipsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildFormReaction[]
+     */
+    protected $formReactionsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Reaction object.
@@ -783,6 +815,10 @@ abstract class Reaction implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collChildFormRelationships = null;
+
+            $this->collFormReactions = null;
+
         } // if (deep)
     }
 
@@ -895,6 +931,41 @@ abstract class Reaction implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->childFormRelationshipsScheduledForDeletion !== null) {
+                if (!$this->childFormRelationshipsScheduledForDeletion->isEmpty()) {
+                    foreach ($this->childFormRelationshipsScheduledForDeletion as $childFormRelationship) {
+                        // need to save related object because we set the relation to null
+                        $childFormRelationship->save($con);
+                    }
+                    $this->childFormRelationshipsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collChildFormRelationships !== null) {
+                foreach ($this->collChildFormRelationships as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->formReactionsScheduledForDeletion !== null) {
+                if (!$this->formReactionsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\FormReactionQuery::create()
+                        ->filterByPrimaryKeys($this->formReactionsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->formReactionsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collFormReactions !== null) {
+                foreach ($this->collFormReactions as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -1094,10 +1165,11 @@ abstract class Reaction implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Reaction'][$this->hashCode()])) {
@@ -1121,6 +1193,38 @@ abstract class Reaction implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collChildFormRelationships) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'childFormRelationships';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'child_form_relationships';
+                        break;
+                    default:
+                        $key = 'ChildFormRelationships';
+                }
+
+                $result[$key] = $this->collChildFormRelationships->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collFormReactions) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'formReactions';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form_reactions';
+                        break;
+                    default:
+                        $key = 'FormReactions';
+                }
+
+                $result[$key] = $this->collFormReactions->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1396,6 +1500,26 @@ abstract class Reaction implements ActiveRecordInterface
         $copyObj->setBcc($this->getBcc());
         $copyObj->setTemplate($this->getTemplate());
         $copyObj->setContent($this->getContent());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getChildFormRelationships() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addChildFormRelationship($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getFormReactions() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addFormReaction($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1422,6 +1546,577 @@ abstract class Reaction implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('ChildFormRelationship' == $relationName) {
+            $this->initChildFormRelationships();
+            return;
+        }
+        if ('FormReaction' == $relationName) {
+            $this->initFormReactions();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collChildFormRelationships collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addChildFormRelationships()
+     */
+    public function clearChildFormRelationships()
+    {
+        $this->collChildFormRelationships = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collChildFormRelationships collection loaded partially.
+     */
+    public function resetPartialChildFormRelationships($v = true)
+    {
+        $this->collChildFormRelationshipsPartial = $v;
+    }
+
+    /**
+     * Initializes the collChildFormRelationships collection.
+     *
+     * By default this just sets the collChildFormRelationships collection to an empty array (like clearcollChildFormRelationships());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initChildFormRelationships($overrideExisting = true)
+    {
+        if (null !== $this->collChildFormRelationships && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ChildFormRelationshipTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collChildFormRelationships = new $collectionClassName;
+        $this->collChildFormRelationships->setModel('\FormsAPI\ChildFormRelationship');
+    }
+
+    /**
+     * Gets an array of ChildChildFormRelationship objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildReaction is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     * @throws PropelException
+     */
+    public function getChildFormRelationships(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collChildFormRelationshipsPartial && !$this->isNew();
+        if (null === $this->collChildFormRelationships || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collChildFormRelationships) {
+                // return empty collection
+                $this->initChildFormRelationships();
+            } else {
+                $collChildFormRelationships = ChildChildFormRelationshipQuery::create(null, $criteria)
+                    ->filterByReaction($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collChildFormRelationshipsPartial && count($collChildFormRelationships)) {
+                        $this->initChildFormRelationships(false);
+
+                        foreach ($collChildFormRelationships as $obj) {
+                            if (false == $this->collChildFormRelationships->contains($obj)) {
+                                $this->collChildFormRelationships->append($obj);
+                            }
+                        }
+
+                        $this->collChildFormRelationshipsPartial = true;
+                    }
+
+                    return $collChildFormRelationships;
+                }
+
+                if ($partial && $this->collChildFormRelationships) {
+                    foreach ($this->collChildFormRelationships as $obj) {
+                        if ($obj->isNew()) {
+                            $collChildFormRelationships[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collChildFormRelationships = $collChildFormRelationships;
+                $this->collChildFormRelationshipsPartial = false;
+            }
+        }
+
+        return $this->collChildFormRelationships;
+    }
+
+    /**
+     * Sets a collection of ChildChildFormRelationship objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $childFormRelationships A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildReaction The current object (for fluent API support)
+     */
+    public function setChildFormRelationships(Collection $childFormRelationships, ConnectionInterface $con = null)
+    {
+        /** @var ChildChildFormRelationship[] $childFormRelationshipsToDelete */
+        $childFormRelationshipsToDelete = $this->getChildFormRelationships(new Criteria(), $con)->diff($childFormRelationships);
+
+
+        $this->childFormRelationshipsScheduledForDeletion = $childFormRelationshipsToDelete;
+
+        foreach ($childFormRelationshipsToDelete as $childFormRelationshipRemoved) {
+            $childFormRelationshipRemoved->setReaction(null);
+        }
+
+        $this->collChildFormRelationships = null;
+        foreach ($childFormRelationships as $childFormRelationship) {
+            $this->addChildFormRelationship($childFormRelationship);
+        }
+
+        $this->collChildFormRelationships = $childFormRelationships;
+        $this->collChildFormRelationshipsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ChildFormRelationship objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related ChildFormRelationship objects.
+     * @throws PropelException
+     */
+    public function countChildFormRelationships(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collChildFormRelationshipsPartial && !$this->isNew();
+        if (null === $this->collChildFormRelationships || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collChildFormRelationships) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getChildFormRelationships());
+            }
+
+            $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByReaction($this)
+                ->count($con);
+        }
+
+        return count($this->collChildFormRelationships);
+    }
+
+    /**
+     * Method called to associate a ChildChildFormRelationship object to this object
+     * through the ChildChildFormRelationship foreign key attribute.
+     *
+     * @param  ChildChildFormRelationship $l ChildChildFormRelationship
+     * @return $this|\FormsAPI\Reaction The current object (for fluent API support)
+     */
+    public function addChildFormRelationship(ChildChildFormRelationship $l)
+    {
+        if ($this->collChildFormRelationships === null) {
+            $this->initChildFormRelationships();
+            $this->collChildFormRelationshipsPartial = true;
+        }
+
+        if (!$this->collChildFormRelationships->contains($l)) {
+            $this->doAddChildFormRelationship($l);
+
+            if ($this->childFormRelationshipsScheduledForDeletion and $this->childFormRelationshipsScheduledForDeletion->contains($l)) {
+                $this->childFormRelationshipsScheduledForDeletion->remove($this->childFormRelationshipsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildChildFormRelationship $childFormRelationship The ChildChildFormRelationship object to add.
+     */
+    protected function doAddChildFormRelationship(ChildChildFormRelationship $childFormRelationship)
+    {
+        $this->collChildFormRelationships[]= $childFormRelationship;
+        $childFormRelationship->setReaction($this);
+    }
+
+    /**
+     * @param  ChildChildFormRelationship $childFormRelationship The ChildChildFormRelationship object to remove.
+     * @return $this|ChildReaction The current object (for fluent API support)
+     */
+    public function removeChildFormRelationship(ChildChildFormRelationship $childFormRelationship)
+    {
+        if ($this->getChildFormRelationships()->contains($childFormRelationship)) {
+            $pos = $this->collChildFormRelationships->search($childFormRelationship);
+            $this->collChildFormRelationships->remove($pos);
+            if (null === $this->childFormRelationshipsScheduledForDeletion) {
+                $this->childFormRelationshipsScheduledForDeletion = clone $this->collChildFormRelationships;
+                $this->childFormRelationshipsScheduledForDeletion->clear();
+            }
+            $this->childFormRelationshipsScheduledForDeletion[]= $childFormRelationship;
+            $childFormRelationship->setReaction(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Reaction is new, it will return
+     * an empty collection; or if this Reaction has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Reaction.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinParent(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Parent', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Reaction is new, it will return
+     * an empty collection; or if this Reaction has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Reaction.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinChild(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Child', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Reaction is new, it will return
+     * an empty collection; or if this Reaction has previously
+     * been saved, it will retrieve related ChildFormRelationships from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Reaction.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildChildFormRelationship[] List of ChildChildFormRelationship objects
+     */
+    public function getChildFormRelationshipsJoinTag(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildChildFormRelationshipQuery::create(null, $criteria);
+        $query->joinWith('Tag', $joinBehavior);
+
+        return $this->getChildFormRelationships($query, $con);
+    }
+
+    /**
+     * Clears out the collFormReactions collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addFormReactions()
+     */
+    public function clearFormReactions()
+    {
+        $this->collFormReactions = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collFormReactions collection loaded partially.
+     */
+    public function resetPartialFormReactions($v = true)
+    {
+        $this->collFormReactionsPartial = $v;
+    }
+
+    /**
+     * Initializes the collFormReactions collection.
+     *
+     * By default this just sets the collFormReactions collection to an empty array (like clearcollFormReactions());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initFormReactions($overrideExisting = true)
+    {
+        if (null !== $this->collFormReactions && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = FormReactionTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collFormReactions = new $collectionClassName;
+        $this->collFormReactions->setModel('\FormsAPI\FormReaction');
+    }
+
+    /**
+     * Gets an array of ChildFormReaction objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildReaction is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildFormReaction[] List of ChildFormReaction objects
+     * @throws PropelException
+     */
+    public function getFormReactions(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormReactionsPartial && !$this->isNew();
+        if (null === $this->collFormReactions || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collFormReactions) {
+                // return empty collection
+                $this->initFormReactions();
+            } else {
+                $collFormReactions = ChildFormReactionQuery::create(null, $criteria)
+                    ->filterByReaction($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collFormReactionsPartial && count($collFormReactions)) {
+                        $this->initFormReactions(false);
+
+                        foreach ($collFormReactions as $obj) {
+                            if (false == $this->collFormReactions->contains($obj)) {
+                                $this->collFormReactions->append($obj);
+                            }
+                        }
+
+                        $this->collFormReactionsPartial = true;
+                    }
+
+                    return $collFormReactions;
+                }
+
+                if ($partial && $this->collFormReactions) {
+                    foreach ($this->collFormReactions as $obj) {
+                        if ($obj->isNew()) {
+                            $collFormReactions[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collFormReactions = $collFormReactions;
+                $this->collFormReactionsPartial = false;
+            }
+        }
+
+        return $this->collFormReactions;
+    }
+
+    /**
+     * Sets a collection of ChildFormReaction objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $formReactions A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildReaction The current object (for fluent API support)
+     */
+    public function setFormReactions(Collection $formReactions, ConnectionInterface $con = null)
+    {
+        /** @var ChildFormReaction[] $formReactionsToDelete */
+        $formReactionsToDelete = $this->getFormReactions(new Criteria(), $con)->diff($formReactions);
+
+
+        $this->formReactionsScheduledForDeletion = $formReactionsToDelete;
+
+        foreach ($formReactionsToDelete as $formReactionRemoved) {
+            $formReactionRemoved->setReaction(null);
+        }
+
+        $this->collFormReactions = null;
+        foreach ($formReactions as $formReaction) {
+            $this->addFormReaction($formReaction);
+        }
+
+        $this->collFormReactions = $formReactions;
+        $this->collFormReactionsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related FormReaction objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related FormReaction objects.
+     * @throws PropelException
+     */
+    public function countFormReactions(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFormReactionsPartial && !$this->isNew();
+        if (null === $this->collFormReactions || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collFormReactions) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getFormReactions());
+            }
+
+            $query = ChildFormReactionQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByReaction($this)
+                ->count($con);
+        }
+
+        return count($this->collFormReactions);
+    }
+
+    /**
+     * Method called to associate a ChildFormReaction object to this object
+     * through the ChildFormReaction foreign key attribute.
+     *
+     * @param  ChildFormReaction $l ChildFormReaction
+     * @return $this|\FormsAPI\Reaction The current object (for fluent API support)
+     */
+    public function addFormReaction(ChildFormReaction $l)
+    {
+        if ($this->collFormReactions === null) {
+            $this->initFormReactions();
+            $this->collFormReactionsPartial = true;
+        }
+
+        if (!$this->collFormReactions->contains($l)) {
+            $this->doAddFormReaction($l);
+
+            if ($this->formReactionsScheduledForDeletion and $this->formReactionsScheduledForDeletion->contains($l)) {
+                $this->formReactionsScheduledForDeletion->remove($this->formReactionsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildFormReaction $formReaction The ChildFormReaction object to add.
+     */
+    protected function doAddFormReaction(ChildFormReaction $formReaction)
+    {
+        $this->collFormReactions[]= $formReaction;
+        $formReaction->setReaction($this);
+    }
+
+    /**
+     * @param  ChildFormReaction $formReaction The ChildFormReaction object to remove.
+     * @return $this|ChildReaction The current object (for fluent API support)
+     */
+    public function removeFormReaction(ChildFormReaction $formReaction)
+    {
+        if ($this->getFormReactions()->contains($formReaction)) {
+            $pos = $this->collFormReactions->search($formReaction);
+            $this->collFormReactions->remove($pos);
+            if (null === $this->formReactionsScheduledForDeletion) {
+                $this->formReactionsScheduledForDeletion = clone $this->collFormReactions;
+                $this->formReactionsScheduledForDeletion->clear();
+            }
+            $this->formReactionsScheduledForDeletion[]= clone $formReaction;
+            $formReaction->setReaction(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Reaction is new, it will return
+     * an empty collection; or if this Reaction has previously
+     * been saved, it will retrieve related FormReactions from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Reaction.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildFormReaction[] List of ChildFormReaction objects
+     */
+    public function getFormReactionsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildFormReactionQuery::create(null, $criteria);
+        $query->joinWith('Form', $joinBehavior);
+
+        return $this->getFormReactions($query, $con);
     }
 
     /**
@@ -1458,8 +2153,20 @@ abstract class Reaction implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collChildFormRelationships) {
+                foreach ($this->collChildFormRelationships as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collFormReactions) {
+                foreach ($this->collFormReactions as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collChildFormRelationships = null;
+        $this->collFormReactions = null;
     }
 
     /**
@@ -1518,6 +2225,24 @@ abstract class Reaction implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collChildFormRelationships) {
+                foreach ($this->collChildFormRelationships as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collFormReactions) {
+                foreach ($this->collFormReactions as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

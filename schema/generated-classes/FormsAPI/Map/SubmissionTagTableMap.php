@@ -137,8 +137,8 @@ class SubmissionTagTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('submission_id', 'SubmissionId', 'INTEGER', true, null, null);
-        $this->addColumn('tag_id', 'TagId', 'INTEGER', true, null, null);
+        $this->addForeignKey('submission_id', 'SubmissionId', 'INTEGER', 'submission', 'id', true, null, null);
+        $this->addForeignKey('tag_id', 'TagId', 'INTEGER', 'tag', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -146,6 +146,20 @@ class SubmissionTagTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Submission', '\\FormsAPI\\Submission', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':submission_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Tag', '\\FormsAPI\\Tag', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':tag_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**

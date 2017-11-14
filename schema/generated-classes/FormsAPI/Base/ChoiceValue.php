@@ -4,13 +4,18 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\ChoiceValue as ChildChoiceValue;
 use FormsAPI\ChoiceValueQuery as ChildChoiceValueQuery;
+use FormsAPI\ElementChoice as ChildElementChoice;
+use FormsAPI\ElementChoiceQuery as ChildElementChoiceQuery;
 use FormsAPI\Map\ChoiceValueTableMap;
+use FormsAPI\Map\ElementChoiceTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -84,6 +89,12 @@ abstract class ChoiceValue implements ActiveRecordInterface
     protected $value;
 
     /**
+     * @var        ObjectCollection|ChildElementChoice[] Collection to store aggregation of ChildElementChoice objects.
+     */
+    protected $collElementChoices;
+    protected $collElementChoicesPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -107,6 +118,12 @@ abstract class ChoiceValue implements ActiveRecordInterface
      * @var     ConstraintViolationList
      */
     protected $validationFailures;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildElementChoice[]
+     */
+    protected $elementChoicesScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\ChoiceValue object.
@@ -503,6 +520,8 @@ abstract class ChoiceValue implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collElementChoices = null;
+
         } // if (deep)
     }
 
@@ -615,6 +634,23 @@ abstract class ChoiceValue implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->elementChoicesScheduledForDeletion !== null) {
+                if (!$this->elementChoicesScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\ElementChoiceQuery::create()
+                        ->filterByPrimaryKeys($this->elementChoicesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->elementChoicesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collElementChoices !== null) {
+                foreach ($this->collElementChoices as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -751,10 +787,11 @@ abstract class ChoiceValue implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['ChoiceValue'][$this->hashCode()])) {
@@ -771,6 +808,23 @@ abstract class ChoiceValue implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collElementChoices) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'elementChoices';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'element_choices';
+                        break;
+                    default:
+                        $key = 'ElementChoices';
+                }
+
+                $result[$key] = $this->collElementChoices->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -976,6 +1030,20 @@ abstract class ChoiceValue implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setValue($this->getValue());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getElementChoices() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addElementChoice($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1002,6 +1070,273 @@ abstract class ChoiceValue implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('ElementChoice' == $relationName) {
+            $this->initElementChoices();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collElementChoices collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addElementChoices()
+     */
+    public function clearElementChoices()
+    {
+        $this->collElementChoices = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collElementChoices collection loaded partially.
+     */
+    public function resetPartialElementChoices($v = true)
+    {
+        $this->collElementChoicesPartial = $v;
+    }
+
+    /**
+     * Initializes the collElementChoices collection.
+     *
+     * By default this just sets the collElementChoices collection to an empty array (like clearcollElementChoices());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initElementChoices($overrideExisting = true)
+    {
+        if (null !== $this->collElementChoices && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ElementChoiceTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collElementChoices = new $collectionClassName;
+        $this->collElementChoices->setModel('\FormsAPI\ElementChoice');
+    }
+
+    /**
+     * Gets an array of ChildElementChoice objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildChoiceValue is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildElementChoice[] List of ChildElementChoice objects
+     * @throws PropelException
+     */
+    public function getElementChoices(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElementChoicesPartial && !$this->isNew();
+        if (null === $this->collElementChoices || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collElementChoices) {
+                // return empty collection
+                $this->initElementChoices();
+            } else {
+                $collElementChoices = ChildElementChoiceQuery::create(null, $criteria)
+                    ->filterByChoiceValue($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collElementChoicesPartial && count($collElementChoices)) {
+                        $this->initElementChoices(false);
+
+                        foreach ($collElementChoices as $obj) {
+                            if (false == $this->collElementChoices->contains($obj)) {
+                                $this->collElementChoices->append($obj);
+                            }
+                        }
+
+                        $this->collElementChoicesPartial = true;
+                    }
+
+                    return $collElementChoices;
+                }
+
+                if ($partial && $this->collElementChoices) {
+                    foreach ($this->collElementChoices as $obj) {
+                        if ($obj->isNew()) {
+                            $collElementChoices[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collElementChoices = $collElementChoices;
+                $this->collElementChoicesPartial = false;
+            }
+        }
+
+        return $this->collElementChoices;
+    }
+
+    /**
+     * Sets a collection of ChildElementChoice objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $elementChoices A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildChoiceValue The current object (for fluent API support)
+     */
+    public function setElementChoices(Collection $elementChoices, ConnectionInterface $con = null)
+    {
+        /** @var ChildElementChoice[] $elementChoicesToDelete */
+        $elementChoicesToDelete = $this->getElementChoices(new Criteria(), $con)->diff($elementChoices);
+
+
+        $this->elementChoicesScheduledForDeletion = $elementChoicesToDelete;
+
+        foreach ($elementChoicesToDelete as $elementChoiceRemoved) {
+            $elementChoiceRemoved->setChoiceValue(null);
+        }
+
+        $this->collElementChoices = null;
+        foreach ($elementChoices as $elementChoice) {
+            $this->addElementChoice($elementChoice);
+        }
+
+        $this->collElementChoices = $elementChoices;
+        $this->collElementChoicesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ElementChoice objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related ElementChoice objects.
+     * @throws PropelException
+     */
+    public function countElementChoices(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElementChoicesPartial && !$this->isNew();
+        if (null === $this->collElementChoices || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collElementChoices) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getElementChoices());
+            }
+
+            $query = ChildElementChoiceQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByChoiceValue($this)
+                ->count($con);
+        }
+
+        return count($this->collElementChoices);
+    }
+
+    /**
+     * Method called to associate a ChildElementChoice object to this object
+     * through the ChildElementChoice foreign key attribute.
+     *
+     * @param  ChildElementChoice $l ChildElementChoice
+     * @return $this|\FormsAPI\ChoiceValue The current object (for fluent API support)
+     */
+    public function addElementChoice(ChildElementChoice $l)
+    {
+        if ($this->collElementChoices === null) {
+            $this->initElementChoices();
+            $this->collElementChoicesPartial = true;
+        }
+
+        if (!$this->collElementChoices->contains($l)) {
+            $this->doAddElementChoice($l);
+
+            if ($this->elementChoicesScheduledForDeletion and $this->elementChoicesScheduledForDeletion->contains($l)) {
+                $this->elementChoicesScheduledForDeletion->remove($this->elementChoicesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildElementChoice $elementChoice The ChildElementChoice object to add.
+     */
+    protected function doAddElementChoice(ChildElementChoice $elementChoice)
+    {
+        $this->collElementChoices[]= $elementChoice;
+        $elementChoice->setChoiceValue($this);
+    }
+
+    /**
+     * @param  ChildElementChoice $elementChoice The ChildElementChoice object to remove.
+     * @return $this|ChildChoiceValue The current object (for fluent API support)
+     */
+    public function removeElementChoice(ChildElementChoice $elementChoice)
+    {
+        if ($this->getElementChoices()->contains($elementChoice)) {
+            $pos = $this->collElementChoices->search($elementChoice);
+            $this->collElementChoices->remove($pos);
+            if (null === $this->elementChoicesScheduledForDeletion) {
+                $this->elementChoicesScheduledForDeletion = clone $this->collElementChoices;
+                $this->elementChoicesScheduledForDeletion->clear();
+            }
+            $this->elementChoicesScheduledForDeletion[]= clone $elementChoice;
+            $elementChoice->setChoiceValue(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this ChoiceValue is new, it will return
+     * an empty collection; or if this ChoiceValue has previously
+     * been saved, it will retrieve related ElementChoices from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in ChoiceValue.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildElementChoice[] List of ChildElementChoice objects
+     */
+    public function getElementChoicesJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildElementChoiceQuery::create(null, $criteria);
+        $query->joinWith('Element', $joinBehavior);
+
+        return $this->getElementChoices($query, $con);
     }
 
     /**
@@ -1031,8 +1366,14 @@ abstract class ChoiceValue implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collElementChoices) {
+                foreach ($this->collElementChoices as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collElementChoices = null;
     }
 
     /**
@@ -1087,6 +1428,15 @@ abstract class ChoiceValue implements ActiveRecordInterface
                 $failureMap->addAll($retval);
             }
 
+            if (null !== $this->collElementChoices) {
+                foreach ($this->collElementChoices as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
 
             $this->alreadyInValidation = false;
         }

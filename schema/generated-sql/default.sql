@@ -22,6 +22,25 @@ CREATE TABLE [element]
 );
 
 -----------------------------------------------------------------------
+-- response
+-----------------------------------------------------------------------
+
+DROP TABLE IF EXISTS [response];
+
+CREATE TABLE [response]
+(
+    [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    [content] VARCHAR(16383),
+    [element_id] INTEGER NOT NULL,
+    [submission_id] INTEGER NOT NULL,
+    UNIQUE ([id]),
+    FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([submission_id]) REFERENCES [submission] ([id])
+        ON DELETE CASCADE
+);
+
+-----------------------------------------------------------------------
 -- form
 -----------------------------------------------------------------------
 
@@ -70,7 +89,15 @@ CREATE TABLE [child_form_relationship]
     [child_id] INTEGER NOT NULL,
     [tag_id] INTEGER,
     [reaction_id] INTEGER,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([parent_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([child_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([tag_id]) REFERENCES [tag] ([id])
+        ON DELETE SET NULL,
+    FOREIGN KEY ([reaction_id]) REFERENCES [reaction] ([id])
+        ON DELETE SET NULL
 );
 
 -----------------------------------------------------------------------
@@ -112,7 +139,13 @@ CREATE TABLE [dependency]
     [element_id] INTEGER NOT NULL,
     [slave_id] INTEGER NOT NULL,
     [condition_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([slave_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([condition_id]) REFERENCES [condition] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -124,10 +157,14 @@ DROP TABLE IF EXISTS [requirement];
 CREATE TABLE [requirement]
 (
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    [failure_message] VARCHAR(255),
     [element_id] INTEGER NOT NULL,
     [condition_id] INTEGER NOT NULL,
-    [failure_message] VARCHAR(255),
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([condition_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -139,13 +176,23 @@ DROP TABLE IF EXISTS [submission];
 CREATE TABLE [submission]
 (
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    [submitted] TIMESTAMP,
     [visitor_id] INTEGER NOT NULL,
     [form_id] INTEGER NOT NULL,
     [status_id] INTEGER,
     [assignee_id] INTEGER,
     [parent_id] INTEGER,
-    [submitted] TIMESTAMP,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([visitor_id]) REFERENCES [visitor] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([status_id]) REFERENCES [status] ([id])
+        ON DELETE SET NULL,
+    FOREIGN KEY ([assignee_id]) REFERENCES [visitor] ([id])
+        ON DELETE SET NULL,
+    FOREIGN KEY ([parent_id]) REFERENCES [submission] ([id])
+        ON DELETE SET NULL
 );
 
 -----------------------------------------------------------------------
@@ -277,7 +324,11 @@ CREATE TABLE [element_choice]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [element_id] INTEGER NOT NULL,
     [choice_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([choice_id]) REFERENCES [choice_value] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -291,7 +342,30 @@ CREATE TABLE [submission_tag]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [submission_id] INTEGER NOT NULL,
     [tag_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([submission_id]) REFERENCES [submission] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([tag_id]) REFERENCES [tag] ([id])
+        ON DELETE CASCADE
+);
+
+-----------------------------------------------------------------------
+-- form_status
+-----------------------------------------------------------------------
+
+DROP TABLE IF EXISTS [form_status];
+
+CREATE TABLE [form_status]
+(
+    [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    [message] VARCHAR(63),
+    [form_id] INTEGER NOT NULL,
+    [status_id] INTEGER NOT NULL,
+    UNIQUE ([id]),
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([status_id]) REFERENCES [status] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -306,7 +380,11 @@ CREATE TABLE [form_tag]
     [form_id] INTEGER NOT NULL,
     [tag_id] INTEGER NOT NULL,
     [message] VARCHAR(63),
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([tag_id]) REFERENCES [tag] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -320,7 +398,11 @@ CREATE TABLE [form_reaction]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [reaction_id] INTEGER NOT NULL,
     [form_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([reaction_id]) REFERENCES [reaction] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -334,7 +416,11 @@ CREATE TABLE [dashboard_element]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [dashboard_id] INTEGER NOT NULL,
     [element_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([dashboard_id]) REFERENCES [dashboard] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -348,5 +434,9 @@ CREATE TABLE [dashboard_form]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [dashboard_id] INTEGER NOT NULL,
     [form_id] INTEGER NOT NULL,
-    UNIQUE ([id])
+    UNIQUE ([id]),
+    FOREIGN KEY ([dashboard_id]) REFERENCES [dashboard] ([id])
+        ON DELETE CASCADE,
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE
 );

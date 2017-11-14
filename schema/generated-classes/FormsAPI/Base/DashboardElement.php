@@ -4,7 +4,11 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Dashboard as ChildDashboard;
 use FormsAPI\DashboardElementQuery as ChildDashboardElementQuery;
+use FormsAPI\DashboardQuery as ChildDashboardQuery;
+use FormsAPI\Element as ChildElement;
+use FormsAPI\ElementQuery as ChildElementQuery;
 use FormsAPI\Map\DashboardElementTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -89,6 +93,16 @@ abstract class DashboardElement implements ActiveRecordInterface
      * @var        int
      */
     protected $element_id;
+
+    /**
+     * @var        ChildDashboard
+     */
+    protected $aDashboard;
+
+    /**
+     * @var        ChildElement
+     */
+    protected $aElement;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -407,6 +421,10 @@ abstract class DashboardElement implements ActiveRecordInterface
             $this->modifiedColumns[DashboardElementTableMap::COL_DASHBOARD_ID] = true;
         }
 
+        if ($this->aDashboard !== null && $this->aDashboard->getId() !== $v) {
+            $this->aDashboard = null;
+        }
+
         return $this;
     } // setDashboardId()
 
@@ -425,6 +443,10 @@ abstract class DashboardElement implements ActiveRecordInterface
         if ($this->element_id !== $v) {
             $this->element_id = $v;
             $this->modifiedColumns[DashboardElementTableMap::COL_ELEMENT_ID] = true;
+        }
+
+        if ($this->aElement !== null && $this->aElement->getId() !== $v) {
+            $this->aElement = null;
         }
 
         return $this;
@@ -504,6 +526,12 @@ abstract class DashboardElement implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aDashboard !== null && $this->dashboard_id !== $this->aDashboard->getId()) {
+            $this->aDashboard = null;
+        }
+        if ($this->aElement !== null && $this->element_id !== $this->aElement->getId()) {
+            $this->aElement = null;
+        }
     } // ensureConsistency
 
     /**
@@ -543,6 +571,8 @@ abstract class DashboardElement implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aDashboard = null;
+            $this->aElement = null;
         } // if (deep)
     }
 
@@ -645,6 +675,25 @@ abstract class DashboardElement implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aDashboard !== null) {
+                if ($this->aDashboard->isModified() || $this->aDashboard->isNew()) {
+                    $affectedRows += $this->aDashboard->save($con);
+                }
+                $this->setDashboard($this->aDashboard);
+            }
+
+            if ($this->aElement !== null) {
+                if ($this->aElement->isModified() || $this->aElement->isNew()) {
+                    $affectedRows += $this->aElement->save($con);
+                }
+                $this->setElement($this->aElement);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -800,10 +849,11 @@ abstract class DashboardElement implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['DashboardElement'][$this->hashCode()])) {
@@ -821,6 +871,38 @@ abstract class DashboardElement implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aDashboard) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'dashboard';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'dashboard';
+                        break;
+                    default:
+                        $key = 'Dashboard';
+                }
+
+                $result[$key] = $this->aDashboard->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aElement) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'element';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'element';
+                        break;
+                    default:
+                        $key = 'Element';
+                }
+
+                $result[$key] = $this->aElement->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -1065,12 +1147,120 @@ abstract class DashboardElement implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildDashboard object.
+     *
+     * @param  ChildDashboard $v
+     * @return $this|\FormsAPI\DashboardElement The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setDashboard(ChildDashboard $v = null)
+    {
+        if ($v === null) {
+            $this->setDashboardId(NULL);
+        } else {
+            $this->setDashboardId($v->getId());
+        }
+
+        $this->aDashboard = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildDashboard object, it will not be re-added.
+        if ($v !== null) {
+            $v->addDashboardElement($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildDashboard object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildDashboard The associated ChildDashboard object.
+     * @throws PropelException
+     */
+    public function getDashboard(ConnectionInterface $con = null)
+    {
+        if ($this->aDashboard === null && ($this->dashboard_id != 0)) {
+            $this->aDashboard = ChildDashboardQuery::create()->findPk($this->dashboard_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aDashboard->addDashboardElements($this);
+             */
+        }
+
+        return $this->aDashboard;
+    }
+
+    /**
+     * Declares an association between this object and a ChildElement object.
+     *
+     * @param  ChildElement $v
+     * @return $this|\FormsAPI\DashboardElement The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setElement(ChildElement $v = null)
+    {
+        if ($v === null) {
+            $this->setElementId(NULL);
+        } else {
+            $this->setElementId($v->getId());
+        }
+
+        $this->aElement = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildElement object, it will not be re-added.
+        if ($v !== null) {
+            $v->addDashboardElement($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildElement object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildElement The associated ChildElement object.
+     * @throws PropelException
+     */
+    public function getElement(ConnectionInterface $con = null)
+    {
+        if ($this->aElement === null && ($this->element_id != 0)) {
+            $this->aElement = ChildElementQuery::create()->findPk($this->element_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aElement->addDashboardElements($this);
+             */
+        }
+
+        return $this->aElement;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aDashboard) {
+            $this->aDashboard->removeDashboardElement($this);
+        }
+        if (null !== $this->aElement) {
+            $this->aElement->removeDashboardElement($this);
+        }
         $this->id = null;
         $this->dashboard_id = null;
         $this->element_id = null;
@@ -1094,6 +1284,8 @@ abstract class DashboardElement implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aDashboard = null;
+        $this->aElement = null;
     }
 
     /**
@@ -1143,6 +1335,23 @@ abstract class DashboardElement implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aDashboard, 'validate')) {
+                if (!$this->aDashboard->validate($validator)) {
+                    $failureMap->addAll($this->aDashboard->getValidationFailures());
+                }
+            }
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aElement, 'validate')) {
+                if (!$this->aElement->validate($validator)) {
+                    $failureMap->addAll($this->aElement->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

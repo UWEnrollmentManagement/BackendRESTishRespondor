@@ -147,10 +147,10 @@ class ChildFormRelationshipTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('parent_id', 'parentName', 'INTEGER', true, null, null);
-        $this->addColumn('child_id', 'ChildId', 'INTEGER', true, null, null);
-        $this->addColumn('tag_id', 'TagId', 'INTEGER', false, null, null);
-        $this->addColumn('reaction_id', 'ReactionId', 'INTEGER', false, null, null);
+        $this->addForeignKey('parent_id', 'parentName', 'INTEGER', 'form', 'id', true, null, null);
+        $this->addForeignKey('child_id', 'ChildId', 'INTEGER', 'form', 'id', true, null, null);
+        $this->addForeignKey('tag_id', 'TagId', 'INTEGER', 'tag', 'id', false, null, null);
+        $this->addForeignKey('reaction_id', 'ReactionId', 'INTEGER', 'reaction', 'id', false, null, null);
     } // initialize()
 
     /**
@@ -158,6 +158,34 @@ class ChildFormRelationshipTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Parent', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':parent_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Child', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':child_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
+        $this->addRelation('Tag', '\\FormsAPI\\Tag', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':tag_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, null, false);
+        $this->addRelation('Reaction', '\\FormsAPI\\Reaction', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':reaction_id',
+    1 => ':id',
+  ),
+), 'SET NULL', null, null, false);
     } // buildRelations()
 
     /**
