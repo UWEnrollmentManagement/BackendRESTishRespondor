@@ -171,6 +171,62 @@ class FormTableMap extends TableMap
     1 => ':id',
   ),
 ), 'SET NULL', null, null, false);
+        $this->addRelation('AsParent', '\\FormsAPI\\ChildFormRelationship', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':parent_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'AsParents', false);
+        $this->addRelation('AsChild', '\\FormsAPI\\ChildFormRelationship', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':child_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Aschildren', false);
+        $this->addRelation('Submission', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Submissions', false);
+        $this->addRelation('Stakeholder', '\\FormsAPI\\Stakeholder', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Stakeholders', false);
+        $this->addRelation('FormStatus', '\\FormsAPI\\FormStatus', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'FormStatuses', false);
+        $this->addRelation('FormTag', '\\FormsAPI\\FormTag', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'FormTags', false);
+        $this->addRelation('FormReaction', '\\FormsAPI\\FormReaction', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'FormReactions', false);
+        $this->addRelation('DashboardForm', '\\FormsAPI\\DashboardForm', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'DashboardForms', false);
     } // buildRelations()
 
     /**
@@ -185,6 +241,21 @@ class FormTableMap extends TableMap
             'validate' => array('rule1' => array ('column' => 'name','validator' => 'NotNull',), 'rule2' => array ('column' => 'slug','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
+    /**
+     * Method to invalidate the instance pool of all tables related to form     * by a foreign key with ON DELETE CASCADE
+     */
+    public static function clearRelatedInstancePool()
+    {
+        // Invalidate objects in related instance pools,
+        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        ChildFormRelationshipTableMap::clearInstancePool();
+        SubmissionTableMap::clearInstancePool();
+        StakeholderTableMap::clearInstancePool();
+        FormStatusTableMap::clearInstancePool();
+        FormTagTableMap::clearInstancePool();
+        FormReactionTableMap::clearInstancePool();
+        DashboardFormTableMap::clearInstancePool();
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.

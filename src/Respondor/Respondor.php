@@ -4,6 +4,7 @@ namespace FormsAPI\Respondor;
 
 require_once __DIR__ . '/../setup.php';
 
+use Faker\Provider\DateTime;
 use FormsAPI\Mediator\MediatorInterface;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
@@ -35,6 +36,8 @@ class Respondor
         $success = false;
         $error = null;
         $status = 500;
+        // default in case we never set this
+        $reasonPhrase = "Internal Server Error";
 
         $routeInfo = $request->getAttribute('routeInfo')[2];
         $resourceType = $routeInfo['resourceType'];
@@ -56,6 +59,14 @@ class Respondor
             $error = ['message' => "No such resource type '$resourceType'" . implode("; ", $this->mediator->error())];
         } elseif ($request->getMethod() === "POST") {                                // CREATE
             $resource = $this->mediator->create($resourceType);
+            if($resourceType == "submissions") {
+                // remove submitted
+//                unset($parsedBody["submitted"]);
+//                $parsedBody["submitted"] = "2017-12-25 08:15:35";
+//                $parsedBody["submitted"] = DateTime::date('2017-12-25');
+                // bandaid until we figure out datetime here
+                $parsedBody["submitted"] = null;
+            }
 
             $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($resource);
@@ -64,7 +75,6 @@ class Respondor
                 $status = 200;
                 $success = true;
                 $error = null;
-
                 $objectData = $this->mediator->getAttributes($resource);
             } else {
                 $status = 400;
@@ -132,8 +142,16 @@ class Respondor
             "error" => $error
         ];
 
+        $statusMap = [
+            200 => "OK",
+            400 => "Bad Request",
+            404 => "Not Found",
+            500 => "Internal Server Error"
+        ];
+
+        $reasonPhrase = $statusMap[$status];
         $responseContents = json_encode($responseContents);
         $response->getBody()->write($responseContents);
-        return $response->withStatus($status, 'OK');
+        return $response->withStatus($status, $reasonPhrase);
     }
 }

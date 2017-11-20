@@ -59,7 +59,7 @@ class ElementTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 13;
+    const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
@@ -69,12 +69,17 @@ class ElementTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 13;
+    const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the id field
      */
     const COL_ID = 'element.id';
+
+    /**
+     * the column name for the retired field
+     */
+    const COL_RETIRED = 'element.retired';
 
     /**
      * the column name for the type field
@@ -85,21 +90,6 @@ class ElementTableMap extends TableMap
      * the column name for the label field
      */
     const COL_LABEL = 'element.label';
-
-    /**
-     * the column name for the active field
-     */
-    const COL_ACTIVE = 'element.active';
-
-    /**
-     * the column name for the administrative field
-     */
-    const COL_ADMINISTRATIVE = 'element.administrative';
-
-    /**
-     * the column name for the short_name field
-     */
-    const COL_SHORT_NAME = 'element.short_name';
 
     /**
      * the column name for the initial_value field
@@ -115,16 +105,6 @@ class ElementTableMap extends TableMap
      * the column name for the placeholder_text field
      */
     const COL_PLACEHOLDER_TEXT = 'element.placeholder_text';
-
-    /**
-     * the column name for the choices field
-     */
-    const COL_CHOICES = 'element.choices';
-
-    /**
-     * the column name for the dependent_upon field
-     */
-    const COL_DEPENDENT_UPON = 'element.dependent_upon';
 
     /**
      * the column name for the required field
@@ -148,11 +128,11 @@ class ElementTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Type', 'Label', 'Active', 'Administrative', 'ShortName', 'InitialValue', 'HelpText', 'PlaceholderText', 'Choices', 'DependentUpon', 'Required', 'ParentId', ),
-        self::TYPE_CAMELNAME     => array('id', 'type', 'label', 'active', 'administrative', 'shortName', 'initialValue', 'helpText', 'placeholderText', 'choices', 'dependentUpon', 'required', 'parentId', ),
-        self::TYPE_COLNAME       => array(ElementTableMap::COL_ID, ElementTableMap::COL_TYPE, ElementTableMap::COL_LABEL, ElementTableMap::COL_ACTIVE, ElementTableMap::COL_ADMINISTRATIVE, ElementTableMap::COL_SHORT_NAME, ElementTableMap::COL_INITIAL_VALUE, ElementTableMap::COL_HELP_TEXT, ElementTableMap::COL_PLACEHOLDER_TEXT, ElementTableMap::COL_CHOICES, ElementTableMap::COL_DEPENDENT_UPON, ElementTableMap::COL_REQUIRED, ElementTableMap::COL_PARENT_ID, ),
-        self::TYPE_FIELDNAME     => array('id', 'type', 'label', 'active', 'administrative', 'short_name', 'initial_value', 'help_text', 'placeholder_text', 'choices', 'dependent_upon', 'required', 'parent_id', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, )
+        self::TYPE_PHPNAME       => array('Id', 'Retired', 'Type', 'Label', 'InitialValue', 'HelpText', 'PlaceholderText', 'Required', 'ParentId', ),
+        self::TYPE_CAMELNAME     => array('id', 'retired', 'type', 'label', 'initialValue', 'helpText', 'placeholderText', 'required', 'parentId', ),
+        self::TYPE_COLNAME       => array(ElementTableMap::COL_ID, ElementTableMap::COL_RETIRED, ElementTableMap::COL_TYPE, ElementTableMap::COL_LABEL, ElementTableMap::COL_INITIAL_VALUE, ElementTableMap::COL_HELP_TEXT, ElementTableMap::COL_PLACEHOLDER_TEXT, ElementTableMap::COL_REQUIRED, ElementTableMap::COL_PARENT_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'retired', 'type', 'label', 'initial_value', 'help_text', 'placeholder_text', 'required', 'parent_id', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /**
@@ -162,11 +142,11 @@ class ElementTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Type' => 1, 'Label' => 2, 'Active' => 3, 'Administrative' => 4, 'ShortName' => 5, 'InitialValue' => 6, 'HelpText' => 7, 'PlaceholderText' => 8, 'Choices' => 9, 'DependentUpon' => 10, 'Required' => 11, 'ParentId' => 12, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'type' => 1, 'label' => 2, 'active' => 3, 'administrative' => 4, 'shortName' => 5, 'initialValue' => 6, 'helpText' => 7, 'placeholderText' => 8, 'choices' => 9, 'dependentUpon' => 10, 'required' => 11, 'parentId' => 12, ),
-        self::TYPE_COLNAME       => array(ElementTableMap::COL_ID => 0, ElementTableMap::COL_TYPE => 1, ElementTableMap::COL_LABEL => 2, ElementTableMap::COL_ACTIVE => 3, ElementTableMap::COL_ADMINISTRATIVE => 4, ElementTableMap::COL_SHORT_NAME => 5, ElementTableMap::COL_INITIAL_VALUE => 6, ElementTableMap::COL_HELP_TEXT => 7, ElementTableMap::COL_PLACEHOLDER_TEXT => 8, ElementTableMap::COL_CHOICES => 9, ElementTableMap::COL_DEPENDENT_UPON => 10, ElementTableMap::COL_REQUIRED => 11, ElementTableMap::COL_PARENT_ID => 12, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'type' => 1, 'label' => 2, 'active' => 3, 'administrative' => 4, 'short_name' => 5, 'initial_value' => 6, 'help_text' => 7, 'placeholder_text' => 8, 'choices' => 9, 'dependent_upon' => 10, 'required' => 11, 'parent_id' => 12, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, )
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Retired' => 1, 'Type' => 2, 'Label' => 3, 'InitialValue' => 4, 'HelpText' => 5, 'PlaceholderText' => 6, 'Required' => 7, 'ParentId' => 8, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'retired' => 1, 'type' => 2, 'label' => 3, 'initialValue' => 4, 'helpText' => 5, 'placeholderText' => 6, 'required' => 7, 'parentId' => 8, ),
+        self::TYPE_COLNAME       => array(ElementTableMap::COL_ID => 0, ElementTableMap::COL_RETIRED => 1, ElementTableMap::COL_TYPE => 2, ElementTableMap::COL_LABEL => 3, ElementTableMap::COL_INITIAL_VALUE => 4, ElementTableMap::COL_HELP_TEXT => 5, ElementTableMap::COL_PLACEHOLDER_TEXT => 6, ElementTableMap::COL_REQUIRED => 7, ElementTableMap::COL_PARENT_ID => 8, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'retired' => 1, 'type' => 2, 'label' => 3, 'initial_value' => 4, 'help_text' => 5, 'placeholder_text' => 6, 'required' => 7, 'parent_id' => 8, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /**
@@ -187,16 +167,12 @@ class ElementTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
+        $this->addColumn('retired', 'Retired', 'BOOLEAN', true, null, false);
         $this->addColumn('type', 'Type', 'VARCHAR', true, 31, null);
         $this->addColumn('label', 'Label', 'VARCHAR', true, 8191, null);
-        $this->addColumn('active', 'Active', 'BOOLEAN', true, null, true);
-        $this->addColumn('administrative', 'Administrative', 'BOOLEAN', true, null, false);
-        $this->addColumn('short_name', 'ShortName', 'VARCHAR', true, 31, null);
         $this->addColumn('initial_value', 'InitialValue', 'VARCHAR', false, 127, null);
         $this->addColumn('help_text', 'HelpText', 'VARCHAR', false, 4095, null);
         $this->addColumn('placeholder_text', 'PlaceholderText', 'VARCHAR', false, 127, null);
-        $this->addColumn('choices', 'Choices', 'VARCHAR', false, 4095, null);
-        $this->addColumn('dependent_upon', 'DependentUpon', 'VARCHAR', false, 127, null);
         $this->addColumn('required', 'Required', 'BOOLEAN', true, null, true);
         $this->addForeignKey('parent_id', 'ParentId', 'INTEGER', 'element', 'id', false, null, null);
     } // initialize()
@@ -220,6 +196,13 @@ class ElementTableMap extends TableMap
     1 => ':id',
   ),
 ), 'SET NULL', null, 'Parents', false);
+        $this->addRelation('Response', '\\FormsAPI\\Response', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Responses', false);
         $this->addRelation('RootElement', '\\FormsAPI\\Form', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -227,6 +210,41 @@ class ElementTableMap extends TableMap
     1 => ':id',
   ),
 ), 'SET NULL', null, 'RootElements', false);
+        $this->addRelation('AsMaster', '\\FormsAPI\\Dependency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'AsMasters', false);
+        $this->addRelation('AsSlave', '\\FormsAPI\\Dependency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':slave_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'AsSlaves', false);
+        $this->addRelation('Requirement', '\\FormsAPI\\Requirement', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Requirements', false);
+        $this->addRelation('ElementChoice', '\\FormsAPI\\ElementChoice', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'ElementChoices', false);
+        $this->addRelation('DashboardElement', '\\FormsAPI\\DashboardElement', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':element_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'DashboardElements', false);
     } // buildRelations()
 
     /**
@@ -249,7 +267,12 @@ class ElementTableMap extends TableMap
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
         ElementTableMap::clearInstancePool();
+        ResponseTableMap::clearInstancePool();
         FormTableMap::clearInstancePool();
+        DependencyTableMap::clearInstancePool();
+        RequirementTableMap::clearInstancePool();
+        ElementChoiceTableMap::clearInstancePool();
+        DashboardElementTableMap::clearInstancePool();
     }
 
     /**
@@ -394,30 +417,22 @@ class ElementTableMap extends TableMap
     {
         if (null === $alias) {
             $criteria->addSelectColumn(ElementTableMap::COL_ID);
+            $criteria->addSelectColumn(ElementTableMap::COL_RETIRED);
             $criteria->addSelectColumn(ElementTableMap::COL_TYPE);
             $criteria->addSelectColumn(ElementTableMap::COL_LABEL);
-            $criteria->addSelectColumn(ElementTableMap::COL_ACTIVE);
-            $criteria->addSelectColumn(ElementTableMap::COL_ADMINISTRATIVE);
-            $criteria->addSelectColumn(ElementTableMap::COL_SHORT_NAME);
             $criteria->addSelectColumn(ElementTableMap::COL_INITIAL_VALUE);
             $criteria->addSelectColumn(ElementTableMap::COL_HELP_TEXT);
             $criteria->addSelectColumn(ElementTableMap::COL_PLACEHOLDER_TEXT);
-            $criteria->addSelectColumn(ElementTableMap::COL_CHOICES);
-            $criteria->addSelectColumn(ElementTableMap::COL_DEPENDENT_UPON);
             $criteria->addSelectColumn(ElementTableMap::COL_REQUIRED);
             $criteria->addSelectColumn(ElementTableMap::COL_PARENT_ID);
         } else {
             $criteria->addSelectColumn($alias . '.id');
+            $criteria->addSelectColumn($alias . '.retired');
             $criteria->addSelectColumn($alias . '.type');
             $criteria->addSelectColumn($alias . '.label');
-            $criteria->addSelectColumn($alias . '.active');
-            $criteria->addSelectColumn($alias . '.administrative');
-            $criteria->addSelectColumn($alias . '.short_name');
             $criteria->addSelectColumn($alias . '.initial_value');
             $criteria->addSelectColumn($alias . '.help_text');
             $criteria->addSelectColumn($alias . '.placeholder_text');
-            $criteria->addSelectColumn($alias . '.choices');
-            $criteria->addSelectColumn($alias . '.dependent_upon');
             $criteria->addSelectColumn($alias . '.required');
             $criteria->addSelectColumn($alias . '.parent_id');
         }

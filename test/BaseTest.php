@@ -26,22 +26,26 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     protected $allParameters = [
         'forms' =>
             [
-                'id', 'href', 'elements', 'rootElement', 'name',
-                'slug', 'rootElementId', 'successMessage', 'retired'
+                'id', 'href', 'elements', 'root_element', 'name',
+                'slug', 'root_element_id', 'success_message', 'retired'
             ],
         'elements' =>
             [
-                'id', 'href', 'retired', 'type', 'label', 'initialValue',
-                'helpText', 'placeholderText', 'required', 'parentId', 'parent'
+                'id', 'href', 'retired', 'type', 'label', 'initial_value',
+                'help_text', 'placeholder_text', 'required', 'parent_id', 'parent'
             ],
         'visitors' =>
             [
-                'id', 'href', 'UWStudentNumber', 'UWNetID', 'firstName',
-                'middleName', 'lastName',
+                'id', 'href', 'uw_student_number', 'uw_net_id', 'first_name',
+                'middle_name', 'last_name',
             ],
         'choices' =>
             [
                 'id', 'href', 'value',
+            ],
+        'conditions' =>
+            [
+                'id', 'href', 'operator', 'value',
             ],
         'dependencies' =>
             [
@@ -49,19 +53,23 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ],
         'requirements' =>
             [
-                'id', 'href', 'element', 'condition', 'failureMessage',
+                'id', 'href', 'element', 'condition', 'failure_message',
             ],
         'submissions' =>
             [
                 'id', 'href', 'visitor', 'form', 'status', 'assignee', 'parent', 'submitted',
             ],
+        'responses' =>
+            [
+                'id', 'href', 'submission_id', 'submission', 'element_id', 'element', 'content',
+            ],
         'statuses' =>
             [
-                'id', 'href', 'name', 'defaultMessage',
+                'id', 'href', 'name', 'default_message',
             ],
         'tags' =>
             [
-                'id', 'href', 'name', 'defaultMessage',
+                'id', 'href', 'name', 'default_message',
             ],
         'notes' =>
             [
@@ -77,7 +85,7 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ],
         'reactions' =>
             [
-                'id', 'href', 'subject', 'recipient', 'sender', 'replyTo', 'cc', 'bcc',
+                'id', 'href', 'subject', 'recipient', 'sender', 'reply_to', 'cc', 'bcc',
                 'template', 'content',
             ],
         'settings' =>
@@ -90,35 +98,35 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             ],
         'childformrelationships' =>
             [
-                'id', 'href', 'parentId', 'childId', 'tagId', 'parent', 'child', 'tag',
+                'id', 'href', 'parent_id', 'child_id', 'tag_id', 'parent', 'child', 'tag',
             ],
         'elementchoices' =>
             [
-                'id', 'href', 'elementId', 'choiceId', 'element', 'choice',
+                'id', 'href', 'element_id', 'choice_id', 'element', 'choice',
             ],
         'submissiontags' =>
             [
-                'id', 'href', 'submissionId', 'submission', 'tagId', 'tag',
+                'id', 'href', 'submission_id', 'submission', 'tag_id', 'tag',
             ],
         'formstatuses' =>
             [
-                'id', 'href', 'formId', 'form', 'statusId', 'status', 'message',
+                'id', 'href', 'form_id', 'form', 'status_id', 'status', 'message',
             ],
         'formtags' =>
             [
-                'id', 'href', 'formId', 'form', 'tagId', 'tag', 'message',
+                'id', 'href', 'form_id', 'form', 'tag_id', 'tag', 'message',
             ],
         'formreactions' =>
             [
-                'id', 'href', 'formId', 'form', 'reactionId', 'reaction',
+                'id', 'href', 'form_id', 'form', 'reaction_id', 'reaction',
             ],
         'dashboardelements' =>
             [
-                'id', 'href', 'dashboardId', 'dashboard', 'elementId', 'element',
+                'id', 'href', 'dashboard_id', 'dashboard', 'element_id', 'element',
             ],
         'dashboardforms' =>
             [
-                'id', 'href', 'dashboardId', 'dashboard', 'formId', 'form',
+                'id', 'href', 'dashboard_id', 'dashboard', 'form_id', 'form',
             ],
 
     ];
@@ -127,7 +135,17 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
     {
         parent::__construct($name, $data, $dataName);
 
-        $this->faker = new FormsAPIFaker();
+        $instance = $this;
+        $this->faker = new FormsAPIFaker(
+            [
+                'reference' => function($resourceType) use ($instance) {
+                    $response = $instance->doCreateRequiredOnly($resourceType);
+                    $responseData = $instance->responseToArray($response);
+
+                    return $responseData['data']['id'];
+                },
+            ]
+        );
     }
 
     protected function setUp()
@@ -178,6 +196,21 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         return $this->doRequest($request['method'], $request['path'], $request['data']);
     }
 
+    protected function doCreateRequiredOnly($resourceType, $requestData = [])
+    {
+        $requestData = $this->faker->fakeRequiredOnly($resourceType, $requestData);
+
+        // Build the request
+        $request = [
+            'method' => 'POST',
+            'path' => "/$resourceType/",
+            'data' => $requestData,
+        ];
+
+        // Issue the request
+        return $this->doRequest($request['method'], $request['path'], $request['data']);
+    }
+
     protected function responseToArray(Response $response)
     {
         $body = (string)$response->getBody();
@@ -188,13 +221,13 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         return $responseData;
     }
 
-    protected function assertArrayHasKeys($keys, $array, $message=null) {
+    protected function assertArrayHasKeys($keys, $array, $additionalMessage=null) {
 
         foreach ($keys as $key) {
             $this->assertArrayHasKey(
                 $key,
                 $array,
-                $message ? $message : "Array must contain key `$key`, but only contains keys: " . implode(', ', array_keys($array))
+                "Array must contain key `$key`, but only contains keys: " . implode(', ', array_keys($array)) . " $additionalMessage"
             );
         }
     }

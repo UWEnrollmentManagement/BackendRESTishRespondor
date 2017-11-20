@@ -21,30 +21,22 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  * @method     ChildElementQuery orderById($order = Criteria::ASC) Order by the id column
+ * @method     ChildElementQuery orderByRetired($order = Criteria::ASC) Order by the retired column
  * @method     ChildElementQuery orderByType($order = Criteria::ASC) Order by the type column
  * @method     ChildElementQuery orderByLabel($order = Criteria::ASC) Order by the label column
- * @method     ChildElementQuery orderByActive($order = Criteria::ASC) Order by the active column
- * @method     ChildElementQuery orderByAdministrative($order = Criteria::ASC) Order by the administrative column
- * @method     ChildElementQuery orderByShortName($order = Criteria::ASC) Order by the short_name column
  * @method     ChildElementQuery orderByInitialValue($order = Criteria::ASC) Order by the initial_value column
  * @method     ChildElementQuery orderByHelpText($order = Criteria::ASC) Order by the help_text column
  * @method     ChildElementQuery orderByPlaceholderText($order = Criteria::ASC) Order by the placeholder_text column
- * @method     ChildElementQuery orderByChoices($order = Criteria::ASC) Order by the choices column
- * @method     ChildElementQuery orderByDependentUpon($order = Criteria::ASC) Order by the dependent_upon column
  * @method     ChildElementQuery orderByRequired($order = Criteria::ASC) Order by the required column
  * @method     ChildElementQuery orderByParentId($order = Criteria::ASC) Order by the parent_id column
  *
  * @method     ChildElementQuery groupById() Group by the id column
+ * @method     ChildElementQuery groupByRetired() Group by the retired column
  * @method     ChildElementQuery groupByType() Group by the type column
  * @method     ChildElementQuery groupByLabel() Group by the label column
- * @method     ChildElementQuery groupByActive() Group by the active column
- * @method     ChildElementQuery groupByAdministrative() Group by the administrative column
- * @method     ChildElementQuery groupByShortName() Group by the short_name column
  * @method     ChildElementQuery groupByInitialValue() Group by the initial_value column
  * @method     ChildElementQuery groupByHelpText() Group by the help_text column
  * @method     ChildElementQuery groupByPlaceholderText() Group by the placeholder_text column
- * @method     ChildElementQuery groupByChoices() Group by the choices column
- * @method     ChildElementQuery groupByDependentUpon() Group by the dependent_upon column
  * @method     ChildElementQuery groupByRequired() Group by the required column
  * @method     ChildElementQuery groupByParentId() Group by the parent_id column
  *
@@ -76,6 +68,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElementQuery rightJoinWithParent() Adds a RIGHT JOIN clause and with to the query using the Parent relation
  * @method     ChildElementQuery innerJoinWithParent() Adds a INNER JOIN clause and with to the query using the Parent relation
  *
+ * @method     ChildElementQuery leftJoinResponse($relationAlias = null) Adds a LEFT JOIN clause to the query using the Response relation
+ * @method     ChildElementQuery rightJoinResponse($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Response relation
+ * @method     ChildElementQuery innerJoinResponse($relationAlias = null) Adds a INNER JOIN clause to the query using the Response relation
+ *
+ * @method     ChildElementQuery joinWithResponse($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Response relation
+ *
+ * @method     ChildElementQuery leftJoinWithResponse() Adds a LEFT JOIN clause and with to the query using the Response relation
+ * @method     ChildElementQuery rightJoinWithResponse() Adds a RIGHT JOIN clause and with to the query using the Response relation
+ * @method     ChildElementQuery innerJoinWithResponse() Adds a INNER JOIN clause and with to the query using the Response relation
+ *
  * @method     ChildElementQuery leftJoinRootElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the RootElement relation
  * @method     ChildElementQuery rightJoinRootElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the RootElement relation
  * @method     ChildElementQuery innerJoinRootElement($relationAlias = null) Adds a INNER JOIN clause to the query using the RootElement relation
@@ -86,22 +88,68 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElementQuery rightJoinWithRootElement() Adds a RIGHT JOIN clause and with to the query using the RootElement relation
  * @method     ChildElementQuery innerJoinWithRootElement() Adds a INNER JOIN clause and with to the query using the RootElement relation
  *
- * @method     \FormsAPI\ElementQuery|\FormsAPI\FormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildElementQuery leftJoinAsMaster($relationAlias = null) Adds a LEFT JOIN clause to the query using the AsMaster relation
+ * @method     ChildElementQuery rightJoinAsMaster($relationAlias = null) Adds a RIGHT JOIN clause to the query using the AsMaster relation
+ * @method     ChildElementQuery innerJoinAsMaster($relationAlias = null) Adds a INNER JOIN clause to the query using the AsMaster relation
+ *
+ * @method     ChildElementQuery joinWithAsMaster($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the AsMaster relation
+ *
+ * @method     ChildElementQuery leftJoinWithAsMaster() Adds a LEFT JOIN clause and with to the query using the AsMaster relation
+ * @method     ChildElementQuery rightJoinWithAsMaster() Adds a RIGHT JOIN clause and with to the query using the AsMaster relation
+ * @method     ChildElementQuery innerJoinWithAsMaster() Adds a INNER JOIN clause and with to the query using the AsMaster relation
+ *
+ * @method     ChildElementQuery leftJoinAsSlave($relationAlias = null) Adds a LEFT JOIN clause to the query using the AsSlave relation
+ * @method     ChildElementQuery rightJoinAsSlave($relationAlias = null) Adds a RIGHT JOIN clause to the query using the AsSlave relation
+ * @method     ChildElementQuery innerJoinAsSlave($relationAlias = null) Adds a INNER JOIN clause to the query using the AsSlave relation
+ *
+ * @method     ChildElementQuery joinWithAsSlave($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the AsSlave relation
+ *
+ * @method     ChildElementQuery leftJoinWithAsSlave() Adds a LEFT JOIN clause and with to the query using the AsSlave relation
+ * @method     ChildElementQuery rightJoinWithAsSlave() Adds a RIGHT JOIN clause and with to the query using the AsSlave relation
+ * @method     ChildElementQuery innerJoinWithAsSlave() Adds a INNER JOIN clause and with to the query using the AsSlave relation
+ *
+ * @method     ChildElementQuery leftJoinRequirement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Requirement relation
+ * @method     ChildElementQuery rightJoinRequirement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Requirement relation
+ * @method     ChildElementQuery innerJoinRequirement($relationAlias = null) Adds a INNER JOIN clause to the query using the Requirement relation
+ *
+ * @method     ChildElementQuery joinWithRequirement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Requirement relation
+ *
+ * @method     ChildElementQuery leftJoinWithRequirement() Adds a LEFT JOIN clause and with to the query using the Requirement relation
+ * @method     ChildElementQuery rightJoinWithRequirement() Adds a RIGHT JOIN clause and with to the query using the Requirement relation
+ * @method     ChildElementQuery innerJoinWithRequirement() Adds a INNER JOIN clause and with to the query using the Requirement relation
+ *
+ * @method     ChildElementQuery leftJoinElementChoice($relationAlias = null) Adds a LEFT JOIN clause to the query using the ElementChoice relation
+ * @method     ChildElementQuery rightJoinElementChoice($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ElementChoice relation
+ * @method     ChildElementQuery innerJoinElementChoice($relationAlias = null) Adds a INNER JOIN clause to the query using the ElementChoice relation
+ *
+ * @method     ChildElementQuery joinWithElementChoice($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ElementChoice relation
+ *
+ * @method     ChildElementQuery leftJoinWithElementChoice() Adds a LEFT JOIN clause and with to the query using the ElementChoice relation
+ * @method     ChildElementQuery rightJoinWithElementChoice() Adds a RIGHT JOIN clause and with to the query using the ElementChoice relation
+ * @method     ChildElementQuery innerJoinWithElementChoice() Adds a INNER JOIN clause and with to the query using the ElementChoice relation
+ *
+ * @method     ChildElementQuery leftJoinDashboardElement($relationAlias = null) Adds a LEFT JOIN clause to the query using the DashboardElement relation
+ * @method     ChildElementQuery rightJoinDashboardElement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the DashboardElement relation
+ * @method     ChildElementQuery innerJoinDashboardElement($relationAlias = null) Adds a INNER JOIN clause to the query using the DashboardElement relation
+ *
+ * @method     ChildElementQuery joinWithDashboardElement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the DashboardElement relation
+ *
+ * @method     ChildElementQuery leftJoinWithDashboardElement() Adds a LEFT JOIN clause and with to the query using the DashboardElement relation
+ * @method     ChildElementQuery rightJoinWithDashboardElement() Adds a RIGHT JOIN clause and with to the query using the DashboardElement relation
+ * @method     ChildElementQuery innerJoinWithDashboardElement() Adds a INNER JOIN clause and with to the query using the DashboardElement relation
+ *
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\ResponseQuery|\FormsAPI\FormQuery|\FormsAPI\DependencyQuery|\FormsAPI\RequirementQuery|\FormsAPI\ElementChoiceQuery|\FormsAPI\DashboardElementQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildElement findOne(ConnectionInterface $con = null) Return the first ChildElement matching the query
  * @method     ChildElement findOneOrCreate(ConnectionInterface $con = null) Return the first ChildElement matching the query, or a new ChildElement object populated from the query conditions when no match is found
  *
  * @method     ChildElement findOneById(int $id) Return the first ChildElement filtered by the id column
+ * @method     ChildElement findOneByRetired(boolean $retired) Return the first ChildElement filtered by the retired column
  * @method     ChildElement findOneByType(string $type) Return the first ChildElement filtered by the type column
  * @method     ChildElement findOneByLabel(string $label) Return the first ChildElement filtered by the label column
- * @method     ChildElement findOneByActive(boolean $active) Return the first ChildElement filtered by the active column
- * @method     ChildElement findOneByAdministrative(boolean $administrative) Return the first ChildElement filtered by the administrative column
- * @method     ChildElement findOneByShortName(string $short_name) Return the first ChildElement filtered by the short_name column
  * @method     ChildElement findOneByInitialValue(string $initial_value) Return the first ChildElement filtered by the initial_value column
  * @method     ChildElement findOneByHelpText(string $help_text) Return the first ChildElement filtered by the help_text column
  * @method     ChildElement findOneByPlaceholderText(string $placeholder_text) Return the first ChildElement filtered by the placeholder_text column
- * @method     ChildElement findOneByChoices(string $choices) Return the first ChildElement filtered by the choices column
- * @method     ChildElement findOneByDependentUpon(string $dependent_upon) Return the first ChildElement filtered by the dependent_upon column
  * @method     ChildElement findOneByRequired(boolean $required) Return the first ChildElement filtered by the required column
  * @method     ChildElement findOneByParentId(int $parent_id) Return the first ChildElement filtered by the parent_id column *
 
@@ -109,31 +157,23 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElement requireOne(ConnectionInterface $con = null) Return the first ChildElement matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildElement requireOneById(int $id) Return the first ChildElement filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildElement requireOneByRetired(boolean $retired) Return the first ChildElement filtered by the retired column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByType(string $type) Return the first ChildElement filtered by the type column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByLabel(string $label) Return the first ChildElement filtered by the label column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElement requireOneByActive(boolean $active) Return the first ChildElement filtered by the active column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElement requireOneByAdministrative(boolean $administrative) Return the first ChildElement filtered by the administrative column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElement requireOneByShortName(string $short_name) Return the first ChildElement filtered by the short_name column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByInitialValue(string $initial_value) Return the first ChildElement filtered by the initial_value column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByHelpText(string $help_text) Return the first ChildElement filtered by the help_text column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByPlaceholderText(string $placeholder_text) Return the first ChildElement filtered by the placeholder_text column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElement requireOneByChoices(string $choices) Return the first ChildElement filtered by the choices column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElement requireOneByDependentUpon(string $dependent_upon) Return the first ChildElement filtered by the dependent_upon column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByRequired(boolean $required) Return the first ChildElement filtered by the required column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElement requireOneByParentId(int $parent_id) Return the first ChildElement filtered by the parent_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildElement[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildElement objects based on current ModelCriteria
  * @method     ChildElement[]|ObjectCollection findById(int $id) Return ChildElement objects filtered by the id column
+ * @method     ChildElement[]|ObjectCollection findByRetired(boolean $retired) Return ChildElement objects filtered by the retired column
  * @method     ChildElement[]|ObjectCollection findByType(string $type) Return ChildElement objects filtered by the type column
  * @method     ChildElement[]|ObjectCollection findByLabel(string $label) Return ChildElement objects filtered by the label column
- * @method     ChildElement[]|ObjectCollection findByActive(boolean $active) Return ChildElement objects filtered by the active column
- * @method     ChildElement[]|ObjectCollection findByAdministrative(boolean $administrative) Return ChildElement objects filtered by the administrative column
- * @method     ChildElement[]|ObjectCollection findByShortName(string $short_name) Return ChildElement objects filtered by the short_name column
  * @method     ChildElement[]|ObjectCollection findByInitialValue(string $initial_value) Return ChildElement objects filtered by the initial_value column
  * @method     ChildElement[]|ObjectCollection findByHelpText(string $help_text) Return ChildElement objects filtered by the help_text column
  * @method     ChildElement[]|ObjectCollection findByPlaceholderText(string $placeholder_text) Return ChildElement objects filtered by the placeholder_text column
- * @method     ChildElement[]|ObjectCollection findByChoices(string $choices) Return ChildElement objects filtered by the choices column
- * @method     ChildElement[]|ObjectCollection findByDependentUpon(string $dependent_upon) Return ChildElement objects filtered by the dependent_upon column
  * @method     ChildElement[]|ObjectCollection findByRequired(boolean $required) Return ChildElement objects filtered by the required column
  * @method     ChildElement[]|ObjectCollection findByParentId(int $parent_id) Return ChildElement objects filtered by the parent_id column
  * @method     ChildElement[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -234,7 +274,7 @@ abstract class ElementQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, type, label, active, administrative, short_name, initial_value, help_text, placeholder_text, choices, dependent_upon, required, parent_id FROM element WHERE id = :p0';
+        $sql = 'SELECT id, retired, type, label, initial_value, help_text, placeholder_text, required, parent_id FROM element WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -366,6 +406,33 @@ abstract class ElementQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the retired column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByRetired(true); // WHERE retired = true
+     * $query->filterByRetired('yes'); // WHERE retired = true
+     * </code>
+     *
+     * @param     boolean|string $retired The value to use as filter.
+     *              Non-boolean arguments are converted using the following rules:
+     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByRetired($retired = null, $comparison = null)
+    {
+        if (is_string($retired)) {
+            $retired = in_array(strtolower($retired), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+        }
+
+        return $this->addUsingAlias(ElementTableMap::COL_RETIRED, $retired, $comparison);
+    }
+
+    /**
      * Filter the query on the type column
      *
      * Example usage:
@@ -413,85 +480,6 @@ abstract class ElementQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElementTableMap::COL_LABEL, $label, $comparison);
-    }
-
-    /**
-     * Filter the query on the active column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByActive(true); // WHERE active = true
-     * $query->filterByActive('yes'); // WHERE active = true
-     * </code>
-     *
-     * @param     boolean|string $active The value to use as filter.
-     *              Non-boolean arguments are converted using the following rules:
-     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
-     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
-     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElementQuery The current query, for fluid interface
-     */
-    public function filterByActive($active = null, $comparison = null)
-    {
-        if (is_string($active)) {
-            $active = in_array(strtolower($active), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
-        }
-
-        return $this->addUsingAlias(ElementTableMap::COL_ACTIVE, $active, $comparison);
-    }
-
-    /**
-     * Filter the query on the administrative column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByAdministrative(true); // WHERE administrative = true
-     * $query->filterByAdministrative('yes'); // WHERE administrative = true
-     * </code>
-     *
-     * @param     boolean|string $administrative The value to use as filter.
-     *              Non-boolean arguments are converted using the following rules:
-     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
-     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
-     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElementQuery The current query, for fluid interface
-     */
-    public function filterByAdministrative($administrative = null, $comparison = null)
-    {
-        if (is_string($administrative)) {
-            $administrative = in_array(strtolower($administrative), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
-        }
-
-        return $this->addUsingAlias(ElementTableMap::COL_ADMINISTRATIVE, $administrative, $comparison);
-    }
-
-    /**
-     * Filter the query on the short_name column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByShortName('fooValue');   // WHERE short_name = 'fooValue'
-     * $query->filterByShortName('%fooValue%', Criteria::LIKE); // WHERE short_name LIKE '%fooValue%'
-     * </code>
-     *
-     * @param     string $shortName The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElementQuery The current query, for fluid interface
-     */
-    public function filterByShortName($shortName = null, $comparison = null)
-    {
-        if (null === $comparison) {
-            if (is_array($shortName)) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(ElementTableMap::COL_SHORT_NAME, $shortName, $comparison);
     }
 
     /**
@@ -567,56 +555,6 @@ abstract class ElementQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElementTableMap::COL_PLACEHOLDER_TEXT, $placeholderText, $comparison);
-    }
-
-    /**
-     * Filter the query on the choices column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByChoices('fooValue');   // WHERE choices = 'fooValue'
-     * $query->filterByChoices('%fooValue%', Criteria::LIKE); // WHERE choices LIKE '%fooValue%'
-     * </code>
-     *
-     * @param     string $choices The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElementQuery The current query, for fluid interface
-     */
-    public function filterByChoices($choices = null, $comparison = null)
-    {
-        if (null === $comparison) {
-            if (is_array($choices)) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(ElementTableMap::COL_CHOICES, $choices, $comparison);
-    }
-
-    /**
-     * Filter the query on the dependent_upon column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByDependentUpon('fooValue');   // WHERE dependent_upon = 'fooValue'
-     * $query->filterByDependentUpon('%fooValue%', Criteria::LIKE); // WHERE dependent_upon LIKE '%fooValue%'
-     * </code>
-     *
-     * @param     string $dependentUpon The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElementQuery The current query, for fluid interface
-     */
-    public function filterByDependentUpon($dependentUpon = null, $comparison = null)
-    {
-        if (null === $comparison) {
-            if (is_array($dependentUpon)) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(ElementTableMap::COL_DEPENDENT_UPON, $dependentUpon, $comparison);
     }
 
     /**
@@ -840,6 +778,79 @@ abstract class ElementQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query by a related \FormsAPI\Response object
+     *
+     * @param \FormsAPI\Response|ObjectCollection $response the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByResponse($response, $comparison = null)
+    {
+        if ($response instanceof \FormsAPI\Response) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $response->getElementId(), $comparison);
+        } elseif ($response instanceof ObjectCollection) {
+            return $this
+                ->useResponseQuery()
+                ->filterByPrimaryKeys($response->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByResponse() only accepts arguments of type \FormsAPI\Response or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Response relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinResponse($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Response');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Response');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Response relation Response object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ResponseQuery A secondary query class using the current class as primary query
+     */
+    public function useResponseQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinResponse($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Response', '\FormsAPI\ResponseQuery');
+    }
+
+    /**
      * Filter the query by a related \FormsAPI\Form object
      *
      * @param \FormsAPI\Form|ObjectCollection $form the related object to use as filter
@@ -910,6 +921,371 @@ abstract class ElementQuery extends ModelCriteria
         return $this
             ->joinRootElement($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'RootElement', '\FormsAPI\FormQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Dependency object
+     *
+     * @param \FormsAPI\Dependency|ObjectCollection $dependency the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByAsMaster($dependency, $comparison = null)
+    {
+        if ($dependency instanceof \FormsAPI\Dependency) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $dependency->getElementId(), $comparison);
+        } elseif ($dependency instanceof ObjectCollection) {
+            return $this
+                ->useAsMasterQuery()
+                ->filterByPrimaryKeys($dependency->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByAsMaster() only accepts arguments of type \FormsAPI\Dependency or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the AsMaster relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinAsMaster($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('AsMaster');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'AsMaster');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the AsMaster relation Dependency object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\DependencyQuery A secondary query class using the current class as primary query
+     */
+    public function useAsMasterQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinAsMaster($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'AsMaster', '\FormsAPI\DependencyQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Dependency object
+     *
+     * @param \FormsAPI\Dependency|ObjectCollection $dependency the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByAsSlave($dependency, $comparison = null)
+    {
+        if ($dependency instanceof \FormsAPI\Dependency) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $dependency->getSlaveId(), $comparison);
+        } elseif ($dependency instanceof ObjectCollection) {
+            return $this
+                ->useAsSlaveQuery()
+                ->filterByPrimaryKeys($dependency->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByAsSlave() only accepts arguments of type \FormsAPI\Dependency or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the AsSlave relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinAsSlave($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('AsSlave');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'AsSlave');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the AsSlave relation Dependency object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\DependencyQuery A secondary query class using the current class as primary query
+     */
+    public function useAsSlaveQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinAsSlave($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'AsSlave', '\FormsAPI\DependencyQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Requirement object
+     *
+     * @param \FormsAPI\Requirement|ObjectCollection $requirement the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByRequirement($requirement, $comparison = null)
+    {
+        if ($requirement instanceof \FormsAPI\Requirement) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $requirement->getElementId(), $comparison);
+        } elseif ($requirement instanceof ObjectCollection) {
+            return $this
+                ->useRequirementQuery()
+                ->filterByPrimaryKeys($requirement->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByRequirement() only accepts arguments of type \FormsAPI\Requirement or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Requirement relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinRequirement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Requirement');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Requirement');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Requirement relation Requirement object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\RequirementQuery A secondary query class using the current class as primary query
+     */
+    public function useRequirementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinRequirement($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Requirement', '\FormsAPI\RequirementQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\ElementChoice object
+     *
+     * @param \FormsAPI\ElementChoice|ObjectCollection $elementChoice the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByElementChoice($elementChoice, $comparison = null)
+    {
+        if ($elementChoice instanceof \FormsAPI\ElementChoice) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $elementChoice->getElementId(), $comparison);
+        } elseif ($elementChoice instanceof ObjectCollection) {
+            return $this
+                ->useElementChoiceQuery()
+                ->filterByPrimaryKeys($elementChoice->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByElementChoice() only accepts arguments of type \FormsAPI\ElementChoice or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ElementChoice relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinElementChoice($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ElementChoice');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ElementChoice');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ElementChoice relation ElementChoice object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\ElementChoiceQuery A secondary query class using the current class as primary query
+     */
+    public function useElementChoiceQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinElementChoice($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ElementChoice', '\FormsAPI\ElementChoiceQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\DashboardElement object
+     *
+     * @param \FormsAPI\DashboardElement|ObjectCollection $dashboardElement the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElementQuery The current query, for fluid interface
+     */
+    public function filterByDashboardElement($dashboardElement, $comparison = null)
+    {
+        if ($dashboardElement instanceof \FormsAPI\DashboardElement) {
+            return $this
+                ->addUsingAlias(ElementTableMap::COL_ID, $dashboardElement->getElementId(), $comparison);
+        } elseif ($dashboardElement instanceof ObjectCollection) {
+            return $this
+                ->useDashboardElementQuery()
+                ->filterByPrimaryKeys($dashboardElement->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByDashboardElement() only accepts arguments of type \FormsAPI\DashboardElement or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the DashboardElement relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElementQuery The current query, for fluid interface
+     */
+    public function joinDashboardElement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('DashboardElement');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'DashboardElement');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the DashboardElement relation DashboardElement object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\DashboardElementQuery A secondary query class using the current class as primary query
+     */
+    public function useDashboardElementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinDashboardElement($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'DashboardElement', '\FormsAPI\DashboardElementQuery');
     }
 
     /**
