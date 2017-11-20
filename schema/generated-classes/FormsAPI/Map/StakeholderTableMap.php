@@ -87,9 +87,9 @@ class StakeholderTableMap extends TableMap
     const COL_ADDRESS = 'stakeholder.address';
 
     /**
-     * the column name for the formId field
+     * the column name for the form_id field
      */
-    const COL_FORMID = 'stakeholder.formId';
+    const COL_FORM_ID = 'stakeholder.form_id';
 
     /**
      * The default string format for model objects of the related table
@@ -103,10 +103,10 @@ class StakeholderTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Label', 'Address', 'Formid', ),
-        self::TYPE_CAMELNAME     => array('id', 'label', 'address', 'formid', ),
-        self::TYPE_COLNAME       => array(StakeholderTableMap::COL_ID, StakeholderTableMap::COL_LABEL, StakeholderTableMap::COL_ADDRESS, StakeholderTableMap::COL_FORMID, ),
-        self::TYPE_FIELDNAME     => array('id', 'label', 'address', 'formId', ),
+        self::TYPE_PHPNAME       => array('Id', 'Label', 'Address', 'FormId', ),
+        self::TYPE_CAMELNAME     => array('id', 'label', 'address', 'formId', ),
+        self::TYPE_COLNAME       => array(StakeholderTableMap::COL_ID, StakeholderTableMap::COL_LABEL, StakeholderTableMap::COL_ADDRESS, StakeholderTableMap::COL_FORM_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'label', 'address', 'form_id', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -117,10 +117,10 @@ class StakeholderTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Label' => 1, 'Address' => 2, 'Formid' => 3, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'label' => 1, 'address' => 2, 'formid' => 3, ),
-        self::TYPE_COLNAME       => array(StakeholderTableMap::COL_ID => 0, StakeholderTableMap::COL_LABEL => 1, StakeholderTableMap::COL_ADDRESS => 2, StakeholderTableMap::COL_FORMID => 3, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'label' => 1, 'address' => 2, 'formId' => 3, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Label' => 1, 'Address' => 2, 'FormId' => 3, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'label' => 1, 'address' => 2, 'formId' => 3, ),
+        self::TYPE_COLNAME       => array(StakeholderTableMap::COL_ID => 0, StakeholderTableMap::COL_LABEL => 1, StakeholderTableMap::COL_ADDRESS => 2, StakeholderTableMap::COL_FORM_ID => 3, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'label' => 1, 'address' => 2, 'form_id' => 3, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
@@ -144,7 +144,7 @@ class StakeholderTableMap extends TableMap
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addColumn('label', 'Label', 'VARCHAR', true, 127, null);
         $this->addColumn('address', 'Address', 'VARCHAR', true, 127, null);
-        $this->addColumn('formId', 'Formid', 'INTEGER', true, null, null);
+        $this->addForeignKey('form_id', 'FormId', 'INTEGER', 'form', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -152,6 +152,13 @@ class StakeholderTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**
@@ -163,7 +170,7 @@ class StakeholderTableMap extends TableMap
     public function getBehaviors()
     {
         return array(
-            'validate' => array('rule1' => array ('column' => 'label','validator' => 'NotNull',), 'rule2' => array ('column' => 'address','validator' => 'NotNull',), 'rule3' => array ('column' => 'formId','validator' => 'NotNull',), ),
+            'validate' => array('rule1' => array ('column' => 'label','validator' => 'NotNull',), 'rule2' => array ('column' => 'address','validator' => 'NotNull',), 'rule3' => array ('column' => 'form_id','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
 
@@ -311,12 +318,12 @@ class StakeholderTableMap extends TableMap
             $criteria->addSelectColumn(StakeholderTableMap::COL_ID);
             $criteria->addSelectColumn(StakeholderTableMap::COL_LABEL);
             $criteria->addSelectColumn(StakeholderTableMap::COL_ADDRESS);
-            $criteria->addSelectColumn(StakeholderTableMap::COL_FORMID);
+            $criteria->addSelectColumn(StakeholderTableMap::COL_FORM_ID);
         } else {
             $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.label');
             $criteria->addSelectColumn($alias . '.address');
-            $criteria->addSelectColumn($alias . '.formId');
+            $criteria->addSelectColumn($alias . '.form_id');
         }
     }
 

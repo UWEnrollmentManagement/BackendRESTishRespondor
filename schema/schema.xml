@@ -67,7 +67,7 @@
             <parameter name="rule3" value="{column: submission_id, validator: NotNull}" />
         </behavior>
     </table>
-    
+
     <table name="form">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
 
@@ -188,7 +188,7 @@
         </foreign-key>
 
         <column name="condition_id" type="integer" required="true"/>
-        <foreign-key foreignTable="form" onDelete="cascade">
+        <foreign-key foreignTable="condition" onDelete="cascade">
             <reference local="condition_id" foreign="id"/>
         </foreign-key>
 
@@ -267,7 +267,11 @@
     <table name="recipient">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="address" type="integer" required="true" />
-        <column name="note" type="varchar" required="true" />
+
+        <column name="note_id" type="integer" required="true" />
+        <foreign-key foreignTable="note" onDelete="cascade">
+            <reference local="note_id" foreign="id"/>
+        </foreign-key>
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: address, validator: NotNull}" />
@@ -278,12 +282,17 @@
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
         <column name="label" type="varchar" required="true" size="127" />
         <column name="address" type="varchar" required="true" size="127" />
-        <column name="formId" type="integer" required="true" />
+
+        <column name="form_id" type="integer" required="true" />
+        <foreign-key foreignTable="form" onDelete="cascade">
+            <reference local="form_id" foreign="id"/>
+        </foreign-key>
+
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: label, validator: NotNull}" />
             <parameter name="rule2" value="{column: address, validator: NotNull}" />
-            <parameter name="rule3" value="{column: formId, validator: NotNull}" />
+            <parameter name="rule3" value="{column: form_id, validator: NotNull}" />
         </behavior>
     </table>
 
@@ -292,7 +301,7 @@
         <column name="subject" type="varchar" required="true" size="127" />
         <column name="recipient" type="varchar" required="true" size="63"/>
         <column name="sender" type="varchar" required="true" size="63"/>
-        <column name="replyTo" type="varchar" required="false" size="63"/>
+        <column name="reply_to" type="varchar" required="false" size="63"/>
         <column name="cc" type="varchar" required="false" size="63"/>
         <column name="bcc" type="varchar" required="false" size="63"/>
         <column name="template" type="varchar" required="true" size="127"/>
@@ -381,7 +390,7 @@
 
         <behavior name="validate">
             <parameter name="rule1" value="{column: form_id, validator: NotNull}" />
-            <parameter name="rule2" value="{column: tag_id, validator: NotNull}" />
+            <parameter name="rule2" value="{column: status_id, validator: NotNull}" />
         </behavior>
     </table>
 

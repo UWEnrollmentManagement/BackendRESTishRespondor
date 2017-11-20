@@ -8,8 +8,11 @@ use FormsAPI\Condition as ChildCondition;
 use FormsAPI\ConditionQuery as ChildConditionQuery;
 use FormsAPI\Dependency as ChildDependency;
 use FormsAPI\DependencyQuery as ChildDependencyQuery;
+use FormsAPI\Requirement as ChildRequirement;
+use FormsAPI\RequirementQuery as ChildRequirementQuery;
 use FormsAPI\Map\ConditionTableMap;
 use FormsAPI\Map\DependencyTableMap;
+use FormsAPI\Map\RequirementTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -103,6 +106,12 @@ abstract class Condition implements ActiveRecordInterface
     protected $collDependenciesPartial;
 
     /**
+     * @var        ObjectCollection|ChildRequirement[] Collection to store aggregation of ChildRequirement objects.
+     */
+    protected $collRequirements;
+    protected $collRequirementsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -132,6 +141,12 @@ abstract class Condition implements ActiveRecordInterface
      * @var ObjectCollection|ChildDependency[]
      */
     protected $dependenciesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildRequirement[]
+     */
+    protected $requirementsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of FormsAPI\Base\Condition object.
@@ -563,6 +578,8 @@ abstract class Condition implements ActiveRecordInterface
 
             $this->collDependencies = null;
 
+            $this->collRequirements = null;
+
         } // if (deep)
     }
 
@@ -688,6 +705,23 @@ abstract class Condition implements ActiveRecordInterface
 
             if ($this->collDependencies !== null) {
                 foreach ($this->collDependencies as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->requirementsScheduledForDeletion !== null) {
+                if (!$this->requirementsScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\RequirementQuery::create()
+                        ->filterByPrimaryKeys($this->requirementsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->requirementsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collRequirements !== null) {
+                foreach ($this->collRequirements as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -874,6 +908,21 @@ abstract class Condition implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collDependencies->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collRequirements) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'requirements';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'requirements';
+                        break;
+                    default:
+                        $key = 'Requirements';
+                }
+
+                $result[$key] = $this->collRequirements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1103,6 +1152,12 @@ abstract class Condition implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getRequirements() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addRequirement($relObj->copy($deepCopy));
+                }
+            }
+
         } // if ($deepCopy)
 
         if ($makeNew) {
@@ -1146,6 +1201,10 @@ abstract class Condition implements ActiveRecordInterface
     {
         if ('Dependency' == $relationName) {
             $this->initDependencies();
+            return;
+        }
+        if ('Requirement' == $relationName) {
+            $this->initRequirements();
             return;
         }
     }
@@ -1426,6 +1485,256 @@ abstract class Condition implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collRequirements collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addRequirements()
+     */
+    public function clearRequirements()
+    {
+        $this->collRequirements = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collRequirements collection loaded partially.
+     */
+    public function resetPartialRequirements($v = true)
+    {
+        $this->collRequirementsPartial = $v;
+    }
+
+    /**
+     * Initializes the collRequirements collection.
+     *
+     * By default this just sets the collRequirements collection to an empty array (like clearcollRequirements());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initRequirements($overrideExisting = true)
+    {
+        if (null !== $this->collRequirements && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = RequirementTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collRequirements = new $collectionClassName;
+        $this->collRequirements->setModel('\FormsAPI\Requirement');
+    }
+
+    /**
+     * Gets an array of ChildRequirement objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildCondition is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
+     * @throws PropelException
+     */
+    public function getRequirements(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collRequirementsPartial && !$this->isNew();
+        if (null === $this->collRequirements || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collRequirements) {
+                // return empty collection
+                $this->initRequirements();
+            } else {
+                $collRequirements = ChildRequirementQuery::create(null, $criteria)
+                    ->filterByCondition($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collRequirementsPartial && count($collRequirements)) {
+                        $this->initRequirements(false);
+
+                        foreach ($collRequirements as $obj) {
+                            if (false == $this->collRequirements->contains($obj)) {
+                                $this->collRequirements->append($obj);
+                            }
+                        }
+
+                        $this->collRequirementsPartial = true;
+                    }
+
+                    return $collRequirements;
+                }
+
+                if ($partial && $this->collRequirements) {
+                    foreach ($this->collRequirements as $obj) {
+                        if ($obj->isNew()) {
+                            $collRequirements[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collRequirements = $collRequirements;
+                $this->collRequirementsPartial = false;
+            }
+        }
+
+        return $this->collRequirements;
+    }
+
+    /**
+     * Sets a collection of ChildRequirement objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $requirements A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildCondition The current object (for fluent API support)
+     */
+    public function setRequirements(Collection $requirements, ConnectionInterface $con = null)
+    {
+        /** @var ChildRequirement[] $requirementsToDelete */
+        $requirementsToDelete = $this->getRequirements(new Criteria(), $con)->diff($requirements);
+
+
+        $this->requirementsScheduledForDeletion = $requirementsToDelete;
+
+        foreach ($requirementsToDelete as $requirementRemoved) {
+            $requirementRemoved->setCondition(null);
+        }
+
+        $this->collRequirements = null;
+        foreach ($requirements as $requirement) {
+            $this->addRequirement($requirement);
+        }
+
+        $this->collRequirements = $requirements;
+        $this->collRequirementsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Requirement objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Requirement objects.
+     * @throws PropelException
+     */
+    public function countRequirements(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collRequirementsPartial && !$this->isNew();
+        if (null === $this->collRequirements || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collRequirements) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getRequirements());
+            }
+
+            $query = ChildRequirementQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByCondition($this)
+                ->count($con);
+        }
+
+        return count($this->collRequirements);
+    }
+
+    /**
+     * Method called to associate a ChildRequirement object to this object
+     * through the ChildRequirement foreign key attribute.
+     *
+     * @param  ChildRequirement $l ChildRequirement
+     * @return $this|\FormsAPI\Condition The current object (for fluent API support)
+     */
+    public function addRequirement(ChildRequirement $l)
+    {
+        if ($this->collRequirements === null) {
+            $this->initRequirements();
+            $this->collRequirementsPartial = true;
+        }
+
+        if (!$this->collRequirements->contains($l)) {
+            $this->doAddRequirement($l);
+
+            if ($this->requirementsScheduledForDeletion and $this->requirementsScheduledForDeletion->contains($l)) {
+                $this->requirementsScheduledForDeletion->remove($this->requirementsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildRequirement $requirement The ChildRequirement object to add.
+     */
+    protected function doAddRequirement(ChildRequirement $requirement)
+    {
+        $this->collRequirements[]= $requirement;
+        $requirement->setCondition($this);
+    }
+
+    /**
+     * @param  ChildRequirement $requirement The ChildRequirement object to remove.
+     * @return $this|ChildCondition The current object (for fluent API support)
+     */
+    public function removeRequirement(ChildRequirement $requirement)
+    {
+        if ($this->getRequirements()->contains($requirement)) {
+            $pos = $this->collRequirements->search($requirement);
+            $this->collRequirements->remove($pos);
+            if (null === $this->requirementsScheduledForDeletion) {
+                $this->requirementsScheduledForDeletion = clone $this->collRequirements;
+                $this->requirementsScheduledForDeletion->clear();
+            }
+            $this->requirementsScheduledForDeletion[]= clone $requirement;
+            $requirement->setCondition(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Condition is new, it will return
+     * an empty collection; or if this Condition has previously
+     * been saved, it will retrieve related Requirements from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Condition.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
+     */
+    public function getRequirementsJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildRequirementQuery::create(null, $criteria);
+        $query->joinWith('Element', $joinBehavior);
+
+        return $this->getRequirements($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -1458,9 +1767,15 @@ abstract class Condition implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collRequirements) {
+                foreach ($this->collRequirements as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collDependencies = null;
+        $this->collRequirements = null;
     }
 
     /**
@@ -1519,6 +1834,15 @@ abstract class Condition implements ActiveRecordInterface
 
             if (null !== $this->collDependencies) {
                 foreach ($this->collDependencies as $referrerFK) {
+                    if (method_exists($referrerFK, 'validate')) {
+                        if (!$referrerFK->validate($validator)) {
+                            $failureMap->addAll($referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+            }
+            if (null !== $this->collRequirements) {
+                foreach ($this->collRequirements as $referrerFK) {
                     if (method_exists($referrerFK, 'validate')) {
                         if (!$referrerFK->validate($validator)) {
                             $failureMap->addAll($referrerFK->getValidationFailures());

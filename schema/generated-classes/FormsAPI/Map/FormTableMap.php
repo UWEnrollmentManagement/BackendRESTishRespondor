@@ -185,13 +185,6 @@ class FormTableMap extends TableMap
     1 => ':id',
   ),
 ), 'CASCADE', null, 'Aschildren', false);
-        $this->addRelation('Requirement', '\\FormsAPI\\Requirement', RelationMap::ONE_TO_MANY, array (
-  0 =>
-  array (
-    0 => ':condition_id',
-    1 => ':id',
-  ),
-), 'CASCADE', null, 'Requirements', false);
         $this->addRelation('Submission', '\\FormsAPI\\Submission', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -199,6 +192,13 @@ class FormTableMap extends TableMap
     1 => ':id',
   ),
 ), 'CASCADE', null, 'Submissions', false);
+        $this->addRelation('Stakeholder', '\\FormsAPI\\Stakeholder', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':form_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, 'Stakeholders', false);
         $this->addRelation('FormStatus', '\\FormsAPI\\FormStatus', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -249,8 +249,8 @@ class FormTableMap extends TableMap
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
         ChildFormRelationshipTableMap::clearInstancePool();
-        RequirementTableMap::clearInstancePool();
         SubmissionTableMap::clearInstancePool();
+        StakeholderTableMap::clearInstancePool();
         FormStatusTableMap::clearInstancePool();
         FormTagTableMap::clearInstancePool();
         FormReactionTableMap::clearInstancePool();

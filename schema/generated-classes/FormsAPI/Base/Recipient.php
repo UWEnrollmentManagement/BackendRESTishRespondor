@@ -4,6 +4,8 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Note as ChildNote;
+use FormsAPI\NoteQuery as ChildNoteQuery;
 use FormsAPI\RecipientQuery as ChildRecipientQuery;
 use FormsAPI\Map\RecipientTableMap;
 use Propel\Runtime\Propel;
@@ -84,11 +86,16 @@ abstract class Recipient implements ActiveRecordInterface
     protected $address;
 
     /**
-     * The value for the note field.
+     * The value for the note_id field.
      *
-     * @var        string
+     * @var        int
      */
-    protected $note;
+    protected $note_id;
+
+    /**
+     * @var        ChildNote
+     */
+    protected $aNote;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -361,13 +368,13 @@ abstract class Recipient implements ActiveRecordInterface
     }
 
     /**
-     * Get the [note] column value.
+     * Get the [note_id] column value.
      *
-     * @return string
+     * @return int
      */
-    public function getNote()
+    public function getNoteId()
     {
-        return $this->note;
+        return $this->note_id;
     }
 
     /**
@@ -411,24 +418,28 @@ abstract class Recipient implements ActiveRecordInterface
     } // setAddress()
 
     /**
-     * Set the value of [note] column.
+     * Set the value of [note_id] column.
      *
-     * @param string $v new value
+     * @param int $v new value
      * @return $this|\FormsAPI\Recipient The current object (for fluent API support)
      */
-    public function setNote($v)
+    public function setNoteId($v)
     {
         if ($v !== null) {
-            $v = (string) $v;
+            $v = (int) $v;
         }
 
-        if ($this->note !== $v) {
-            $this->note = $v;
-            $this->modifiedColumns[RecipientTableMap::COL_NOTE] = true;
+        if ($this->note_id !== $v) {
+            $this->note_id = $v;
+            $this->modifiedColumns[RecipientTableMap::COL_NOTE_ID] = true;
+        }
+
+        if ($this->aNote !== null && $this->aNote->getId() !== $v) {
+            $this->aNote = null;
         }
 
         return $this;
-    } // setNote()
+    } // setNoteId()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -472,8 +483,8 @@ abstract class Recipient implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : RecipientTableMap::translateFieldName('Address', TableMap::TYPE_PHPNAME, $indexType)];
             $this->address = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RecipientTableMap::translateFieldName('Note', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->note = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RecipientTableMap::translateFieldName('NoteId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->note_id = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -504,6 +515,9 @@ abstract class Recipient implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aNote !== null && $this->note_id !== $this->aNote->getId()) {
+            $this->aNote = null;
+        }
     } // ensureConsistency
 
     /**
@@ -543,6 +557,7 @@ abstract class Recipient implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aNote = null;
         } // if (deep)
     }
 
@@ -646,6 +661,18 @@ abstract class Recipient implements ActiveRecordInterface
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aNote !== null) {
+                if ($this->aNote->isModified() || $this->aNote->isNew()) {
+                    $affectedRows += $this->aNote->save($con);
+                }
+                $this->setNote($this->aNote);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -689,8 +716,8 @@ abstract class Recipient implements ActiveRecordInterface
         if ($this->isColumnModified(RecipientTableMap::COL_ADDRESS)) {
             $modifiedColumns[':p' . $index++]  = 'address';
         }
-        if ($this->isColumnModified(RecipientTableMap::COL_NOTE)) {
-            $modifiedColumns[':p' . $index++]  = 'note';
+        if ($this->isColumnModified(RecipientTableMap::COL_NOTE_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'note_id';
         }
 
         $sql = sprintf(
@@ -709,8 +736,8 @@ abstract class Recipient implements ActiveRecordInterface
                     case 'address':
                         $stmt->bindValue($identifier, $this->address, PDO::PARAM_INT);
                         break;
-                    case 'note':
-                        $stmt->bindValue($identifier, $this->note, PDO::PARAM_STR);
+                    case 'note_id':
+                        $stmt->bindValue($identifier, $this->note_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -781,7 +808,7 @@ abstract class Recipient implements ActiveRecordInterface
                 return $this->getAddress();
                 break;
             case 2:
-                return $this->getNote();
+                return $this->getNoteId();
                 break;
             default:
                 return null;
@@ -800,10 +827,11 @@ abstract class Recipient implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Recipient'][$this->hashCode()])) {
@@ -814,13 +842,30 @@ abstract class Recipient implements ActiveRecordInterface
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getAddress(),
-            $keys[2] => $this->getNote(),
+            $keys[2] => $this->getNoteId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aNote) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'note';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'note';
+                        break;
+                    default:
+                        $key = 'Note';
+                }
+
+                $result[$key] = $this->aNote->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -861,7 +906,7 @@ abstract class Recipient implements ActiveRecordInterface
                 $this->setAddress($value);
                 break;
             case 2:
-                $this->setNote($value);
+                $this->setNoteId($value);
                 break;
         } // switch()
 
@@ -896,7 +941,7 @@ abstract class Recipient implements ActiveRecordInterface
             $this->setAddress($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setNote($arr[$keys[2]]);
+            $this->setNoteId($arr[$keys[2]]);
         }
     }
 
@@ -945,8 +990,8 @@ abstract class Recipient implements ActiveRecordInterface
         if ($this->isColumnModified(RecipientTableMap::COL_ADDRESS)) {
             $criteria->add(RecipientTableMap::COL_ADDRESS, $this->address);
         }
-        if ($this->isColumnModified(RecipientTableMap::COL_NOTE)) {
-            $criteria->add(RecipientTableMap::COL_NOTE, $this->note);
+        if ($this->isColumnModified(RecipientTableMap::COL_NOTE_ID)) {
+            $criteria->add(RecipientTableMap::COL_NOTE_ID, $this->note_id);
         }
 
         return $criteria;
@@ -1035,7 +1080,7 @@ abstract class Recipient implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setAddress($this->getAddress());
-        $copyObj->setNote($this->getNote());
+        $copyObj->setNoteId($this->getNoteId());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1065,15 +1110,69 @@ abstract class Recipient implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildNote object.
+     *
+     * @param  ChildNote $v
+     * @return $this|\FormsAPI\Recipient The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setNote(ChildNote $v = null)
+    {
+        if ($v === null) {
+            $this->setNoteId(NULL);
+        } else {
+            $this->setNoteId($v->getId());
+        }
+
+        $this->aNote = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildNote object, it will not be re-added.
+        if ($v !== null) {
+            $v->addRecipient($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildNote object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildNote The associated ChildNote object.
+     * @throws PropelException
+     */
+    public function getNote(ConnectionInterface $con = null)
+    {
+        if ($this->aNote === null && ($this->note_id != 0)) {
+            $this->aNote = ChildNoteQuery::create()->findPk($this->note_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aNote->addRecipients($this);
+             */
+        }
+
+        return $this->aNote;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aNote) {
+            $this->aNote->removeRecipient($this);
+        }
         $this->id = null;
         $this->address = null;
-        $this->note = null;
+        $this->note_id = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1094,6 +1193,7 @@ abstract class Recipient implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aNote = null;
     }
 
     /**
@@ -1142,6 +1242,17 @@ abstract class Recipient implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aNote, 'validate')) {
+                if (!$this->aNote->validate($validator)) {
+                    $failureMap->addAll($this->aNote->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

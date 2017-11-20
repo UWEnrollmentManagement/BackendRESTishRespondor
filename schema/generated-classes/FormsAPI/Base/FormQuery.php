@@ -72,16 +72,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildFormQuery rightJoinWithAsChild() Adds a RIGHT JOIN clause and with to the query using the AsChild relation
  * @method     ChildFormQuery innerJoinWithAsChild() Adds a INNER JOIN clause and with to the query using the AsChild relation
  *
- * @method     ChildFormQuery leftJoinRequirement($relationAlias = null) Adds a LEFT JOIN clause to the query using the Requirement relation
- * @method     ChildFormQuery rightJoinRequirement($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Requirement relation
- * @method     ChildFormQuery innerJoinRequirement($relationAlias = null) Adds a INNER JOIN clause to the query using the Requirement relation
- *
- * @method     ChildFormQuery joinWithRequirement($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Requirement relation
- *
- * @method     ChildFormQuery leftJoinWithRequirement() Adds a LEFT JOIN clause and with to the query using the Requirement relation
- * @method     ChildFormQuery rightJoinWithRequirement() Adds a RIGHT JOIN clause and with to the query using the Requirement relation
- * @method     ChildFormQuery innerJoinWithRequirement() Adds a INNER JOIN clause and with to the query using the Requirement relation
- *
  * @method     ChildFormQuery leftJoinSubmission($relationAlias = null) Adds a LEFT JOIN clause to the query using the Submission relation
  * @method     ChildFormQuery rightJoinSubmission($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Submission relation
  * @method     ChildFormQuery innerJoinSubmission($relationAlias = null) Adds a INNER JOIN clause to the query using the Submission relation
@@ -91,6 +81,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildFormQuery leftJoinWithSubmission() Adds a LEFT JOIN clause and with to the query using the Submission relation
  * @method     ChildFormQuery rightJoinWithSubmission() Adds a RIGHT JOIN clause and with to the query using the Submission relation
  * @method     ChildFormQuery innerJoinWithSubmission() Adds a INNER JOIN clause and with to the query using the Submission relation
+ *
+ * @method     ChildFormQuery leftJoinStakeholder($relationAlias = null) Adds a LEFT JOIN clause to the query using the Stakeholder relation
+ * @method     ChildFormQuery rightJoinStakeholder($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Stakeholder relation
+ * @method     ChildFormQuery innerJoinStakeholder($relationAlias = null) Adds a INNER JOIN clause to the query using the Stakeholder relation
+ *
+ * @method     ChildFormQuery joinWithStakeholder($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Stakeholder relation
+ *
+ * @method     ChildFormQuery leftJoinWithStakeholder() Adds a LEFT JOIN clause and with to the query using the Stakeholder relation
+ * @method     ChildFormQuery rightJoinWithStakeholder() Adds a RIGHT JOIN clause and with to the query using the Stakeholder relation
+ * @method     ChildFormQuery innerJoinWithStakeholder() Adds a INNER JOIN clause and with to the query using the Stakeholder relation
  *
  * @method     ChildFormQuery leftJoinFormStatus($relationAlias = null) Adds a LEFT JOIN clause to the query using the FormStatus relation
  * @method     ChildFormQuery rightJoinFormStatus($relationAlias = null) Adds a RIGHT JOIN clause to the query using the FormStatus relation
@@ -132,7 +132,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildFormQuery rightJoinWithDashboardForm() Adds a RIGHT JOIN clause and with to the query using the DashboardForm relation
  * @method     ChildFormQuery innerJoinWithDashboardForm() Adds a INNER JOIN clause and with to the query using the DashboardForm relation
  *
- * @method     \FormsAPI\ElementQuery|\FormsAPI\ChildFormRelationshipQuery|\FormsAPI\RequirementQuery|\FormsAPI\SubmissionQuery|\FormsAPI\FormStatusQuery|\FormsAPI\FormTagQuery|\FormsAPI\FormReactionQuery|\FormsAPI\DashboardFormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\ChildFormRelationshipQuery|\FormsAPI\SubmissionQuery|\FormsAPI\StakeholderQuery|\FormsAPI\FormStatusQuery|\FormsAPI\FormTagQuery|\FormsAPI\FormReactionQuery|\FormsAPI\DashboardFormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildForm findOne(ConnectionInterface $con = null) Return the first ChildForm matching the query
  * @method     ChildForm findOneOrCreate(ConnectionInterface $con = null) Return the first ChildForm matching the query, or a new ChildForm object populated from the query conditions when no match is found
@@ -759,79 +759,6 @@ abstract class FormQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query by a related \FormsAPI\Requirement object
-     *
-     * @param \FormsAPI\Requirement|ObjectCollection $requirement the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return ChildFormQuery The current query, for fluid interface
-     */
-    public function filterByRequirement($requirement, $comparison = null)
-    {
-        if ($requirement instanceof \FormsAPI\Requirement) {
-            return $this
-                ->addUsingAlias(FormTableMap::COL_ID, $requirement->getConditionId(), $comparison);
-        } elseif ($requirement instanceof ObjectCollection) {
-            return $this
-                ->useRequirementQuery()
-                ->filterByPrimaryKeys($requirement->getPrimaryKeys())
-                ->endUse();
-        } else {
-            throw new PropelException('filterByRequirement() only accepts arguments of type \FormsAPI\Requirement or Collection');
-        }
-    }
-
-    /**
-     * Adds a JOIN clause to the query using the Requirement relation
-     *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
-     *
-     * @return $this|ChildFormQuery The current query, for fluid interface
-     */
-    public function joinRequirement($relationAlias = null, $joinType = Criteria::INNER_JOIN)
-    {
-        $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('Requirement');
-
-        // create a ModelJoin object for this join
-        $join = new ModelJoin();
-        $join->setJoinType($joinType);
-        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
-        if ($previousJoin = $this->getPreviousJoin()) {
-            $join->setPreviousJoin($previousJoin);
-        }
-
-        // add the ModelJoin to the current object
-        if ($relationAlias) {
-            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
-            $this->addJoinObject($join, $relationAlias);
-        } else {
-            $this->addJoinObject($join, 'Requirement');
-        }
-
-        return $this;
-    }
-
-    /**
-     * Use the Requirement relation Requirement object
-     *
-     * @see useQuery()
-     *
-     * @param     string $relationAlias optional alias for the relation,
-     *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
-     *
-     * @return \FormsAPI\RequirementQuery A secondary query class using the current class as primary query
-     */
-    public function useRequirementQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
-    {
-        return $this
-            ->joinRequirement($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'Requirement', '\FormsAPI\RequirementQuery');
-    }
-
-    /**
      * Filter the query by a related \FormsAPI\Submission object
      *
      * @param \FormsAPI\Submission|ObjectCollection $submission the related object to use as filter
@@ -902,6 +829,79 @@ abstract class FormQuery extends ModelCriteria
         return $this
             ->joinSubmission($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Submission', '\FormsAPI\SubmissionQuery');
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Stakeholder object
+     *
+     * @param \FormsAPI\Stakeholder|ObjectCollection $stakeholder the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildFormQuery The current query, for fluid interface
+     */
+    public function filterByStakeholder($stakeholder, $comparison = null)
+    {
+        if ($stakeholder instanceof \FormsAPI\Stakeholder) {
+            return $this
+                ->addUsingAlias(FormTableMap::COL_ID, $stakeholder->getFormId(), $comparison);
+        } elseif ($stakeholder instanceof ObjectCollection) {
+            return $this
+                ->useStakeholderQuery()
+                ->filterByPrimaryKeys($stakeholder->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByStakeholder() only accepts arguments of type \FormsAPI\Stakeholder or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Stakeholder relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildFormQuery The current query, for fluid interface
+     */
+    public function joinStakeholder($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Stakeholder');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Stakeholder');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Stakeholder relation Stakeholder object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\StakeholderQuery A secondary query class using the current class as primary query
+     */
+    public function useStakeholderQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinStakeholder($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Stakeholder', '\FormsAPI\StakeholderQuery');
     }
 
     /**

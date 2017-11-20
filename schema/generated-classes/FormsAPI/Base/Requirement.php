@@ -4,10 +4,10 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Condition as ChildCondition;
+use FormsAPI\ConditionQuery as ChildConditionQuery;
 use FormsAPI\Element as ChildElement;
 use FormsAPI\ElementQuery as ChildElementQuery;
-use FormsAPI\Form as ChildForm;
-use FormsAPI\FormQuery as ChildFormQuery;
 use FormsAPI\RequirementQuery as ChildRequirementQuery;
 use FormsAPI\Map\RequirementTableMap;
 use Propel\Runtime\Propel;
@@ -107,9 +107,9 @@ abstract class Requirement implements ActiveRecordInterface
     protected $aElement;
 
     /**
-     * @var        ChildForm
+     * @var        ChildCondition
      */
-    protected $aForm;
+    protected $aCondition;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -482,8 +482,8 @@ abstract class Requirement implements ActiveRecordInterface
             $this->modifiedColumns[RequirementTableMap::COL_CONDITION_ID] = true;
         }
 
-        if ($this->aForm !== null && $this->aForm->getId() !== $v) {
-            $this->aForm = null;
+        if ($this->aCondition !== null && $this->aCondition->getId() !== $v) {
+            $this->aCondition = null;
         }
 
         return $this;
@@ -569,8 +569,8 @@ abstract class Requirement implements ActiveRecordInterface
         if ($this->aElement !== null && $this->element_id !== $this->aElement->getId()) {
             $this->aElement = null;
         }
-        if ($this->aForm !== null && $this->condition_id !== $this->aForm->getId()) {
-            $this->aForm = null;
+        if ($this->aCondition !== null && $this->condition_id !== $this->aCondition->getId()) {
+            $this->aCondition = null;
         }
     } // ensureConsistency
 
@@ -612,7 +612,7 @@ abstract class Requirement implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->aElement = null;
-            $this->aForm = null;
+            $this->aCondition = null;
         } // if (deep)
     }
 
@@ -728,11 +728,11 @@ abstract class Requirement implements ActiveRecordInterface
                 $this->setElement($this->aElement);
             }
 
-            if ($this->aForm !== null) {
-                if ($this->aForm->isModified() || $this->aForm->isNew()) {
-                    $affectedRows += $this->aForm->save($con);
+            if ($this->aCondition !== null) {
+                if ($this->aCondition->isModified() || $this->aCondition->isNew()) {
+                    $affectedRows += $this->aCondition->save($con);
                 }
-                $this->setForm($this->aForm);
+                $this->setCondition($this->aCondition);
             }
 
             if ($this->isNew() || $this->isModified()) {
@@ -937,20 +937,20 @@ abstract class Requirement implements ActiveRecordInterface
 
                 $result[$key] = $this->aElement->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
-            if (null !== $this->aForm) {
+            if (null !== $this->aCondition) {
 
                 switch ($keyType) {
                     case TableMap::TYPE_CAMELNAME:
-                        $key = 'form';
+                        $key = 'condition';
                         break;
                     case TableMap::TYPE_FIELDNAME:
-                        $key = 'form';
+                        $key = 'condition';
                         break;
                     default:
-                        $key = 'Form';
+                        $key = 'Condition';
                 }
 
-                $result[$key] = $this->aForm->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+                $result[$key] = $this->aCondition->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
         }
 
@@ -1258,13 +1258,13 @@ abstract class Requirement implements ActiveRecordInterface
     }
 
     /**
-     * Declares an association between this object and a ChildForm object.
+     * Declares an association between this object and a ChildCondition object.
      *
-     * @param  ChildForm $v
+     * @param  ChildCondition $v
      * @return $this|\FormsAPI\Requirement The current object (for fluent API support)
      * @throws PropelException
      */
-    public function setForm(ChildForm $v = null)
+    public function setCondition(ChildCondition $v = null)
     {
         if ($v === null) {
             $this->setConditionId(NULL);
@@ -1272,10 +1272,10 @@ abstract class Requirement implements ActiveRecordInterface
             $this->setConditionId($v->getId());
         }
 
-        $this->aForm = $v;
+        $this->aCondition = $v;
 
         // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildForm object, it will not be re-added.
+        // If this object has already been added to the ChildCondition object, it will not be re-added.
         if ($v !== null) {
             $v->addRequirement($this);
         }
@@ -1286,26 +1286,26 @@ abstract class Requirement implements ActiveRecordInterface
 
 
     /**
-     * Get the associated ChildForm object
+     * Get the associated ChildCondition object
      *
      * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildForm The associated ChildForm object.
+     * @return ChildCondition The associated ChildCondition object.
      * @throws PropelException
      */
-    public function getForm(ConnectionInterface $con = null)
+    public function getCondition(ConnectionInterface $con = null)
     {
-        if ($this->aForm === null && ($this->condition_id != 0)) {
-            $this->aForm = ChildFormQuery::create()->findPk($this->condition_id, $con);
+        if ($this->aCondition === null && ($this->condition_id != 0)) {
+            $this->aCondition = ChildConditionQuery::create()->findPk($this->condition_id, $con);
             /* The following can be used additionally to
                 guarantee the related object contains a reference
                 to this object.  This level of coupling may, however, be
                 undesirable since it could result in an only partially populated collection
                 in the referenced object.
-                $this->aForm->addRequirements($this);
+                $this->aCondition->addRequirements($this);
              */
         }
 
-        return $this->aForm;
+        return $this->aCondition;
     }
 
     /**
@@ -1318,8 +1318,8 @@ abstract class Requirement implements ActiveRecordInterface
         if (null !== $this->aElement) {
             $this->aElement->removeRequirement($this);
         }
-        if (null !== $this->aForm) {
-            $this->aForm->removeRequirement($this);
+        if (null !== $this->aCondition) {
+            $this->aCondition->removeRequirement($this);
         }
         $this->id = null;
         $this->failure_message = null;
@@ -1346,7 +1346,7 @@ abstract class Requirement implements ActiveRecordInterface
         } // if ($deep)
 
         $this->aElement = null;
-        $this->aForm = null;
+        $this->aCondition = null;
     }
 
     /**
@@ -1408,9 +1408,9 @@ abstract class Requirement implements ActiveRecordInterface
                 }
             }
             // If validate() method exists, the validate-behavior is configured for related object
-            if (method_exists($this->aForm, 'validate')) {
-                if (!$this->aForm->validate($validator)) {
-                    $failureMap->addAll($this->aForm->getValidationFailures());
+            if (method_exists($this->aCondition, 'validate')) {
+                if (!$this->aCondition->validate($validator)) {
+                    $failureMap->addAll($this->aCondition->getValidationFailures());
                 }
             }
 

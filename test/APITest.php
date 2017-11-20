@@ -319,8 +319,6 @@ class APITest extends BaseTest
     public function testCreateAllElse($requestData = [])
     {
         foreach ($this->allParameters as $resourceType => $allParameters) {
-//            die(var_dump($resourceType));
-            // forms
             $response = $this->doCreate($resourceType, $requestData);
 
             // Assert that the return code is 200

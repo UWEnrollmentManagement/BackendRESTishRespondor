@@ -62,6 +62,15 @@ class FormsAPIFaker
                 'parent_id' => ['reference', 'elements']
             ],
         ],
+        'responses' => [
+            "required" => [
+                'content' => 'sentence',
+                'submission_id' => ['reference', 'submissions'],
+                'element_id' => ['reference', 'elements'],
+            ],
+            "optional" => [
+            ],
+        ],
         'visitors' => [
             'required' => [
                 'uw_net_id' => 'userName',
@@ -90,7 +99,7 @@ class FormsAPIFaker
         ],
         'dependencies' => [
             'required' => [
-                'element_id' => 'catchPhrase',
+                'element_id' => ['reference', 'elements'],
                 'slave_id' => ['reference', 'elements'],
                 'condition_id' => ['reference', 'conditions'],
             ],
@@ -145,6 +154,7 @@ class FormsAPIFaker
         'recipients' => [
             'required' => [
                 'address' => 'email',
+                'note_id' => ['reference', 'notes']
             ],
             'optional' => [
             ],
@@ -163,11 +173,11 @@ class FormsAPIFaker
                 'subject' => 'title',
                 'recipient' => 'email',
                 'sender' => 'email',
-                'replyTo' => 'email',
+                'reply_to' => 'email',
                 'cc' => 'email',
                 'bcc' => 'email',
-                'template' => 'paragraphs',
-                'content' => 'paragraphs',
+                'template' => 'paragraph',
+                'content' => 'paragraph',
             ],
             'optional' => [
             ],
@@ -221,6 +231,14 @@ class FormsAPIFaker
             'optional' => [
             ],
         ],
+        'formstatuses' => [
+            'required' => [
+                'form_id' => ['reference', 'forms'],
+                'status_id' => ['reference', 'statuses'],
+            ],
+            'optional' => [
+            ],
+        ],
         'formreactions' => [
             'required' => [
                 'form_id' => ['reference', 'forms'],
@@ -231,7 +249,7 @@ class FormsAPIFaker
         ],
         'dashboardelements' => [
             'required' => [
-                'dashboard_id' => ['reference', 'dashboard'],
+                'dashboard_id' => ['reference', 'dashboards'],
                 'element_id' => ['reference', 'elements'],
             ],
             'optional' => [

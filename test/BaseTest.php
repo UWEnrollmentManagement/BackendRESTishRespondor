@@ -59,6 +59,10 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             [
                 'id', 'href', 'visitor', 'form', 'status', 'assignee', 'parent', 'submitted',
             ],
+        'responses' =>
+            [
+                'id', 'href', 'submission_id', 'submission', 'element_id', 'element', 'content',
+            ],
         'statuses' =>
             [
                 'id', 'href', 'name', 'default_message',

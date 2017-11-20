@@ -10,6 +10,7 @@ use FormsAPI\Map\NoteTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -34,6 +35,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildNoteQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildNoteQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildNoteQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildNoteQuery leftJoinRecipient($relationAlias = null) Adds a LEFT JOIN clause to the query using the Recipient relation
+ * @method     ChildNoteQuery rightJoinRecipient($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Recipient relation
+ * @method     ChildNoteQuery innerJoinRecipient($relationAlias = null) Adds a INNER JOIN clause to the query using the Recipient relation
+ *
+ * @method     ChildNoteQuery joinWithRecipient($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Recipient relation
+ *
+ * @method     ChildNoteQuery leftJoinWithRecipient() Adds a LEFT JOIN clause and with to the query using the Recipient relation
+ * @method     ChildNoteQuery rightJoinWithRecipient() Adds a RIGHT JOIN clause and with to the query using the Recipient relation
+ * @method     ChildNoteQuery innerJoinWithRecipient() Adds a INNER JOIN clause and with to the query using the Recipient relation
+ *
+ * @method     \FormsAPI\RecipientQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildNote findOne(ConnectionInterface $con = null) Return the first ChildNote matching the query
  * @method     ChildNote findOneOrCreate(ConnectionInterface $con = null) Return the first ChildNote matching the query, or a new ChildNote object populated from the query conditions when no match is found
@@ -330,6 +343,79 @@ abstract class NoteQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(NoteTableMap::COL_SUBJECT, $subject, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Recipient object
+     *
+     * @param \FormsAPI\Recipient|ObjectCollection $recipient the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildNoteQuery The current query, for fluid interface
+     */
+    public function filterByRecipient($recipient, $comparison = null)
+    {
+        if ($recipient instanceof \FormsAPI\Recipient) {
+            return $this
+                ->addUsingAlias(NoteTableMap::COL_ID, $recipient->getNoteId(), $comparison);
+        } elseif ($recipient instanceof ObjectCollection) {
+            return $this
+                ->useRecipientQuery()
+                ->filterByPrimaryKeys($recipient->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByRecipient() only accepts arguments of type \FormsAPI\Recipient or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Recipient relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildNoteQuery The current query, for fluid interface
+     */
+    public function joinRecipient($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Recipient');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Recipient');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Recipient relation Recipient object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\RecipientQuery A secondary query class using the current class as primary query
+     */
+    public function useRecipientQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinRecipient($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Recipient', '\FormsAPI\RecipientQuery');
     }
 
     /**

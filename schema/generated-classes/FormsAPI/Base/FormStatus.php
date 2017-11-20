@@ -1370,7 +1370,7 @@ abstract class FormStatus implements ActiveRecordInterface
     static public function loadValidatorMetadata(ClassMetadata $metadata)
     {
         $metadata->addPropertyConstraint('form_id', new NotNull());
-        $metadata->addPropertyConstraint('tag_id', new NotNull());
+        $metadata->addPropertyConstraint('status_id', new NotNull());
     }
 
     /**

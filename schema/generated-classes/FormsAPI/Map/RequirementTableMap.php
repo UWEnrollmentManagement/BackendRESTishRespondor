@@ -144,7 +144,7 @@ class RequirementTableMap extends TableMap
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addColumn('failure_message', 'FailureMessage', 'VARCHAR', false, 255, null);
         $this->addForeignKey('element_id', 'ElementId', 'INTEGER', 'element', 'id', true, null, null);
-        $this->addForeignKey('condition_id', 'ConditionId', 'INTEGER', 'form', 'id', true, null, null);
+        $this->addForeignKey('condition_id', 'ConditionId', 'INTEGER', 'condition', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -159,7 +159,7 @@ class RequirementTableMap extends TableMap
     1 => ':id',
   ),
 ), 'CASCADE', null, null, false);
-        $this->addRelation('Form', '\\FormsAPI\\Form', RelationMap::MANY_TO_ONE, array (
+        $this->addRelation('Condition', '\\FormsAPI\\Condition', RelationMap::MANY_TO_ONE, array (
   0 =>
   array (
     0 => ':condition_id',

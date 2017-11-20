@@ -10,6 +10,7 @@ use FormsAPI\Map\StakeholderTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -22,12 +23,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildStakeholderQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildStakeholderQuery orderByLabel($order = Criteria::ASC) Order by the label column
  * @method     ChildStakeholderQuery orderByAddress($order = Criteria::ASC) Order by the address column
- * @method     ChildStakeholderQuery orderByFormid($order = Criteria::ASC) Order by the formId column
+ * @method     ChildStakeholderQuery orderByFormId($order = Criteria::ASC) Order by the form_id column
  *
  * @method     ChildStakeholderQuery groupById() Group by the id column
  * @method     ChildStakeholderQuery groupByLabel() Group by the label column
  * @method     ChildStakeholderQuery groupByAddress() Group by the address column
- * @method     ChildStakeholderQuery groupByFormid() Group by the formId column
+ * @method     ChildStakeholderQuery groupByFormId() Group by the form_id column
  *
  * @method     ChildStakeholderQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildStakeholderQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -37,13 +38,25 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildStakeholderQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildStakeholderQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
+ * @method     ChildStakeholderQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
+ * @method     ChildStakeholderQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
+ * @method     ChildStakeholderQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ *
+ * @method     ChildStakeholderQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ *
+ * @method     ChildStakeholderQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
+ * @method     ChildStakeholderQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
+ * @method     ChildStakeholderQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ *
+ * @method     \FormsAPI\FormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ *
  * @method     ChildStakeholder findOne(ConnectionInterface $con = null) Return the first ChildStakeholder matching the query
  * @method     ChildStakeholder findOneOrCreate(ConnectionInterface $con = null) Return the first ChildStakeholder matching the query, or a new ChildStakeholder object populated from the query conditions when no match is found
  *
  * @method     ChildStakeholder findOneById(int $id) Return the first ChildStakeholder filtered by the id column
  * @method     ChildStakeholder findOneByLabel(string $label) Return the first ChildStakeholder filtered by the label column
  * @method     ChildStakeholder findOneByAddress(string $address) Return the first ChildStakeholder filtered by the address column
- * @method     ChildStakeholder findOneByFormid(int $formId) Return the first ChildStakeholder filtered by the formId column *
+ * @method     ChildStakeholder findOneByFormId(int $form_id) Return the first ChildStakeholder filtered by the form_id column *
 
  * @method     ChildStakeholder requirePk($key, ConnectionInterface $con = null) Return the ChildStakeholder by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildStakeholder requireOne(ConnectionInterface $con = null) Return the first ChildStakeholder matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -51,13 +64,13 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildStakeholder requireOneById(int $id) Return the first ChildStakeholder filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildStakeholder requireOneByLabel(string $label) Return the first ChildStakeholder filtered by the label column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildStakeholder requireOneByAddress(string $address) Return the first ChildStakeholder filtered by the address column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildStakeholder requireOneByFormid(int $formId) Return the first ChildStakeholder filtered by the formId column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildStakeholder requireOneByFormId(int $form_id) Return the first ChildStakeholder filtered by the form_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildStakeholder[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildStakeholder objects based on current ModelCriteria
  * @method     ChildStakeholder[]|ObjectCollection findById(int $id) Return ChildStakeholder objects filtered by the id column
  * @method     ChildStakeholder[]|ObjectCollection findByLabel(string $label) Return ChildStakeholder objects filtered by the label column
  * @method     ChildStakeholder[]|ObjectCollection findByAddress(string $address) Return ChildStakeholder objects filtered by the address column
- * @method     ChildStakeholder[]|ObjectCollection findByFormid(int $formId) Return ChildStakeholder objects filtered by the formId column
+ * @method     ChildStakeholder[]|ObjectCollection findByFormId(int $form_id) Return ChildStakeholder objects filtered by the form_id column
  * @method     ChildStakeholder[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -156,7 +169,7 @@ abstract class StakeholderQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, label, address, formId FROM stakeholder WHERE id = :p0';
+        $sql = 'SELECT id, label, address, form_id FROM stakeholder WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -338,16 +351,18 @@ abstract class StakeholderQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the formId column
+     * Filter the query on the form_id column
      *
      * Example usage:
      * <code>
-     * $query->filterByFormid(1234); // WHERE formId = 1234
-     * $query->filterByFormid(array(12, 34)); // WHERE formId IN (12, 34)
-     * $query->filterByFormid(array('min' => 12)); // WHERE formId > 12
+     * $query->filterByFormId(1234); // WHERE form_id = 1234
+     * $query->filterByFormId(array(12, 34)); // WHERE form_id IN (12, 34)
+     * $query->filterByFormId(array('min' => 12)); // WHERE form_id > 12
      * </code>
      *
-     * @param     mixed $formid The value to use as filter.
+     * @see       filterByForm()
+     *
+     * @param     mixed $formId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
@@ -355,16 +370,16 @@ abstract class StakeholderQuery extends ModelCriteria
      *
      * @return $this|ChildStakeholderQuery The current query, for fluid interface
      */
-    public function filterByFormid($formid = null, $comparison = null)
+    public function filterByFormId($formId = null, $comparison = null)
     {
-        if (is_array($formid)) {
+        if (is_array($formId)) {
             $useMinMax = false;
-            if (isset($formid['min'])) {
-                $this->addUsingAlias(StakeholderTableMap::COL_FORMID, $formid['min'], Criteria::GREATER_EQUAL);
+            if (isset($formId['min'])) {
+                $this->addUsingAlias(StakeholderTableMap::COL_FORM_ID, $formId['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
-            if (isset($formid['max'])) {
-                $this->addUsingAlias(StakeholderTableMap::COL_FORMID, $formid['max'], Criteria::LESS_EQUAL);
+            if (isset($formId['max'])) {
+                $this->addUsingAlias(StakeholderTableMap::COL_FORM_ID, $formId['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -375,7 +390,84 @@ abstract class StakeholderQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(StakeholderTableMap::COL_FORMID, $formid, $comparison);
+        return $this->addUsingAlias(StakeholderTableMap::COL_FORM_ID, $formId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Form object
+     *
+     * @param \FormsAPI\Form|ObjectCollection $form The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildStakeholderQuery The current query, for fluid interface
+     */
+    public function filterByForm($form, $comparison = null)
+    {
+        if ($form instanceof \FormsAPI\Form) {
+            return $this
+                ->addUsingAlias(StakeholderTableMap::COL_FORM_ID, $form->getId(), $comparison);
+        } elseif ($form instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(StakeholderTableMap::COL_FORM_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Form relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildStakeholderQuery The current query, for fluid interface
+     */
+    public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Form');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Form');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Form relation Form object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\FormQuery A secondary query class using the current class as primary query
+     */
+    public function useFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinForm($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Form', '\FormsAPI\FormQuery');
     }
 
     /**

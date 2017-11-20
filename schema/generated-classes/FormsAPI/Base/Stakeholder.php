@@ -4,6 +4,8 @@ namespace FormsAPI\Base;
 
 use \Exception;
 use \PDO;
+use FormsAPI\Form as ChildForm;
+use FormsAPI\FormQuery as ChildFormQuery;
 use FormsAPI\StakeholderQuery as ChildStakeholderQuery;
 use FormsAPI\Map\StakeholderTableMap;
 use Propel\Runtime\Propel;
@@ -91,11 +93,16 @@ abstract class Stakeholder implements ActiveRecordInterface
     protected $address;
 
     /**
-     * The value for the formid field.
+     * The value for the form_id field.
      *
      * @var        int
      */
-    protected $formid;
+    protected $form_id;
+
+    /**
+     * @var        ChildForm
+     */
+    protected $aForm;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -378,13 +385,13 @@ abstract class Stakeholder implements ActiveRecordInterface
     }
 
     /**
-     * Get the [formid] column value.
+     * Get the [form_id] column value.
      *
      * @return int
      */
-    public function getFormid()
+    public function getFormId()
     {
-        return $this->formid;
+        return $this->form_id;
     }
 
     /**
@@ -448,24 +455,28 @@ abstract class Stakeholder implements ActiveRecordInterface
     } // setAddress()
 
     /**
-     * Set the value of [formid] column.
+     * Set the value of [form_id] column.
      *
      * @param int $v new value
      * @return $this|\FormsAPI\Stakeholder The current object (for fluent API support)
      */
-    public function setFormid($v)
+    public function setFormId($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->formid !== $v) {
-            $this->formid = $v;
-            $this->modifiedColumns[StakeholderTableMap::COL_FORMID] = true;
+        if ($this->form_id !== $v) {
+            $this->form_id = $v;
+            $this->modifiedColumns[StakeholderTableMap::COL_FORM_ID] = true;
+        }
+
+        if ($this->aForm !== null && $this->aForm->getId() !== $v) {
+            $this->aForm = null;
         }
 
         return $this;
-    } // setFormid()
+    } // setFormId()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -512,8 +523,8 @@ abstract class Stakeholder implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : StakeholderTableMap::translateFieldName('Address', TableMap::TYPE_PHPNAME, $indexType)];
             $this->address = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : StakeholderTableMap::translateFieldName('Formid', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->formid = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : StakeholderTableMap::translateFieldName('FormId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->form_id = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -544,6 +555,9 @@ abstract class Stakeholder implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aForm !== null && $this->form_id !== $this->aForm->getId()) {
+            $this->aForm = null;
+        }
     } // ensureConsistency
 
     /**
@@ -583,6 +597,7 @@ abstract class Stakeholder implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aForm = null;
         } // if (deep)
     }
 
@@ -686,6 +701,18 @@ abstract class Stakeholder implements ActiveRecordInterface
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aForm !== null) {
+                if ($this->aForm->isModified() || $this->aForm->isNew()) {
+                    $affectedRows += $this->aForm->save($con);
+                }
+                $this->setForm($this->aForm);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -732,8 +759,8 @@ abstract class Stakeholder implements ActiveRecordInterface
         if ($this->isColumnModified(StakeholderTableMap::COL_ADDRESS)) {
             $modifiedColumns[':p' . $index++]  = 'address';
         }
-        if ($this->isColumnModified(StakeholderTableMap::COL_FORMID)) {
-            $modifiedColumns[':p' . $index++]  = 'formId';
+        if ($this->isColumnModified(StakeholderTableMap::COL_FORM_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'form_id';
         }
 
         $sql = sprintf(
@@ -755,8 +782,8 @@ abstract class Stakeholder implements ActiveRecordInterface
                     case 'address':
                         $stmt->bindValue($identifier, $this->address, PDO::PARAM_STR);
                         break;
-                    case 'formId':
-                        $stmt->bindValue($identifier, $this->formid, PDO::PARAM_INT);
+                    case 'form_id':
+                        $stmt->bindValue($identifier, $this->form_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -830,7 +857,7 @@ abstract class Stakeholder implements ActiveRecordInterface
                 return $this->getAddress();
                 break;
             case 3:
-                return $this->getFormid();
+                return $this->getFormId();
                 break;
             default:
                 return null;
@@ -849,10 +876,11 @@ abstract class Stakeholder implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['Stakeholder'][$this->hashCode()])) {
@@ -864,13 +892,30 @@ abstract class Stakeholder implements ActiveRecordInterface
             $keys[0] => $this->getId(),
             $keys[1] => $this->getLabel(),
             $keys[2] => $this->getAddress(),
-            $keys[3] => $this->getFormid(),
+            $keys[3] => $this->getFormId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aForm) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'form';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'form';
+                        break;
+                    default:
+                        $key = 'Form';
+                }
+
+                $result[$key] = $this->aForm->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -914,7 +959,7 @@ abstract class Stakeholder implements ActiveRecordInterface
                 $this->setAddress($value);
                 break;
             case 3:
-                $this->setFormid($value);
+                $this->setFormId($value);
                 break;
         } // switch()
 
@@ -952,7 +997,7 @@ abstract class Stakeholder implements ActiveRecordInterface
             $this->setAddress($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setFormid($arr[$keys[3]]);
+            $this->setFormId($arr[$keys[3]]);
         }
     }
 
@@ -1004,8 +1049,8 @@ abstract class Stakeholder implements ActiveRecordInterface
         if ($this->isColumnModified(StakeholderTableMap::COL_ADDRESS)) {
             $criteria->add(StakeholderTableMap::COL_ADDRESS, $this->address);
         }
-        if ($this->isColumnModified(StakeholderTableMap::COL_FORMID)) {
-            $criteria->add(StakeholderTableMap::COL_FORMID, $this->formid);
+        if ($this->isColumnModified(StakeholderTableMap::COL_FORM_ID)) {
+            $criteria->add(StakeholderTableMap::COL_FORM_ID, $this->form_id);
         }
 
         return $criteria;
@@ -1095,7 +1140,7 @@ abstract class Stakeholder implements ActiveRecordInterface
     {
         $copyObj->setLabel($this->getLabel());
         $copyObj->setAddress($this->getAddress());
-        $copyObj->setFormid($this->getFormid());
+        $copyObj->setFormId($this->getFormId());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1125,16 +1170,70 @@ abstract class Stakeholder implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildForm object.
+     *
+     * @param  ChildForm $v
+     * @return $this|\FormsAPI\Stakeholder The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setForm(ChildForm $v = null)
+    {
+        if ($v === null) {
+            $this->setFormId(NULL);
+        } else {
+            $this->setFormId($v->getId());
+        }
+
+        $this->aForm = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildForm object, it will not be re-added.
+        if ($v !== null) {
+            $v->addStakeholder($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildForm object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildForm The associated ChildForm object.
+     * @throws PropelException
+     */
+    public function getForm(ConnectionInterface $con = null)
+    {
+        if ($this->aForm === null && ($this->form_id != 0)) {
+            $this->aForm = ChildFormQuery::create()->findPk($this->form_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aForm->addStakeholders($this);
+             */
+        }
+
+        return $this->aForm;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aForm) {
+            $this->aForm->removeStakeholder($this);
+        }
         $this->id = null;
         $this->label = null;
         $this->address = null;
-        $this->formid = null;
+        $this->form_id = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1155,6 +1254,7 @@ abstract class Stakeholder implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aForm = null;
     }
 
     /**
@@ -1179,7 +1279,7 @@ abstract class Stakeholder implements ActiveRecordInterface
     {
         $metadata->addPropertyConstraint('label', new NotNull());
         $metadata->addPropertyConstraint('address', new NotNull());
-        $metadata->addPropertyConstraint('formId', new NotNull());
+        $metadata->addPropertyConstraint('form_id', new NotNull());
     }
 
     /**
@@ -1205,6 +1305,17 @@ abstract class Stakeholder implements ActiveRecordInterface
             $this->alreadyInValidation = true;
             $retval = null;
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            // If validate() method exists, the validate-behavior is configured for related object
+            if (method_exists($this->aForm, 'validate')) {
+                if (!$this->aForm->validate($validator)) {
+                    $failureMap->addAll($this->aForm->getValidationFailures());
+                }
+            }
 
             $retval = $validator->validate($this);
             if (count($retval) > 0) {

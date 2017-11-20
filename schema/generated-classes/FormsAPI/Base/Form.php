@@ -18,8 +18,8 @@ use FormsAPI\FormStatus as ChildFormStatus;
 use FormsAPI\FormStatusQuery as ChildFormStatusQuery;
 use FormsAPI\FormTag as ChildFormTag;
 use FormsAPI\FormTagQuery as ChildFormTagQuery;
-use FormsAPI\Requirement as ChildRequirement;
-use FormsAPI\RequirementQuery as ChildRequirementQuery;
+use FormsAPI\Stakeholder as ChildStakeholder;
+use FormsAPI\StakeholderQuery as ChildStakeholderQuery;
 use FormsAPI\Submission as ChildSubmission;
 use FormsAPI\SubmissionQuery as ChildSubmissionQuery;
 use FormsAPI\Map\ChildFormRelationshipTableMap;
@@ -28,7 +28,7 @@ use FormsAPI\Map\FormReactionTableMap;
 use FormsAPI\Map\FormStatusTableMap;
 use FormsAPI\Map\FormTableMap;
 use FormsAPI\Map\FormTagTableMap;
-use FormsAPI\Map\RequirementTableMap;
+use FormsAPI\Map\StakeholderTableMap;
 use FormsAPI\Map\SubmissionTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -156,16 +156,16 @@ abstract class Form implements ActiveRecordInterface
     protected $collAschildrenPartial;
 
     /**
-     * @var        ObjectCollection|ChildRequirement[] Collection to store aggregation of ChildRequirement objects.
-     */
-    protected $collRequirements;
-    protected $collRequirementsPartial;
-
-    /**
      * @var        ObjectCollection|ChildSubmission[] Collection to store aggregation of ChildSubmission objects.
      */
     protected $collSubmissions;
     protected $collSubmissionsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildStakeholder[] Collection to store aggregation of ChildStakeholder objects.
+     */
+    protected $collStakeholders;
+    protected $collStakeholdersPartial;
 
     /**
      * @var        ObjectCollection|ChildFormStatus[] Collection to store aggregation of ChildFormStatus objects.
@@ -230,15 +230,15 @@ abstract class Form implements ActiveRecordInterface
 
     /**
      * An array of objects scheduled for deletion.
-     * @var ObjectCollection|ChildRequirement[]
-     */
-    protected $requirementsScheduledForDeletion = null;
-
-    /**
-     * An array of objects scheduled for deletion.
      * @var ObjectCollection|ChildSubmission[]
      */
     protected $submissionsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildStakeholder[]
+     */
+    protected $stakeholdersScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -843,9 +843,9 @@ abstract class Form implements ActiveRecordInterface
 
             $this->collAschildren = null;
 
-            $this->collRequirements = null;
-
             $this->collSubmissions = null;
+
+            $this->collStakeholders = null;
 
             $this->collFormStatuses = null;
 
@@ -1015,23 +1015,6 @@ abstract class Form implements ActiveRecordInterface
                 }
             }
 
-            if ($this->requirementsScheduledForDeletion !== null) {
-                if (!$this->requirementsScheduledForDeletion->isEmpty()) {
-                    \FormsAPI\RequirementQuery::create()
-                        ->filterByPrimaryKeys($this->requirementsScheduledForDeletion->getPrimaryKeys(false))
-                        ->delete($con);
-                    $this->requirementsScheduledForDeletion = null;
-                }
-            }
-
-            if ($this->collRequirements !== null) {
-                foreach ($this->collRequirements as $referrerFK) {
-                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
-                        $affectedRows += $referrerFK->save($con);
-                    }
-                }
-            }
-
             if ($this->submissionsScheduledForDeletion !== null) {
                 if (!$this->submissionsScheduledForDeletion->isEmpty()) {
                     \FormsAPI\SubmissionQuery::create()
@@ -1043,6 +1026,23 @@ abstract class Form implements ActiveRecordInterface
 
             if ($this->collSubmissions !== null) {
                 foreach ($this->collSubmissions as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->stakeholdersScheduledForDeletion !== null) {
+                if (!$this->stakeholdersScheduledForDeletion->isEmpty()) {
+                    \FormsAPI\StakeholderQuery::create()
+                        ->filterByPrimaryKeys($this->stakeholdersScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->stakeholdersScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collStakeholders !== null) {
+                foreach ($this->collStakeholders as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1358,21 +1358,6 @@ abstract class Form implements ActiveRecordInterface
 
                 $result[$key] = $this->collAschildren->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
-            if (null !== $this->collRequirements) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'requirements';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'requirements';
-                        break;
-                    default:
-                        $key = 'Requirements';
-                }
-
-                $result[$key] = $this->collRequirements->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
-            }
             if (null !== $this->collSubmissions) {
 
                 switch ($keyType) {
@@ -1387,6 +1372,21 @@ abstract class Form implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collSubmissions->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collStakeholders) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'stakeholders';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'stakeholders';
+                        break;
+                    default:
+                        $key = 'Stakeholders';
+                }
+
+                $result[$key] = $this->collStakeholders->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collFormStatuses) {
 
@@ -1712,15 +1712,15 @@ abstract class Form implements ActiveRecordInterface
                 }
             }
 
-            foreach ($this->getRequirements() as $relObj) {
-                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
-                    $copyObj->addRequirement($relObj->copy($deepCopy));
-                }
-            }
-
             foreach ($this->getSubmissions() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addSubmission($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getStakeholders() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addStakeholder($relObj->copy($deepCopy));
                 }
             }
 
@@ -1848,12 +1848,12 @@ abstract class Form implements ActiveRecordInterface
             $this->initAschildren();
             return;
         }
-        if ('Requirement' == $relationName) {
-            $this->initRequirements();
-            return;
-        }
         if ('Submission' == $relationName) {
             $this->initSubmissions();
+            return;
+        }
+        if ('Stakeholder' == $relationName) {
+            $this->initStakeholders();
             return;
         }
         if ('FormStatus' == $relationName) {
@@ -2425,256 +2425,6 @@ abstract class Form implements ActiveRecordInterface
     }
 
     /**
-     * Clears out the collRequirements collection
-     *
-     * This does not modify the database; however, it will remove any associated objects, causing
-     * them to be refetched by subsequent calls to accessor method.
-     *
-     * @return void
-     * @see        addRequirements()
-     */
-    public function clearRequirements()
-    {
-        $this->collRequirements = null; // important to set this to NULL since that means it is uninitialized
-    }
-
-    /**
-     * Reset is the collRequirements collection loaded partially.
-     */
-    public function resetPartialRequirements($v = true)
-    {
-        $this->collRequirementsPartial = $v;
-    }
-
-    /**
-     * Initializes the collRequirements collection.
-     *
-     * By default this just sets the collRequirements collection to an empty array (like clearcollRequirements());
-     * however, you may wish to override this method in your stub class to provide setting appropriate
-     * to your application -- for example, setting the initial array to the values stored in database.
-     *
-     * @param      boolean $overrideExisting If set to true, the method call initializes
-     *                                        the collection even if it is not empty
-     *
-     * @return void
-     */
-    public function initRequirements($overrideExisting = true)
-    {
-        if (null !== $this->collRequirements && !$overrideExisting) {
-            return;
-        }
-
-        $collectionClassName = RequirementTableMap::getTableMap()->getCollectionClassName();
-
-        $this->collRequirements = new $collectionClassName;
-        $this->collRequirements->setModel('\FormsAPI\Requirement');
-    }
-
-    /**
-     * Gets an array of ChildRequirement objects which contain a foreign key that references this object.
-     *
-     * If the $criteria is not null, it is used to always fetch the results from the database.
-     * Otherwise the results are fetched from the database the first time, then cached.
-     * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildForm is new, it will return
-     * an empty collection or the current collection; the criteria is ignored on a new object.
-     *
-     * @param      Criteria $criteria optional Criteria object to narrow the query
-     * @param      ConnectionInterface $con optional connection object
-     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
-     * @throws PropelException
-     */
-    public function getRequirements(Criteria $criteria = null, ConnectionInterface $con = null)
-    {
-        $partial = $this->collRequirementsPartial && !$this->isNew();
-        if (null === $this->collRequirements || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collRequirements) {
-                // return empty collection
-                $this->initRequirements();
-            } else {
-                $collRequirements = ChildRequirementQuery::create(null, $criteria)
-                    ->filterByForm($this)
-                    ->find($con);
-
-                if (null !== $criteria) {
-                    if (false !== $this->collRequirementsPartial && count($collRequirements)) {
-                        $this->initRequirements(false);
-
-                        foreach ($collRequirements as $obj) {
-                            if (false == $this->collRequirements->contains($obj)) {
-                                $this->collRequirements->append($obj);
-                            }
-                        }
-
-                        $this->collRequirementsPartial = true;
-                    }
-
-                    return $collRequirements;
-                }
-
-                if ($partial && $this->collRequirements) {
-                    foreach ($this->collRequirements as $obj) {
-                        if ($obj->isNew()) {
-                            $collRequirements[] = $obj;
-                        }
-                    }
-                }
-
-                $this->collRequirements = $collRequirements;
-                $this->collRequirementsPartial = false;
-            }
-        }
-
-        return $this->collRequirements;
-    }
-
-    /**
-     * Sets a collection of ChildRequirement objects related by a one-to-many relationship
-     * to the current object.
-     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
-     * and new objects from the given Propel collection.
-     *
-     * @param      Collection $requirements A Propel collection.
-     * @param      ConnectionInterface $con Optional connection object
-     * @return $this|ChildForm The current object (for fluent API support)
-     */
-    public function setRequirements(Collection $requirements, ConnectionInterface $con = null)
-    {
-        /** @var ChildRequirement[] $requirementsToDelete */
-        $requirementsToDelete = $this->getRequirements(new Criteria(), $con)->diff($requirements);
-
-
-        $this->requirementsScheduledForDeletion = $requirementsToDelete;
-
-        foreach ($requirementsToDelete as $requirementRemoved) {
-            $requirementRemoved->setForm(null);
-        }
-
-        $this->collRequirements = null;
-        foreach ($requirements as $requirement) {
-            $this->addRequirement($requirement);
-        }
-
-        $this->collRequirements = $requirements;
-        $this->collRequirementsPartial = false;
-
-        return $this;
-    }
-
-    /**
-     * Returns the number of related Requirement objects.
-     *
-     * @param      Criteria $criteria
-     * @param      boolean $distinct
-     * @param      ConnectionInterface $con
-     * @return int             Count of related Requirement objects.
-     * @throws PropelException
-     */
-    public function countRequirements(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
-    {
-        $partial = $this->collRequirementsPartial && !$this->isNew();
-        if (null === $this->collRequirements || null !== $criteria || $partial) {
-            if ($this->isNew() && null === $this->collRequirements) {
-                return 0;
-            }
-
-            if ($partial && !$criteria) {
-                return count($this->getRequirements());
-            }
-
-            $query = ChildRequirementQuery::create(null, $criteria);
-            if ($distinct) {
-                $query->distinct();
-            }
-
-            return $query
-                ->filterByForm($this)
-                ->count($con);
-        }
-
-        return count($this->collRequirements);
-    }
-
-    /**
-     * Method called to associate a ChildRequirement object to this object
-     * through the ChildRequirement foreign key attribute.
-     *
-     * @param  ChildRequirement $l ChildRequirement
-     * @return $this|\FormsAPI\Form The current object (for fluent API support)
-     */
-    public function addRequirement(ChildRequirement $l)
-    {
-        if ($this->collRequirements === null) {
-            $this->initRequirements();
-            $this->collRequirementsPartial = true;
-        }
-
-        if (!$this->collRequirements->contains($l)) {
-            $this->doAddRequirement($l);
-
-            if ($this->requirementsScheduledForDeletion and $this->requirementsScheduledForDeletion->contains($l)) {
-                $this->requirementsScheduledForDeletion->remove($this->requirementsScheduledForDeletion->search($l));
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param ChildRequirement $requirement The ChildRequirement object to add.
-     */
-    protected function doAddRequirement(ChildRequirement $requirement)
-    {
-        $this->collRequirements[]= $requirement;
-        $requirement->setForm($this);
-    }
-
-    /**
-     * @param  ChildRequirement $requirement The ChildRequirement object to remove.
-     * @return $this|ChildForm The current object (for fluent API support)
-     */
-    public function removeRequirement(ChildRequirement $requirement)
-    {
-        if ($this->getRequirements()->contains($requirement)) {
-            $pos = $this->collRequirements->search($requirement);
-            $this->collRequirements->remove($pos);
-            if (null === $this->requirementsScheduledForDeletion) {
-                $this->requirementsScheduledForDeletion = clone $this->collRequirements;
-                $this->requirementsScheduledForDeletion->clear();
-            }
-            $this->requirementsScheduledForDeletion[]= clone $requirement;
-            $requirement->setForm(null);
-        }
-
-        return $this;
-    }
-
-
-    /**
-     * If this collection has already been initialized with
-     * an identical criteria, it returns the collection.
-     * Otherwise if this Form is new, it will return
-     * an empty collection; or if this Form has previously
-     * been saved, it will retrieve related Requirements from storage.
-     *
-     * This method is protected by default in order to keep the public
-     * api reasonable.  You can provide public methods for those you
-     * actually need in Form.
-     *
-     * @param      Criteria $criteria optional Criteria object to narrow the query
-     * @param      ConnectionInterface $con optional connection object
-     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
-     * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
-     */
-    public function getRequirementsJoinElement(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
-    {
-        $query = ChildRequirementQuery::create(null, $criteria);
-        $query->joinWith('Element', $joinBehavior);
-
-        return $this->getRequirements($query, $con);
-    }
-
-    /**
      * Clears out the collSubmissions collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -2997,6 +2747,231 @@ abstract class Form implements ActiveRecordInterface
         $query->joinWith('SubmissionRelatedByParentId', $joinBehavior);
 
         return $this->getSubmissions($query, $con);
+    }
+
+    /**
+     * Clears out the collStakeholders collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addStakeholders()
+     */
+    public function clearStakeholders()
+    {
+        $this->collStakeholders = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collStakeholders collection loaded partially.
+     */
+    public function resetPartialStakeholders($v = true)
+    {
+        $this->collStakeholdersPartial = $v;
+    }
+
+    /**
+     * Initializes the collStakeholders collection.
+     *
+     * By default this just sets the collStakeholders collection to an empty array (like clearcollStakeholders());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initStakeholders($overrideExisting = true)
+    {
+        if (null !== $this->collStakeholders && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = StakeholderTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collStakeholders = new $collectionClassName;
+        $this->collStakeholders->setModel('\FormsAPI\Stakeholder');
+    }
+
+    /**
+     * Gets an array of ChildStakeholder objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildForm is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildStakeholder[] List of ChildStakeholder objects
+     * @throws PropelException
+     */
+    public function getStakeholders(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collStakeholdersPartial && !$this->isNew();
+        if (null === $this->collStakeholders || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collStakeholders) {
+                // return empty collection
+                $this->initStakeholders();
+            } else {
+                $collStakeholders = ChildStakeholderQuery::create(null, $criteria)
+                    ->filterByForm($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collStakeholdersPartial && count($collStakeholders)) {
+                        $this->initStakeholders(false);
+
+                        foreach ($collStakeholders as $obj) {
+                            if (false == $this->collStakeholders->contains($obj)) {
+                                $this->collStakeholders->append($obj);
+                            }
+                        }
+
+                        $this->collStakeholdersPartial = true;
+                    }
+
+                    return $collStakeholders;
+                }
+
+                if ($partial && $this->collStakeholders) {
+                    foreach ($this->collStakeholders as $obj) {
+                        if ($obj->isNew()) {
+                            $collStakeholders[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collStakeholders = $collStakeholders;
+                $this->collStakeholdersPartial = false;
+            }
+        }
+
+        return $this->collStakeholders;
+    }
+
+    /**
+     * Sets a collection of ChildStakeholder objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $stakeholders A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildForm The current object (for fluent API support)
+     */
+    public function setStakeholders(Collection $stakeholders, ConnectionInterface $con = null)
+    {
+        /** @var ChildStakeholder[] $stakeholdersToDelete */
+        $stakeholdersToDelete = $this->getStakeholders(new Criteria(), $con)->diff($stakeholders);
+
+
+        $this->stakeholdersScheduledForDeletion = $stakeholdersToDelete;
+
+        foreach ($stakeholdersToDelete as $stakeholderRemoved) {
+            $stakeholderRemoved->setForm(null);
+        }
+
+        $this->collStakeholders = null;
+        foreach ($stakeholders as $stakeholder) {
+            $this->addStakeholder($stakeholder);
+        }
+
+        $this->collStakeholders = $stakeholders;
+        $this->collStakeholdersPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Stakeholder objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Stakeholder objects.
+     * @throws PropelException
+     */
+    public function countStakeholders(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collStakeholdersPartial && !$this->isNew();
+        if (null === $this->collStakeholders || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collStakeholders) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getStakeholders());
+            }
+
+            $query = ChildStakeholderQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByForm($this)
+                ->count($con);
+        }
+
+        return count($this->collStakeholders);
+    }
+
+    /**
+     * Method called to associate a ChildStakeholder object to this object
+     * through the ChildStakeholder foreign key attribute.
+     *
+     * @param  ChildStakeholder $l ChildStakeholder
+     * @return $this|\FormsAPI\Form The current object (for fluent API support)
+     */
+    public function addStakeholder(ChildStakeholder $l)
+    {
+        if ($this->collStakeholders === null) {
+            $this->initStakeholders();
+            $this->collStakeholdersPartial = true;
+        }
+
+        if (!$this->collStakeholders->contains($l)) {
+            $this->doAddStakeholder($l);
+
+            if ($this->stakeholdersScheduledForDeletion and $this->stakeholdersScheduledForDeletion->contains($l)) {
+                $this->stakeholdersScheduledForDeletion->remove($this->stakeholdersScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildStakeholder $stakeholder The ChildStakeholder object to add.
+     */
+    protected function doAddStakeholder(ChildStakeholder $stakeholder)
+    {
+        $this->collStakeholders[]= $stakeholder;
+        $stakeholder->setForm($this);
+    }
+
+    /**
+     * @param  ChildStakeholder $stakeholder The ChildStakeholder object to remove.
+     * @return $this|ChildForm The current object (for fluent API support)
+     */
+    public function removeStakeholder(ChildStakeholder $stakeholder)
+    {
+        if ($this->getStakeholders()->contains($stakeholder)) {
+            $pos = $this->collStakeholders->search($stakeholder);
+            $this->collStakeholders->remove($pos);
+            if (null === $this->stakeholdersScheduledForDeletion) {
+                $this->stakeholdersScheduledForDeletion = clone $this->collStakeholders;
+                $this->stakeholdersScheduledForDeletion->clear();
+            }
+            $this->stakeholdersScheduledForDeletion[]= clone $stakeholder;
+            $stakeholder->setForm(null);
+        }
+
+        return $this;
     }
 
     /**
@@ -4044,13 +4019,13 @@ abstract class Form implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
-            if ($this->collRequirements) {
-                foreach ($this->collRequirements as $o) {
+            if ($this->collSubmissions) {
+                foreach ($this->collSubmissions as $o) {
                     $o->clearAllReferences($deep);
                 }
             }
-            if ($this->collSubmissions) {
-                foreach ($this->collSubmissions as $o) {
+            if ($this->collStakeholders) {
+                foreach ($this->collStakeholders as $o) {
                     $o->clearAllReferences($deep);
                 }
             }
@@ -4078,8 +4053,8 @@ abstract class Form implements ActiveRecordInterface
 
         $this->collAsParents = null;
         $this->collAschildren = null;
-        $this->collRequirements = null;
         $this->collSubmissions = null;
+        $this->collStakeholders = null;
         $this->collFormStatuses = null;
         $this->collFormTags = null;
         $this->collFormReactions = null;
@@ -4169,8 +4144,8 @@ abstract class Form implements ActiveRecordInterface
                     }
                 }
             }
-            if (null !== $this->collRequirements) {
-                foreach ($this->collRequirements as $referrerFK) {
+            if (null !== $this->collSubmissions) {
+                foreach ($this->collSubmissions as $referrerFK) {
                     if (method_exists($referrerFK, 'validate')) {
                         if (!$referrerFK->validate($validator)) {
                             $failureMap->addAll($referrerFK->getValidationFailures());
@@ -4178,8 +4153,8 @@ abstract class Form implements ActiveRecordInterface
                     }
                 }
             }
-            if (null !== $this->collSubmissions) {
-                foreach ($this->collSubmissions as $referrerFK) {
+            if (null !== $this->collStakeholders) {
+                foreach ($this->collStakeholders as $referrerFK) {
                     if (method_exists($referrerFK, 'validate')) {
                         if (!$referrerFK->validate($validator)) {
                             $failureMap->addAll($referrerFK->getValidationFailures());

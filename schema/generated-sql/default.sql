@@ -163,7 +163,7 @@ CREATE TABLE [requirement]
     UNIQUE ([id]),
     FOREIGN KEY ([element_id]) REFERENCES [element] ([id])
         ON DELETE CASCADE,
-    FOREIGN KEY ([condition_id]) REFERENCES [form] ([id])
+    FOREIGN KEY ([condition_id]) REFERENCES [condition] ([id])
         ON DELETE CASCADE
 );
 
@@ -247,8 +247,10 @@ CREATE TABLE [recipient]
 (
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [address] INTEGER NOT NULL,
-    [note] VARCHAR(255) NOT NULL,
-    UNIQUE ([id])
+    [note_id] INTEGER NOT NULL,
+    UNIQUE ([id]),
+    FOREIGN KEY ([note_id]) REFERENCES [note] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -262,8 +264,10 @@ CREATE TABLE [stakeholder]
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     [label] VARCHAR(127) NOT NULL,
     [address] VARCHAR(127) NOT NULL,
-    [formId] INTEGER NOT NULL,
-    UNIQUE ([id])
+    [form_id] INTEGER NOT NULL,
+    UNIQUE ([id]),
+    FOREIGN KEY ([form_id]) REFERENCES [form] ([id])
+        ON DELETE CASCADE
 );
 
 -----------------------------------------------------------------------
@@ -278,7 +282,7 @@ CREATE TABLE [reaction]
     [subject] VARCHAR(127) NOT NULL,
     [recipient] VARCHAR(63) NOT NULL,
     [sender] VARCHAR(63) NOT NULL,
-    [replyTo] VARCHAR(63),
+    [reply_to] VARCHAR(63),
     [cc] VARCHAR(63),
     [bcc] VARCHAR(63),
     [template] VARCHAR(127) NOT NULL,

@@ -106,11 +106,11 @@ abstract class Reaction implements ActiveRecordInterface
     protected $sender;
 
     /**
-     * The value for the replyto field.
+     * The value for the reply_to field.
      *
      * @var        string
      */
-    protected $replyto;
+    protected $reply_to;
 
     /**
      * The value for the cc field.
@@ -455,13 +455,13 @@ abstract class Reaction implements ActiveRecordInterface
     }
 
     /**
-     * Get the [replyto] column value.
+     * Get the [reply_to] column value.
      *
      * @return string
      */
-    public function getReplyto()
+    public function getReplyTo()
     {
-        return $this->replyto;
+        return $this->reply_to;
     }
 
     /**
@@ -585,24 +585,24 @@ abstract class Reaction implements ActiveRecordInterface
     } // setSender()
 
     /**
-     * Set the value of [replyto] column.
+     * Set the value of [reply_to] column.
      *
      * @param string $v new value
      * @return $this|\FormsAPI\Reaction The current object (for fluent API support)
      */
-    public function setReplyto($v)
+    public function setReplyTo($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->replyto !== $v) {
-            $this->replyto = $v;
-            $this->modifiedColumns[ReactionTableMap::COL_REPLYTO] = true;
+        if ($this->reply_to !== $v) {
+            $this->reply_to = $v;
+            $this->modifiedColumns[ReactionTableMap::COL_REPLY_TO] = true;
         }
 
         return $this;
-    } // setReplyto()
+    } // setReplyTo()
 
     /**
      * Set the value of [cc] column.
@@ -732,8 +732,8 @@ abstract class Reaction implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ReactionTableMap::translateFieldName('Sender', TableMap::TYPE_PHPNAME, $indexType)];
             $this->sender = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ReactionTableMap::translateFieldName('Replyto', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->replyto = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ReactionTableMap::translateFieldName('ReplyTo', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->reply_to = (null !== $col) ? (string) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ReactionTableMap::translateFieldName('Cc', TableMap::TYPE_PHPNAME, $indexType)];
             $this->cc = (null !== $col) ? (string) $col : null;
@@ -1006,8 +1006,8 @@ abstract class Reaction implements ActiveRecordInterface
         if ($this->isColumnModified(ReactionTableMap::COL_SENDER)) {
             $modifiedColumns[':p' . $index++]  = 'sender';
         }
-        if ($this->isColumnModified(ReactionTableMap::COL_REPLYTO)) {
-            $modifiedColumns[':p' . $index++]  = 'replyTo';
+        if ($this->isColumnModified(ReactionTableMap::COL_REPLY_TO)) {
+            $modifiedColumns[':p' . $index++]  = 'reply_to';
         }
         if ($this->isColumnModified(ReactionTableMap::COL_CC)) {
             $modifiedColumns[':p' . $index++]  = 'cc';
@@ -1044,8 +1044,8 @@ abstract class Reaction implements ActiveRecordInterface
                     case 'sender':
                         $stmt->bindValue($identifier, $this->sender, PDO::PARAM_STR);
                         break;
-                    case 'replyTo':
-                        $stmt->bindValue($identifier, $this->replyto, PDO::PARAM_STR);
+                    case 'reply_to':
+                        $stmt->bindValue($identifier, $this->reply_to, PDO::PARAM_STR);
                         break;
                     case 'cc':
                         $stmt->bindValue($identifier, $this->cc, PDO::PARAM_STR);
@@ -1134,7 +1134,7 @@ abstract class Reaction implements ActiveRecordInterface
                 return $this->getSender();
                 break;
             case 4:
-                return $this->getReplyto();
+                return $this->getReplyTo();
                 break;
             case 5:
                 return $this->getCc();
@@ -1182,7 +1182,7 @@ abstract class Reaction implements ActiveRecordInterface
             $keys[1] => $this->getSubject(),
             $keys[2] => $this->getRecipient(),
             $keys[3] => $this->getSender(),
-            $keys[4] => $this->getReplyto(),
+            $keys[4] => $this->getReplyTo(),
             $keys[5] => $this->getCc(),
             $keys[6] => $this->getBcc(),
             $keys[7] => $this->getTemplate(),
@@ -1271,7 +1271,7 @@ abstract class Reaction implements ActiveRecordInterface
                 $this->setSender($value);
                 break;
             case 4:
-                $this->setReplyto($value);
+                $this->setReplyTo($value);
                 break;
             case 5:
                 $this->setCc($value);
@@ -1324,7 +1324,7 @@ abstract class Reaction implements ActiveRecordInterface
             $this->setSender($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setReplyto($arr[$keys[4]]);
+            $this->setReplyTo($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
             $this->setCc($arr[$keys[5]]);
@@ -1391,8 +1391,8 @@ abstract class Reaction implements ActiveRecordInterface
         if ($this->isColumnModified(ReactionTableMap::COL_SENDER)) {
             $criteria->add(ReactionTableMap::COL_SENDER, $this->sender);
         }
-        if ($this->isColumnModified(ReactionTableMap::COL_REPLYTO)) {
-            $criteria->add(ReactionTableMap::COL_REPLYTO, $this->replyto);
+        if ($this->isColumnModified(ReactionTableMap::COL_REPLY_TO)) {
+            $criteria->add(ReactionTableMap::COL_REPLY_TO, $this->reply_to);
         }
         if ($this->isColumnModified(ReactionTableMap::COL_CC)) {
             $criteria->add(ReactionTableMap::COL_CC, $this->cc);
@@ -1495,7 +1495,7 @@ abstract class Reaction implements ActiveRecordInterface
         $copyObj->setSubject($this->getSubject());
         $copyObj->setRecipient($this->getRecipient());
         $copyObj->setSender($this->getSender());
-        $copyObj->setReplyto($this->getReplyto());
+        $copyObj->setReplyTo($this->getReplyTo());
         $copyObj->setCc($this->getCc());
         $copyObj->setBcc($this->getBcc());
         $copyObj->setTemplate($this->getTemplate());
@@ -2130,7 +2130,7 @@ abstract class Reaction implements ActiveRecordInterface
         $this->subject = null;
         $this->recipient = null;
         $this->sender = null;
-        $this->replyto = null;
+        $this->reply_to = null;
         $this->cc = null;
         $this->bcc = null;
         $this->template = null;

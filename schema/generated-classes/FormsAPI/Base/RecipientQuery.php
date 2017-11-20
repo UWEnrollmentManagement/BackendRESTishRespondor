@@ -10,6 +10,7 @@ use FormsAPI\Map\RecipientTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -21,11 +22,11 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildRecipientQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildRecipientQuery orderByAddress($order = Criteria::ASC) Order by the address column
- * @method     ChildRecipientQuery orderByNote($order = Criteria::ASC) Order by the note column
+ * @method     ChildRecipientQuery orderByNoteId($order = Criteria::ASC) Order by the note_id column
  *
  * @method     ChildRecipientQuery groupById() Group by the id column
  * @method     ChildRecipientQuery groupByAddress() Group by the address column
- * @method     ChildRecipientQuery groupByNote() Group by the note column
+ * @method     ChildRecipientQuery groupByNoteId() Group by the note_id column
  *
  * @method     ChildRecipientQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildRecipientQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -35,24 +36,36 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildRecipientQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildRecipientQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
+ * @method     ChildRecipientQuery leftJoinNote($relationAlias = null) Adds a LEFT JOIN clause to the query using the Note relation
+ * @method     ChildRecipientQuery rightJoinNote($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Note relation
+ * @method     ChildRecipientQuery innerJoinNote($relationAlias = null) Adds a INNER JOIN clause to the query using the Note relation
+ *
+ * @method     ChildRecipientQuery joinWithNote($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Note relation
+ *
+ * @method     ChildRecipientQuery leftJoinWithNote() Adds a LEFT JOIN clause and with to the query using the Note relation
+ * @method     ChildRecipientQuery rightJoinWithNote() Adds a RIGHT JOIN clause and with to the query using the Note relation
+ * @method     ChildRecipientQuery innerJoinWithNote() Adds a INNER JOIN clause and with to the query using the Note relation
+ *
+ * @method     \FormsAPI\NoteQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ *
  * @method     ChildRecipient findOne(ConnectionInterface $con = null) Return the first ChildRecipient matching the query
  * @method     ChildRecipient findOneOrCreate(ConnectionInterface $con = null) Return the first ChildRecipient matching the query, or a new ChildRecipient object populated from the query conditions when no match is found
  *
  * @method     ChildRecipient findOneById(int $id) Return the first ChildRecipient filtered by the id column
  * @method     ChildRecipient findOneByAddress(int $address) Return the first ChildRecipient filtered by the address column
- * @method     ChildRecipient findOneByNote(string $note) Return the first ChildRecipient filtered by the note column *
+ * @method     ChildRecipient findOneByNoteId(int $note_id) Return the first ChildRecipient filtered by the note_id column *
 
  * @method     ChildRecipient requirePk($key, ConnectionInterface $con = null) Return the ChildRecipient by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOne(ConnectionInterface $con = null) Return the first ChildRecipient matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient requireOneById(int $id) Return the first ChildRecipient filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOneByAddress(int $address) Return the first ChildRecipient filtered by the address column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRecipient requireOneByNote(string $note) Return the first ChildRecipient filtered by the note column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildRecipient requireOneByNoteId(int $note_id) Return the first ChildRecipient filtered by the note_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildRecipient objects based on current ModelCriteria
  * @method     ChildRecipient[]|ObjectCollection findById(int $id) Return ChildRecipient objects filtered by the id column
  * @method     ChildRecipient[]|ObjectCollection findByAddress(int $address) Return ChildRecipient objects filtered by the address column
- * @method     ChildRecipient[]|ObjectCollection findByNote(string $note) Return ChildRecipient objects filtered by the note column
+ * @method     ChildRecipient[]|ObjectCollection findByNoteId(int $note_id) Return ChildRecipient objects filtered by the note_id column
  * @method     ChildRecipient[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -151,7 +164,7 @@ abstract class RecipientQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, address, note FROM recipient WHERE id = :p0';
+        $sql = 'SELECT id, address, note_id FROM recipient WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -324,28 +337,123 @@ abstract class RecipientQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the note column
+     * Filter the query on the note_id column
      *
      * Example usage:
      * <code>
-     * $query->filterByNote('fooValue');   // WHERE note = 'fooValue'
-     * $query->filterByNote('%fooValue%', Criteria::LIKE); // WHERE note LIKE '%fooValue%'
+     * $query->filterByNoteId(1234); // WHERE note_id = 1234
+     * $query->filterByNoteId(array(12, 34)); // WHERE note_id IN (12, 34)
+     * $query->filterByNoteId(array('min' => 12)); // WHERE note_id > 12
      * </code>
      *
-     * @param     string $note The value to use as filter.
+     * @see       filterByNote()
+     *
+     * @param     mixed $noteId The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildRecipientQuery The current query, for fluid interface
      */
-    public function filterByNote($note = null, $comparison = null)
+    public function filterByNoteId($noteId = null, $comparison = null)
     {
-        if (null === $comparison) {
-            if (is_array($note)) {
+        if (is_array($noteId)) {
+            $useMinMax = false;
+            if (isset($noteId['min'])) {
+                $this->addUsingAlias(RecipientTableMap::COL_NOTE_ID, $noteId['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($noteId['max'])) {
+                $this->addUsingAlias(RecipientTableMap::COL_NOTE_ID, $noteId['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(RecipientTableMap::COL_NOTE, $note, $comparison);
+        return $this->addUsingAlias(RecipientTableMap::COL_NOTE_ID, $noteId, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \FormsAPI\Note object
+     *
+     * @param \FormsAPI\Note|ObjectCollection $note The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildRecipientQuery The current query, for fluid interface
+     */
+    public function filterByNote($note, $comparison = null)
+    {
+        if ($note instanceof \FormsAPI\Note) {
+            return $this
+                ->addUsingAlias(RecipientTableMap::COL_NOTE_ID, $note->getId(), $comparison);
+        } elseif ($note instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(RecipientTableMap::COL_NOTE_ID, $note->toKeyValue('PrimaryKey', 'Id'), $comparison);
+        } else {
+            throw new PropelException('filterByNote() only accepts arguments of type \FormsAPI\Note or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Note relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildRecipientQuery The current query, for fluid interface
+     */
+    public function joinNote($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Note');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Note');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Note relation Note object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \FormsAPI\NoteQuery A secondary query class using the current class as primary query
+     */
+    public function useNoteQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinNote($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Note', '\FormsAPI\NoteQuery');
     }
 
     /**

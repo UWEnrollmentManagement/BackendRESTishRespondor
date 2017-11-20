@@ -24,7 +24,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildReactionQuery orderBySubject($order = Criteria::ASC) Order by the subject column
  * @method     ChildReactionQuery orderByRecipient($order = Criteria::ASC) Order by the recipient column
  * @method     ChildReactionQuery orderBySender($order = Criteria::ASC) Order by the sender column
- * @method     ChildReactionQuery orderByReplyto($order = Criteria::ASC) Order by the replyTo column
+ * @method     ChildReactionQuery orderByReplyTo($order = Criteria::ASC) Order by the reply_to column
  * @method     ChildReactionQuery orderByCc($order = Criteria::ASC) Order by the cc column
  * @method     ChildReactionQuery orderByBcc($order = Criteria::ASC) Order by the bcc column
  * @method     ChildReactionQuery orderByTemplate($order = Criteria::ASC) Order by the template column
@@ -34,7 +34,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildReactionQuery groupBySubject() Group by the subject column
  * @method     ChildReactionQuery groupByRecipient() Group by the recipient column
  * @method     ChildReactionQuery groupBySender() Group by the sender column
- * @method     ChildReactionQuery groupByReplyto() Group by the replyTo column
+ * @method     ChildReactionQuery groupByReplyTo() Group by the reply_to column
  * @method     ChildReactionQuery groupByCc() Group by the cc column
  * @method     ChildReactionQuery groupByBcc() Group by the bcc column
  * @method     ChildReactionQuery groupByTemplate() Group by the template column
@@ -77,7 +77,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildReaction findOneBySubject(string $subject) Return the first ChildReaction filtered by the subject column
  * @method     ChildReaction findOneByRecipient(string $recipient) Return the first ChildReaction filtered by the recipient column
  * @method     ChildReaction findOneBySender(string $sender) Return the first ChildReaction filtered by the sender column
- * @method     ChildReaction findOneByReplyto(string $replyTo) Return the first ChildReaction filtered by the replyTo column
+ * @method     ChildReaction findOneByReplyTo(string $reply_to) Return the first ChildReaction filtered by the reply_to column
  * @method     ChildReaction findOneByCc(string $cc) Return the first ChildReaction filtered by the cc column
  * @method     ChildReaction findOneByBcc(string $bcc) Return the first ChildReaction filtered by the bcc column
  * @method     ChildReaction findOneByTemplate(string $template) Return the first ChildReaction filtered by the template column
@@ -90,7 +90,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildReaction requireOneBySubject(string $subject) Return the first ChildReaction filtered by the subject column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildReaction requireOneByRecipient(string $recipient) Return the first ChildReaction filtered by the recipient column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildReaction requireOneBySender(string $sender) Return the first ChildReaction filtered by the sender column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildReaction requireOneByReplyto(string $replyTo) Return the first ChildReaction filtered by the replyTo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildReaction requireOneByReplyTo(string $reply_to) Return the first ChildReaction filtered by the reply_to column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildReaction requireOneByCc(string $cc) Return the first ChildReaction filtered by the cc column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildReaction requireOneByBcc(string $bcc) Return the first ChildReaction filtered by the bcc column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildReaction requireOneByTemplate(string $template) Return the first ChildReaction filtered by the template column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -101,7 +101,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildReaction[]|ObjectCollection findBySubject(string $subject) Return ChildReaction objects filtered by the subject column
  * @method     ChildReaction[]|ObjectCollection findByRecipient(string $recipient) Return ChildReaction objects filtered by the recipient column
  * @method     ChildReaction[]|ObjectCollection findBySender(string $sender) Return ChildReaction objects filtered by the sender column
- * @method     ChildReaction[]|ObjectCollection findByReplyto(string $replyTo) Return ChildReaction objects filtered by the replyTo column
+ * @method     ChildReaction[]|ObjectCollection findByReplyTo(string $reply_to) Return ChildReaction objects filtered by the reply_to column
  * @method     ChildReaction[]|ObjectCollection findByCc(string $cc) Return ChildReaction objects filtered by the cc column
  * @method     ChildReaction[]|ObjectCollection findByBcc(string $bcc) Return ChildReaction objects filtered by the bcc column
  * @method     ChildReaction[]|ObjectCollection findByTemplate(string $template) Return ChildReaction objects filtered by the template column
@@ -204,7 +204,7 @@ abstract class ReactionQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, subject, recipient, sender, replyTo, cc, bcc, template, content FROM reaction WHERE id = :p0';
+        $sql = 'SELECT id, subject, recipient, sender, reply_to, cc, bcc, template, content FROM reaction WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -411,28 +411,28 @@ abstract class ReactionQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the replyTo column
+     * Filter the query on the reply_to column
      *
      * Example usage:
      * <code>
-     * $query->filterByReplyto('fooValue');   // WHERE replyTo = 'fooValue'
-     * $query->filterByReplyto('%fooValue%', Criteria::LIKE); // WHERE replyTo LIKE '%fooValue%'
+     * $query->filterByReplyTo('fooValue');   // WHERE reply_to = 'fooValue'
+     * $query->filterByReplyTo('%fooValue%', Criteria::LIKE); // WHERE reply_to LIKE '%fooValue%'
      * </code>
      *
-     * @param     string $replyto The value to use as filter.
+     * @param     string $replyTo The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildReactionQuery The current query, for fluid interface
      */
-    public function filterByReplyto($replyto = null, $comparison = null)
+    public function filterByReplyTo($replyTo = null, $comparison = null)
     {
         if (null === $comparison) {
-            if (is_array($replyto)) {
+            if (is_array($replyTo)) {
                 $comparison = Criteria::IN;
             }
         }
 
-        return $this->addUsingAlias(ReactionTableMap::COL_REPLYTO, $replyto, $comparison);
+        return $this->addUsingAlias(ReactionTableMap::COL_REPLY_TO, $replyTo, $comparison);
     }
 
     /**

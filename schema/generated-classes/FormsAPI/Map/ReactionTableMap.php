@@ -92,9 +92,9 @@ class ReactionTableMap extends TableMap
     const COL_SENDER = 'reaction.sender';
 
     /**
-     * the column name for the replyTo field
+     * the column name for the reply_to field
      */
-    const COL_REPLYTO = 'reaction.replyTo';
+    const COL_REPLY_TO = 'reaction.reply_to';
 
     /**
      * the column name for the cc field
@@ -128,10 +128,10 @@ class ReactionTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Subject', 'Recipient', 'Sender', 'Replyto', 'Cc', 'Bcc', 'Template', 'Content', ),
-        self::TYPE_CAMELNAME     => array('id', 'subject', 'recipient', 'sender', 'replyto', 'cc', 'bcc', 'template', 'content', ),
-        self::TYPE_COLNAME       => array(ReactionTableMap::COL_ID, ReactionTableMap::COL_SUBJECT, ReactionTableMap::COL_RECIPIENT, ReactionTableMap::COL_SENDER, ReactionTableMap::COL_REPLYTO, ReactionTableMap::COL_CC, ReactionTableMap::COL_BCC, ReactionTableMap::COL_TEMPLATE, ReactionTableMap::COL_CONTENT, ),
-        self::TYPE_FIELDNAME     => array('id', 'subject', 'recipient', 'sender', 'replyTo', 'cc', 'bcc', 'template', 'content', ),
+        self::TYPE_PHPNAME       => array('Id', 'Subject', 'Recipient', 'Sender', 'ReplyTo', 'Cc', 'Bcc', 'Template', 'Content', ),
+        self::TYPE_CAMELNAME     => array('id', 'subject', 'recipient', 'sender', 'replyTo', 'cc', 'bcc', 'template', 'content', ),
+        self::TYPE_COLNAME       => array(ReactionTableMap::COL_ID, ReactionTableMap::COL_SUBJECT, ReactionTableMap::COL_RECIPIENT, ReactionTableMap::COL_SENDER, ReactionTableMap::COL_REPLY_TO, ReactionTableMap::COL_CC, ReactionTableMap::COL_BCC, ReactionTableMap::COL_TEMPLATE, ReactionTableMap::COL_CONTENT, ),
+        self::TYPE_FIELDNAME     => array('id', 'subject', 'recipient', 'sender', 'reply_to', 'cc', 'bcc', 'template', 'content', ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
@@ -142,10 +142,10 @@ class ReactionTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Subject' => 1, 'Recipient' => 2, 'Sender' => 3, 'Replyto' => 4, 'Cc' => 5, 'Bcc' => 6, 'Template' => 7, 'Content' => 8, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'subject' => 1, 'recipient' => 2, 'sender' => 3, 'replyto' => 4, 'cc' => 5, 'bcc' => 6, 'template' => 7, 'content' => 8, ),
-        self::TYPE_COLNAME       => array(ReactionTableMap::COL_ID => 0, ReactionTableMap::COL_SUBJECT => 1, ReactionTableMap::COL_RECIPIENT => 2, ReactionTableMap::COL_SENDER => 3, ReactionTableMap::COL_REPLYTO => 4, ReactionTableMap::COL_CC => 5, ReactionTableMap::COL_BCC => 6, ReactionTableMap::COL_TEMPLATE => 7, ReactionTableMap::COL_CONTENT => 8, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'subject' => 1, 'recipient' => 2, 'sender' => 3, 'replyTo' => 4, 'cc' => 5, 'bcc' => 6, 'template' => 7, 'content' => 8, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Subject' => 1, 'Recipient' => 2, 'Sender' => 3, 'ReplyTo' => 4, 'Cc' => 5, 'Bcc' => 6, 'Template' => 7, 'Content' => 8, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'subject' => 1, 'recipient' => 2, 'sender' => 3, 'replyTo' => 4, 'cc' => 5, 'bcc' => 6, 'template' => 7, 'content' => 8, ),
+        self::TYPE_COLNAME       => array(ReactionTableMap::COL_ID => 0, ReactionTableMap::COL_SUBJECT => 1, ReactionTableMap::COL_RECIPIENT => 2, ReactionTableMap::COL_SENDER => 3, ReactionTableMap::COL_REPLY_TO => 4, ReactionTableMap::COL_CC => 5, ReactionTableMap::COL_BCC => 6, ReactionTableMap::COL_TEMPLATE => 7, ReactionTableMap::COL_CONTENT => 8, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'subject' => 1, 'recipient' => 2, 'sender' => 3, 'reply_to' => 4, 'cc' => 5, 'bcc' => 6, 'template' => 7, 'content' => 8, ),
         self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
@@ -170,7 +170,7 @@ class ReactionTableMap extends TableMap
         $this->addColumn('subject', 'Subject', 'VARCHAR', true, 127, null);
         $this->addColumn('recipient', 'Recipient', 'VARCHAR', true, 63, null);
         $this->addColumn('sender', 'Sender', 'VARCHAR', true, 63, null);
-        $this->addColumn('replyTo', 'Replyto', 'VARCHAR', false, 63, null);
+        $this->addColumn('reply_to', 'ReplyTo', 'VARCHAR', false, 63, null);
         $this->addColumn('cc', 'Cc', 'VARCHAR', false, 63, null);
         $this->addColumn('bcc', 'Bcc', 'VARCHAR', false, 63, null);
         $this->addColumn('template', 'Template', 'VARCHAR', true, 127, null);
@@ -366,7 +366,7 @@ class ReactionTableMap extends TableMap
             $criteria->addSelectColumn(ReactionTableMap::COL_SUBJECT);
             $criteria->addSelectColumn(ReactionTableMap::COL_RECIPIENT);
             $criteria->addSelectColumn(ReactionTableMap::COL_SENDER);
-            $criteria->addSelectColumn(ReactionTableMap::COL_REPLYTO);
+            $criteria->addSelectColumn(ReactionTableMap::COL_REPLY_TO);
             $criteria->addSelectColumn(ReactionTableMap::COL_CC);
             $criteria->addSelectColumn(ReactionTableMap::COL_BCC);
             $criteria->addSelectColumn(ReactionTableMap::COL_TEMPLATE);
@@ -376,7 +376,7 @@ class ReactionTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.subject');
             $criteria->addSelectColumn($alias . '.recipient');
             $criteria->addSelectColumn($alias . '.sender');
-            $criteria->addSelectColumn($alias . '.replyTo');
+            $criteria->addSelectColumn($alias . '.reply_to');
             $criteria->addSelectColumn($alias . '.cc');
             $criteria->addSelectColumn($alias . '.bcc');
             $criteria->addSelectColumn($alias . '.template');

@@ -22,6 +22,8 @@ use FormsAPI\FormQuery;
 use FormsAPI\Condition;
 use FormsAPI\FormReaction;
 use FormsAPI\FormTag;
+use FormsAPI\FormStatus;
+use FormsAPI\Response;
 use FormsAPI\Note;
 use FormsAPI\Reaction;
 use FormsAPI\Recipient;
@@ -50,6 +52,7 @@ class PropelMediator implements MediatorInterface
         'dependencies' => Dependency::class,
         'requirements' => Requirement::class,
         'submissions' => Submission::class,
+        'responses' => Response::class,
         'statuses' => Status::class,
         'tags' => Tag::class,
         'notes' => Note::class,
@@ -62,6 +65,7 @@ class PropelMediator implements MediatorInterface
         'elementchoices' => ElementChoice::class,
         'submissiontags' => SubmissionTag::class,
         'formtags' => FormTag::class,
+        'formstatuses' => FormStatus::class,
         'formreactions' => FormReaction::class,
         'dashboardelements' => DashboardElement::class,
         'dashboardforms' => DashboardForm::class,
@@ -115,7 +119,7 @@ class PropelMediator implements MediatorInterface
         $resourceType = array_search(get_class($resource), static::$classMap);
 
         $attributes["href"] = "{$this->href}/$resourceType/{$attributes['id']}/";
-        var_dump($attributes);
+
         if ($resourceType === 'forms') {
             $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
             $attributes["root_element"] = "{$this->href}/elements/{$attributes['root_element_id']}/";
@@ -143,7 +147,39 @@ class PropelMediator implements MediatorInterface
         } elseif ($resourceType === "recipients") {
             $attributes["note"] = "{$this->href}/notes/{$attributes['note_id']}";
 
+        } elseif ($resourceType === 'responses') {
+            $attributes['submission'] = "{$this->href}/submissions/{$attributes['submission_id']}";
+            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
+        } elseif ($resourceType === 'stakeholders') {
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
+        } elseif ($resourceType === 'childformrelationships') {
+            $attributes['child'] = "{$this->href}/forms/{$attributes['child_id']}";
+            $attributes['parent'] = "{$this->href}/forms/{$attributes['parent_id']}";
+            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
+            $attributes['reaction'] = "{$this->href}/reactions/{$attributes['reaction_id']}";
+        } elseif ($resourceType === 'elementchoices') {
+            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
+            $attributes['choice'] = "{$this->href}/choices/{$attributes['choice_id']}";
+        } elseif ($resourceType === 'submissiontags') {
+            $attributes['submission'] = "{$this->href}/submissions/{$attributes['submission_id']}";
+            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
+        } elseif ($resourceType === 'formstatuses') {
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
+            $attributes['status'] = "{$this->href}/statuses/{$attributes['status_id']}";
+        } elseif ($resourceType === 'formtags') {
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
+            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
+        } elseif ($resourceType === 'formreactions') {
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
+            $attributes['reaction'] = "{$this->href}/reactions/{$attributes['reaction_id']}";
+        } elseif ($resourceType === 'dashboardelements') {
+            $attributes['dashboard'] = "{$this->href}/dashboards/{$attributes['dashboard_id']}";
+            $attributes['element'] = "{$this->href}/element/{$attributes['element_id']}";
+        } elseif ($resourceType === 'dashboardforms') {
+            $attributes['dashboard'] = "{$this->href}/dashboards/{$attributes['dashboard_id']}";
+            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
         }
+
 
         return $attributes;
 

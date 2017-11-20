@@ -3511,10 +3511,10 @@ abstract class Element implements ActiveRecordInterface
      * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
      * @return ObjectCollection|ChildRequirement[] List of ChildRequirement objects
      */
-    public function getRequirementsJoinForm(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    public function getRequirementsJoinCondition(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
     {
         $query = ChildRequirementQuery::create(null, $criteria);
-        $query->joinWith('Form', $joinBehavior);
+        $query->joinWith('Condition', $joinBehavior);
 
         return $this->getRequirements($query, $con);
     }

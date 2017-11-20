@@ -82,9 +82,9 @@ class RecipientTableMap extends TableMap
     const COL_ADDRESS = 'recipient.address';
 
     /**
-     * the column name for the note field
+     * the column name for the note_id field
      */
-    const COL_NOTE = 'recipient.note';
+    const COL_NOTE_ID = 'recipient.note_id';
 
     /**
      * The default string format for model objects of the related table
@@ -98,10 +98,10 @@ class RecipientTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Address', 'Note', ),
-        self::TYPE_CAMELNAME     => array('id', 'address', 'note', ),
-        self::TYPE_COLNAME       => array(RecipientTableMap::COL_ID, RecipientTableMap::COL_ADDRESS, RecipientTableMap::COL_NOTE, ),
-        self::TYPE_FIELDNAME     => array('id', 'address', 'note', ),
+        self::TYPE_PHPNAME       => array('Id', 'Address', 'NoteId', ),
+        self::TYPE_CAMELNAME     => array('id', 'address', 'noteId', ),
+        self::TYPE_COLNAME       => array(RecipientTableMap::COL_ID, RecipientTableMap::COL_ADDRESS, RecipientTableMap::COL_NOTE_ID, ),
+        self::TYPE_FIELDNAME     => array('id', 'address', 'note_id', ),
         self::TYPE_NUM           => array(0, 1, 2, )
     );
 
@@ -112,10 +112,10 @@ class RecipientTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Address' => 1, 'Note' => 2, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'address' => 1, 'note' => 2, ),
-        self::TYPE_COLNAME       => array(RecipientTableMap::COL_ID => 0, RecipientTableMap::COL_ADDRESS => 1, RecipientTableMap::COL_NOTE => 2, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'address' => 1, 'note' => 2, ),
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Address' => 1, 'NoteId' => 2, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'address' => 1, 'noteId' => 2, ),
+        self::TYPE_COLNAME       => array(RecipientTableMap::COL_ID => 0, RecipientTableMap::COL_ADDRESS => 1, RecipientTableMap::COL_NOTE_ID => 2, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'address' => 1, 'note_id' => 2, ),
         self::TYPE_NUM           => array(0, 1, 2, )
     );
 
@@ -138,7 +138,7 @@ class RecipientTableMap extends TableMap
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addColumn('address', 'Address', 'INTEGER', true, null, null);
-        $this->addColumn('note', 'Note', 'VARCHAR', true, 255, null);
+        $this->addForeignKey('note_id', 'NoteId', 'INTEGER', 'note', 'id', true, null, null);
     } // initialize()
 
     /**
@@ -146,6 +146,13 @@ class RecipientTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Note', '\\FormsAPI\\Note', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':note_id',
+    1 => ':id',
+  ),
+), 'CASCADE', null, null, false);
     } // buildRelations()
 
     /**
@@ -304,11 +311,11 @@ class RecipientTableMap extends TableMap
         if (null === $alias) {
             $criteria->addSelectColumn(RecipientTableMap::COL_ID);
             $criteria->addSelectColumn(RecipientTableMap::COL_ADDRESS);
-            $criteria->addSelectColumn(RecipientTableMap::COL_NOTE);
+            $criteria->addSelectColumn(RecipientTableMap::COL_NOTE_ID);
         } else {
             $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.address');
-            $criteria->addSelectColumn($alias . '.note');
+            $criteria->addSelectColumn($alias . '.note_id');
         }
     }
 

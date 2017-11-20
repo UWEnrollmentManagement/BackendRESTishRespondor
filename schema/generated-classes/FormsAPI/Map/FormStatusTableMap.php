@@ -177,7 +177,7 @@ class FormStatusTableMap extends TableMap
     public function getBehaviors()
     {
         return array(
-            'validate' => array('rule1' => array ('column' => 'form_id','validator' => 'NotNull',), 'rule2' => array ('column' => 'tag_id','validator' => 'NotNull',), ),
+            'validate' => array('rule1' => array ('column' => 'form_id','validator' => 'NotNull',), 'rule2' => array ('column' => 'status_id','validator' => 'NotNull',), ),
         );
     } // getBehaviors()
 

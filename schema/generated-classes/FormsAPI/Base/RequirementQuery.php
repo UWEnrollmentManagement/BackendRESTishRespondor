@@ -48,17 +48,17 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildRequirementQuery rightJoinWithElement() Adds a RIGHT JOIN clause and with to the query using the Element relation
  * @method     ChildRequirementQuery innerJoinWithElement() Adds a INNER JOIN clause and with to the query using the Element relation
  *
- * @method     ChildRequirementQuery leftJoinForm($relationAlias = null) Adds a LEFT JOIN clause to the query using the Form relation
- * @method     ChildRequirementQuery rightJoinForm($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Form relation
- * @method     ChildRequirementQuery innerJoinForm($relationAlias = null) Adds a INNER JOIN clause to the query using the Form relation
+ * @method     ChildRequirementQuery leftJoinCondition($relationAlias = null) Adds a LEFT JOIN clause to the query using the Condition relation
+ * @method     ChildRequirementQuery rightJoinCondition($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Condition relation
+ * @method     ChildRequirementQuery innerJoinCondition($relationAlias = null) Adds a INNER JOIN clause to the query using the Condition relation
  *
- * @method     ChildRequirementQuery joinWithForm($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Form relation
+ * @method     ChildRequirementQuery joinWithCondition($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Condition relation
  *
- * @method     ChildRequirementQuery leftJoinWithForm() Adds a LEFT JOIN clause and with to the query using the Form relation
- * @method     ChildRequirementQuery rightJoinWithForm() Adds a RIGHT JOIN clause and with to the query using the Form relation
- * @method     ChildRequirementQuery innerJoinWithForm() Adds a INNER JOIN clause and with to the query using the Form relation
+ * @method     ChildRequirementQuery leftJoinWithCondition() Adds a LEFT JOIN clause and with to the query using the Condition relation
+ * @method     ChildRequirementQuery rightJoinWithCondition() Adds a RIGHT JOIN clause and with to the query using the Condition relation
+ * @method     ChildRequirementQuery innerJoinWithCondition() Adds a INNER JOIN clause and with to the query using the Condition relation
  *
- * @method     \FormsAPI\ElementQuery|\FormsAPI\FormQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \FormsAPI\ElementQuery|\FormsAPI\ConditionQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildRequirement findOne(ConnectionInterface $con = null) Return the first ChildRequirement matching the query
  * @method     ChildRequirement findOneOrCreate(ConnectionInterface $con = null) Return the first ChildRequirement matching the query, or a new ChildRequirement object populated from the query conditions when no match is found
@@ -388,7 +388,7 @@ abstract class RequirementQuery extends ModelCriteria
      * $query->filterByConditionId(array('min' => 12)); // WHERE condition_id > 12
      * </code>
      *
-     * @see       filterByForm()
+     * @see       filterByCondition()
      *
      * @param     mixed $conditionId The value to use as filter.
      *              Use scalar values for equality.
@@ -499,44 +499,44 @@ abstract class RequirementQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query by a related \FormsAPI\Form object
+     * Filter the query by a related \FormsAPI\Condition object
      *
-     * @param \FormsAPI\Form|ObjectCollection $form The related object(s) to use as filter
+     * @param \FormsAPI\Condition|ObjectCollection $condition The related object(s) to use as filter
      * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
      * @return ChildRequirementQuery The current query, for fluid interface
      */
-    public function filterByForm($form, $comparison = null)
+    public function filterByCondition($condition, $comparison = null)
     {
-        if ($form instanceof \FormsAPI\Form) {
+        if ($condition instanceof \FormsAPI\Condition) {
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $form->getId(), $comparison);
-        } elseif ($form instanceof ObjectCollection) {
+                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $condition->getId(), $comparison);
+        } elseif ($condition instanceof ObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
 
             return $this
-                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $form->toKeyValue('PrimaryKey', 'Id'), $comparison);
+                ->addUsingAlias(RequirementTableMap::COL_CONDITION_ID, $condition->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
-            throw new PropelException('filterByForm() only accepts arguments of type \FormsAPI\Form or Collection');
+            throw new PropelException('filterByCondition() only accepts arguments of type \FormsAPI\Condition or Collection');
         }
     }
 
     /**
-     * Adds a JOIN clause to the query using the Form relation
+     * Adds a JOIN clause to the query using the Condition relation
      *
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return $this|ChildRequirementQuery The current query, for fluid interface
      */
-    public function joinForm($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinCondition($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('Form');
+        $relationMap = $tableMap->getRelation('Condition');
 
         // create a ModelJoin object for this join
         $join = new ModelJoin();
@@ -551,14 +551,14 @@ abstract class RequirementQuery extends ModelCriteria
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
-            $this->addJoinObject($join, 'Form');
+            $this->addJoinObject($join, 'Condition');
         }
 
         return $this;
     }
 
     /**
-     * Use the Form relation Form object
+     * Use the Condition relation Condition object
      *
      * @see useQuery()
      *
@@ -566,13 +566,13 @@ abstract class RequirementQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return \FormsAPI\FormQuery A secondary query class using the current class as primary query
+     * @return \FormsAPI\ConditionQuery A secondary query class using the current class as primary query
      */
-    public function useFormQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function useConditionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
         return $this
-            ->joinForm($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'Form', '\FormsAPI\FormQuery');
+            ->joinCondition($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Condition', '\FormsAPI\ConditionQuery');
     }
 
     /**
