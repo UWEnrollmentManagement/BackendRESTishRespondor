@@ -244,6 +244,8 @@ class APITest extends BaseTest
          //Assert that the id is an int
         $this->assertInternalType('int', $responseData['data']['id']);
 
+        return $responseData['data'];
+
     }
 
     /**
@@ -251,7 +253,6 @@ class APITest extends BaseTest
      **/
     public function testDeleteForm()
     {
-
         // Create a form to use
         $requestData = $this->testGetForm();
 
@@ -262,13 +263,11 @@ class APITest extends BaseTest
 
         // Issue the request
         $response = $this->doRequest($request['method'], $request['path']);
-
-        // Assert that the return code is 200
-//        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->getStatusCode());
 
         // attempt to grab it to make sure it is dead
         $request['method'] = 'GET';
-        $pulseCheck = $this->doRequest($request['method'], $request['path']);
+        $response = $this->doRequest($request['method'], $request['path']);
 
         // Assert that the return code is 404
         $this->assertEquals(404, $response->getStatusCode());
@@ -340,6 +339,36 @@ class APITest extends BaseTest
 
             // Assert that the id is an int
             $this->assertInternalType('int', $responseData['data']['id']);
+        }
+    }
+
+    /**
+     * A client should be able to delete resources of all other types, not just forms
+     */
+    public function testDeleteAllElse()
+    {
+        foreach ($this->allParameters as $resourceType => $allParameters) {
+            $response = $this->doCreate($resourceType);
+
+            // Create the resource
+            $this->assertEquals(200, $response->getStatusCode(), "$resourceType");
+            $responseData = $this->responseToArray($response);
+
+            $request = [
+                'method' => 'DELETE',
+                'path' => "/$resourceType/{$responseData['data']['id']}/"
+            ];
+
+            // Issue the request
+            $response = $this->doRequest($request['method'], $request['path']);
+            $this->assertEquals(200, $response->getStatusCode());
+
+            // attempt to grab it to make sure it is dead
+            $request['method'] = 'GET';
+            $response = $this->doRequest($request['method'], $request['path']);
+
+            // Assert that the return code is 404
+            $this->assertEquals(404, $response->getStatusCode());
         }
     }
 }

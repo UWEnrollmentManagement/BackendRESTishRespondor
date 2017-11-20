@@ -223,7 +223,7 @@ class PropelMediator implements MediatorInterface
     {
         $resource->delete();
 
-        return $resource->wasDeleted();
+        return $resource->isDeleted();
     }
 
     public function resourceTypeExists($resourceType)
