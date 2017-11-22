@@ -315,10 +315,10 @@ class APITest extends BaseTest
      * A client shall be able to create all other resource types, in addition to
      * forms.
      */
-    public function testCreateAllElse($requestData = [])
+    public function testCreateAllElse()
     {
         foreach ($this->allParameters as $resourceType => $allParameters) {
-            $response = $this->doCreate($resourceType, $requestData);
+            $response = $this->doCreate($resourceType);
 
             // Assert that the return code is 200
             $this->assertEquals(200, $response->getStatusCode(), "$resourceType");
@@ -331,11 +331,6 @@ class APITest extends BaseTest
             // Assert that data is an array and has the necessary parameters
             $this->assertInternalType('array', $responseData['data']);
             $this->assertArrayHasKeys($allParameters, $responseData['data'], "For resource type $resourceType.");
-
-            // Assert that the return object has the values we provided
-            foreach ($requestData as $key => $value) {
-                $this->assertEquals($value, $responseData['data']['key']);
-            }
 
             // Assert that the id is an int
             $this->assertInternalType('int', $responseData['data']['id']);
@@ -369,6 +364,43 @@ class APITest extends BaseTest
 
             // Assert that the return code is 404
             $this->assertEquals(404, $response->getStatusCode());
+        }
+    }
+
+    /**
+     * A client shall be able to create all other resource types, in addition to
+     * forms.
+     */
+    public function testGetAllElse()
+    {
+        foreach ($this->allParameters as $resourceType => $allParameters) {
+            // Create a resource of the given type
+            $createResponse = $this->doCreate($resourceType);
+
+            // Assert that the return code is 200
+            $this->assertEquals(200, $createResponse->getStatusCode(), "$resourceType");
+
+            // Retrieve the response data
+            $createResponseData = $this->responseToArray($createResponse);
+
+            // Assert that the id is an int
+            $this->assertInternalType('int', $createResponseData['data']['id']);
+
+            $request = [
+                'method' => 'GET',
+                'path' => "/$resourceType/{$createResponseData['data']['id']}/"
+            ];
+
+            // Issue the request
+            $retrieveResponse = $this->doRequest($request['method'], $request['path']);
+            $this->assertEquals(200, $retrieveResponse->getStatusCode());
+            $retrieveResponseData = $this->responseToArray($retrieveResponse);
+
+            // Assert that each attribute has the same value in the create response as
+            // the retrieve response
+            foreach ($createResponseData['data'] as $key => $value) {
+                $this->assertEquals($value, $retrieveResponseData['data'][$key]);
+            }
         }
     }
 }
