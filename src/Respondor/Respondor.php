@@ -30,16 +30,18 @@ class Respondor
          // Then I think that there is a way to feed that array into the new form in one line
 
         $parsedBody = $request->getParsedBody();
+        $routeInfo = $request->getAttribute('routeInfo')[2];
 
+        // default in case we never set this
         $objectData = null;
-        // href and some other keys are generated in the respondor to return
         $success = false;
         $error = null;
         $status = 500;
-        // default in case we never set this
         $reasonPhrase = "Internal Server Error";
+        $current = $request->getUri()->getPath();
+        $next = null;
+        $previous = null;
 
-        $routeInfo = $request->getAttribute('routeInfo')[2];
         $resourceType = $routeInfo['resourceType'];
         $resourceId = null;
 
@@ -137,6 +139,9 @@ class Respondor
         $responseContents = [
             "success" => $success,
             "status" => $status,
+            "previous" => $previous,
+            "current" => $current,
+            "next" => $next,
             "data" => $objectData,
             "time" => date("Y-m-dH:i:s"),
             "error" => $error
