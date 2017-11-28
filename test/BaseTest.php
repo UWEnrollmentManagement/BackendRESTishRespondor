@@ -237,6 +237,9 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         $requiredResponseFields = [
             "success",
             "status",
+            "previous",
+            "current",
+            "next",
             "time",
             "data",
             "error",

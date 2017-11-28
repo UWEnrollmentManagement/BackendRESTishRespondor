@@ -189,9 +189,6 @@ class APITest extends BaseTest
         // Assert that data is an array
         $this->assertInternalType('array', $responseData['data']);
 
-        print_r($responseData);
-        die();
-
         foreach ($responseData['data'] as $formData) {
             $this->assertArrayHasKeys($this->allParameters['forms'], $formData);
 
