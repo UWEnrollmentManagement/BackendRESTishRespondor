@@ -81,7 +81,7 @@ abstract class Recipient implements ActiveRecordInterface
     /**
      * The value for the address field.
      *
-     * @var        int
+     * @var        string
      */
     protected $address;
 
@@ -360,7 +360,7 @@ abstract class Recipient implements ActiveRecordInterface
     /**
      * Get the [address] column value.
      *
-     * @return int
+     * @return string
      */
     public function getAddress()
     {
@@ -400,13 +400,13 @@ abstract class Recipient implements ActiveRecordInterface
     /**
      * Set the value of [address] column.
      *
-     * @param int $v new value
+     * @param string $v new value
      * @return $this|\FormsAPI\Recipient The current object (for fluent API support)
      */
     public function setAddress($v)
     {
         if ($v !== null) {
-            $v = (int) $v;
+            $v = (string) $v;
         }
 
         if ($this->address !== $v) {
@@ -481,7 +481,7 @@ abstract class Recipient implements ActiveRecordInterface
             $this->id = (null !== $col) ? (int) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : RecipientTableMap::translateFieldName('Address', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->address = (null !== $col) ? (int) $col : null;
+            $this->address = (null !== $col) ? (string) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RecipientTableMap::translateFieldName('NoteId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->note_id = (null !== $col) ? (int) $col : null;
@@ -734,7 +734,7 @@ abstract class Recipient implements ActiveRecordInterface
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
                     case 'address':
-                        $stmt->bindValue($identifier, $this->address, PDO::PARAM_INT);
+                        $stmt->bindValue($identifier, $this->address, PDO::PARAM_STR);
                         break;
                     case 'note_id':
                         $stmt->bindValue($identifier, $this->note_id, PDO::PARAM_INT);

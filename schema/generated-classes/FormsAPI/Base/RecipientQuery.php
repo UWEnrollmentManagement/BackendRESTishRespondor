@@ -52,19 +52,19 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildRecipient findOneOrCreate(ConnectionInterface $con = null) Return the first ChildRecipient matching the query, or a new ChildRecipient object populated from the query conditions when no match is found
  *
  * @method     ChildRecipient findOneById(int $id) Return the first ChildRecipient filtered by the id column
- * @method     ChildRecipient findOneByAddress(int $address) Return the first ChildRecipient filtered by the address column
+ * @method     ChildRecipient findOneByAddress(string $address) Return the first ChildRecipient filtered by the address column
  * @method     ChildRecipient findOneByNoteId(int $note_id) Return the first ChildRecipient filtered by the note_id column *
 
  * @method     ChildRecipient requirePk($key, ConnectionInterface $con = null) Return the ChildRecipient by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOne(ConnectionInterface $con = null) Return the first ChildRecipient matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient requireOneById(int $id) Return the first ChildRecipient filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildRecipient requireOneByAddress(int $address) Return the first ChildRecipient filtered by the address column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildRecipient requireOneByAddress(string $address) Return the first ChildRecipient filtered by the address column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildRecipient requireOneByNoteId(int $note_id) Return the first ChildRecipient filtered by the note_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildRecipient[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildRecipient objects based on current ModelCriteria
  * @method     ChildRecipient[]|ObjectCollection findById(int $id) Return ChildRecipient objects filtered by the id column
- * @method     ChildRecipient[]|ObjectCollection findByAddress(int $address) Return ChildRecipient objects filtered by the address column
+ * @method     ChildRecipient[]|ObjectCollection findByAddress(string $address) Return ChildRecipient objects filtered by the address column
  * @method     ChildRecipient[]|ObjectCollection findByNoteId(int $note_id) Return ChildRecipient objects filtered by the note_id column
  * @method     ChildRecipient[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
@@ -300,35 +300,19 @@ abstract class RecipientQuery extends ModelCriteria
      *
      * Example usage:
      * <code>
-     * $query->filterByAddress(1234); // WHERE address = 1234
-     * $query->filterByAddress(array(12, 34)); // WHERE address IN (12, 34)
-     * $query->filterByAddress(array('min' => 12)); // WHERE address > 12
+     * $query->filterByAddress('fooValue');   // WHERE address = 'fooValue'
+     * $query->filterByAddress('%fooValue%', Criteria::LIKE); // WHERE address LIKE '%fooValue%'
      * </code>
      *
-     * @param     mixed $address The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $address The value to use as filter.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this|ChildRecipientQuery The current query, for fluid interface
      */
     public function filterByAddress($address = null, $comparison = null)
     {
-        if (is_array($address)) {
-            $useMinMax = false;
-            if (isset($address['min'])) {
-                $this->addUsingAlias(RecipientTableMap::COL_ADDRESS, $address['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($address['max'])) {
-                $this->addUsingAlias(RecipientTableMap::COL_ADDRESS, $address['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
+        if (null === $comparison) {
+            if (is_array($address)) {
                 $comparison = Criteria::IN;
             }
         }

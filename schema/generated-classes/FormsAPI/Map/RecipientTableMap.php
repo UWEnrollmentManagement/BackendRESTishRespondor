@@ -137,7 +137,7 @@ class RecipientTableMap extends TableMap
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('address', 'Address', 'INTEGER', true, null, null);
+        $this->addColumn('address', 'Address', 'VARCHAR', true, 255, null);
         $this->addForeignKey('note_id', 'NoteId', 'INTEGER', 'note', 'id', true, null, null);
     } // initialize()
 

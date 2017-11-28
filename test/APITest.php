@@ -189,6 +189,9 @@ class APITest extends BaseTest
         // Assert that data is an array
         $this->assertInternalType('array', $responseData['data']);
 
+        print_r($responseData);
+        die();
+
         foreach ($responseData['data'] as $formData) {
             $this->assertArrayHasKeys($this->allParameters['forms'], $formData);
 
@@ -279,11 +282,14 @@ class APITest extends BaseTest
      **/
     public function testModifyForm() {
         // Create a form to use
-        $requestData = $this->testCreateForm();
+        $responseData = $this->testCreateForm();
+        $formId = $responseData['id'];
+
+        $requestData = $this->faker->fake('forms');
 
         $request = [
             'method' => 'PATCH',
-            'path' => "/forms/{$requestData['id']}/",
+            'path' => "/forms/{$formId}/",
             'data' => $requestData,
         ];
 
@@ -400,6 +406,45 @@ class APITest extends BaseTest
             // the retrieve response
             foreach ($createResponseData['data'] as $key => $value) {
                 $this->assertEquals($value, $retrieveResponseData['data'][$key]);
+            }
+        }
+    }
+
+
+    /**
+     * A client shall be able to update all other resource types, in addition to
+     * forms.
+     */
+    public function testModifyAllElse()
+    {
+        foreach ($this->allParameters as $resourceType => $allParameters) {
+            // Create a resource of the given type
+            $createResponse = $this->doCreate($resourceType);
+
+            // Assert that the return code is 200
+            $this->assertEquals(200, $createResponse->getStatusCode(), "$resourceType");
+
+            // Retrieve the response data
+            $createResponseData = $this->responseToArray($createResponse);
+
+            // Assert that the id is an int
+            $this->assertInternalType('int', $createResponseData['data']['id']);
+
+            $request = [
+                'method' => 'PATCH',
+                'path' => "/$resourceType/{$createResponseData['data']['id']}/",
+                'data' => $this->faker->fake($resourceType),
+            ];
+
+            // Issue the request
+            $response = $this->doRequest($request['method'], $request['path'], $request['data']);
+            $this->assertEquals(200, $response->getStatusCode());
+            $responseData = $this->responseToArray($response);
+
+            // Assert that each attribute has the same value in the create response as
+            // the retrieve response
+            foreach ($request['data'] as $key => $value) {
+                $this->assertEquals($value, $responseData['data'][$key], "For resource type $resourceType and key $key.");
             }
         }
     }

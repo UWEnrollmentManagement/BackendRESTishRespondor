@@ -58,7 +58,7 @@ class FormsAPIFaker
                 'help_text' => 'catchPhrase',
                 'placeholder_text' => 'catchPhrase',
                 'required' => "boolean",
-                'initial value' => 'catchPhrase',
+                'initial_value' => 'catchPhrase',
                 'parent_id' => ['reference', 'elements']
             ],
         ],
