@@ -138,7 +138,7 @@ class PropelMediator implements MediatorInterface
             $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
             $attributes['status'] = "{$this->href}/statuses/{$attributes['status_id']}";
             $attributes['assignee'] = "{$this->href}/visitors/{$attributes['assignee_id']}";
-            $attributes['submitted'] = "{$this->href}/visitors/{$attributes['assignee_id']}";
+            $attributes['submitted'] = strtotime($attributes['submitted']);
             if (array_key_exists('parent', $attributes)) {
                 $attributes['parent'] = "{$this->href}/submissions/{$attributes['parent_id']}";
             } else {

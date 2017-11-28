@@ -266,7 +266,7 @@
 
     <table name="recipient">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
-        <column name="address" type="integer" required="true" />
+        <column name="address" type="varchar" required="true" />
 
         <column name="note_id" type="integer" required="true" />
         <foreign-key foreignTable="note" onDelete="cascade">

@@ -246,7 +246,7 @@ DROP TABLE IF EXISTS [recipient];
 CREATE TABLE [recipient]
 (
     [id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    [address] INTEGER NOT NULL,
+    [address] VARCHAR(255) NOT NULL,
     [note_id] INTEGER NOT NULL,
     UNIQUE ([id]),
     FOREIGN KEY ([note_id]) REFERENCES [note] ([id])
