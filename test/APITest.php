@@ -207,7 +207,6 @@ class APITest extends BaseTest
                 );
             }
         }
-
     }
 
     /**
@@ -407,6 +406,62 @@ class APITest extends BaseTest
         }
     }
 
+    /**
+     * Client can get a list of other resources
+     **/
+    public function testListAllElse()
+    {
+        foreach ($this->allParameters as $resourceType => $allParameters) {
+            // Make some forms so we can return more than one
+            $createResponseData = [];
+            for($i = 0; $i < 5; $i++) {
+                $response = $this->doCreate($resourceType);
+                $responseData = $this->responseToArray($response)['data'];
+                $createResponseData[$responseData['id']] = $responseData;
+            }
+
+            $request = [
+                'method' => 'GET',
+                'path' => "/$resourceType/"
+            ];
+
+            // Issue the request
+            $response = $this->doRequest($request['method'], $request['path']);
+
+            // Assert that the return code is 200
+            $this->assertEquals(200, $response->getStatusCode());
+
+            // Retrieve the response data, assert that it is valid
+            $responseData = $this->responseToArray($response);
+            $this->assertHasRequiredResponseElements($responseData);
+
+            // Assert that data is an array
+            $this->assertInternalType('array', $responseData['data']);
+
+            $retrieveResponseData = [];
+            foreach ($responseData['data'] as $resourceData) {
+                $retrieveResponseData[$resourceData['id']] = $resourceData;
+            }
+
+            foreach ($createResponseData as $resourceId => $createResource) {
+                $this->assertArrayHasKey($resourceId, $retrieveResponseData);
+
+                $retrieveResource = $retrieveResponseData[$resourceId];
+
+                $this->assertArrayHasKeys($allParameters, $retrieveResource);
+
+                // Assert that the return object has the values we provided
+                foreach ($createResource as $key => $value) {
+                    $this->assertEquals(
+                        $value,
+                        $retrieveResource[$key],
+                        "Comparing resource $resourceType $resourceId on key $key"
+                    );
+                }
+            }
+
+        }
+    }
 
     /**
      * A client shall be able to update all other resource types, in addition to
