@@ -9,6 +9,8 @@
 namespace FormsAPI\Mediator;
 
 use Propel\Runtime\Map\TableMap;
+use Propel\Runtime\ActiveQuery\Criteria;
+
 use FormsAPI\ChildFormRelationship;
 use FormsAPI\ChoiceValue as Choice;
 use FormsAPI\DashboardElement;
@@ -42,6 +44,18 @@ class PropelMediator implements MediatorInterface
     protected $href;
 
     protected $errors = [];
+
+    protected static $condMap = [
+        MediatorInterface::COND_GT => Criteria::GREATER_THAN,
+        MediatorInterface::COND_LT => Criteria::LESS_THAN,
+        MediatorInterface::COND_EQUAL => Criteria::EQUAL,
+        MediatorInterface::COND_GTE => Criteria::GREATER_EQUAL,
+        MediatorInterface::COND_LTE => Criteria::LESS_EQUAL,
+        MediatorInterface::COND_NOT_EQUAL => Criteria::NOT_EQUAL,
+        MediatorInterface::COND_LIKE => Criteria::LIKE,
+        MediatorInterface::COND_NULL => Criteria::ISNULL,
+        MediatorInterface::COND_NOT_NULL => Criteria::ISNOTNULL,
+    ];
 
     protected static $classMap = [
         'forms' => Form::class,
@@ -216,6 +230,13 @@ class PropelMediator implements MediatorInterface
     public function offset($collection, $offset)
     {
         return $collection->offset($offset);
+    }
+
+    public function filter($collection, $attribute, $operator, $value = null)
+    {
+        $attribute = $collection->getTableMap()->getColumn($attribute)->getPhpName();
+        $propelOperator = static::$condMap[$operator];
+        return $collection->filterBy($attribute, $value, $propelOperator);
     }
 
     public function delete($resource)

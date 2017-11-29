@@ -12,6 +12,28 @@ namespace FormsAPI\Mediator;
 Interface MediatorInterface
 {
 
+    const COND_GT = '>';
+    const COND_LT = '<';
+    const COND_EQUAL = '=';
+    const COND_GTE = '>=';
+    const COND_LTE = '<=';
+    const COND_NOT_EQUAL = '!=';
+    const COND_LIKE = 'LIKE';
+    const COND_NULL = 'NULL';
+    const COND_NOT_NULL = 'NOT_NULL';
+
+    const ALL_CONDS = [
+        MediatorInterface::COND_GT,
+        MediatorInterface::COND_LT,
+        MediatorInterface::COND_EQUAL,
+        MediatorInterface::COND_GTE,
+        MediatorInterface::COND_LTE,
+        MediatorInterface::COND_NOT_EQUAL,
+        MediatorInterface::COND_LIKE,
+        MediatorInterface::COND_NULL,
+        MediatorInterface::COND_NOT_NULL,
+    ];
+
     /**
      * MediatorInterface constructor.
      *
@@ -83,6 +105,17 @@ Interface MediatorInterface
      * @return mixed
      */
     public function offset($collection, $offset);
+
+    /**
+     * Filters a collection according to the given criteria
+     *
+     * @param $collection
+     * @param $attribute
+     * @param $operator
+     * @param null $value
+     * @return mixed
+     */
+    public function filter($collection, $attribute, $operator, $value=null);
 
     /**
      * Deletes a given resource. Return true on success or false on failure to delete.

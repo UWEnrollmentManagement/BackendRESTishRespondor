@@ -169,9 +169,10 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
             'CONTENT_TYPE' => 'application/json;charset=utf8',
         ];
 
+
         $env = Environment::mock($vars);
         $request = Request::createFromEnvironment($env);
-        
+
         if($data) {
             $request->getBody()->write(json_encode($data));   
         }
