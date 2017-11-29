@@ -500,4 +500,100 @@ class APITest extends BaseTest
             }
         }
     }
+
+    /**
+     * Client can get a list of the forms, with pagination
+     **/
+    public function testPagination()
+    {
+        $numForms = 10;
+        $formsPerPage = 3;
+
+        // Make some forms so we can return more than one
+        $createResponseData = [];
+        for($i = 0; $i < $numForms; $i++) {
+            $responseData = $this->testCreateForm();
+            $createResponseData[$responseData['id']] = $responseData;
+        }
+
+        $request = [
+            'method' => 'GET',
+            'path' => "/forms/?limit=$formsPerPage"
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path']);
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array
+        $this->assertInternalType('array', $responseData['data']);
+
+        // Assert that the appropriate number of items have been returned
+        $this->assertEquals($formsPerPage, sizeof($responseData['data']));
+
+        // Assert that 'current' includes our current page
+        $this->assertContains($request['path'], $responseData['current']);
+
+        // Previous should be null, we are on the first page
+        $this->assertNull($responseData['previous']);
+
+        // Next should contain an href to the next page of results
+        $this->assertNotNull($responseData['next']);
+        $this->assertContains('/forms/', $responseData['next']);
+        $this->assertContains("limit=$formsPerPage", $responseData['next']);
+        $this->assertContains("offset=$formsPerPage", $responseData['next']);
+
+        // Begin accumulating all of the form data returned by these responses
+        $retrieveResponseData = [];
+        foreach ($responseData['data'] as $responseDatum) {
+            $retrieveResponseData[$responseDatum['id']] = $responseDatum;
+        }
+
+        $pageFollows = 0;
+        while($responseData['next'] !== null) {
+            $request = [
+                'method' => 'GET',
+                'path' => $responseData['next']
+            ];
+
+            // Issue the request
+            $response = $this->doRequest($request['method'], $request['path']);
+
+            // Assert that the return code is 200
+            $this->assertEquals(200, $response->getStatusCode());
+
+            // Retrieve the response data, accumulate the results
+            $responseData = $this->responseToArray($response);
+            foreach ($responseData['data'] as $responseDatum) {
+                $retrieveResponseData[$responseDatum['id']] = $responseDatum;
+            }
+
+            $pageFollows++;
+            $this->assertLessThan(20, $pageFollows, 'Form pagination never gave a null next.');
+        }
+
+        // Assert that we retrieved all of the forms
+        $this->assertEquals($numForms, sizeof($retrieveResponseData));
+        $this->assertEquals($createResponseData, $retrieveResponseData);
+
+        // Test that "previous" is generated correctly
+        $request = [
+            'method' => 'GET',
+            'path' => "/forms/?limit=$formsPerPage&offset=$formsPerPage"
+        ];
+        $response = $this->doRequest($request['method'], $request['path']);
+        $this->assertEquals(200, $response->getStatusCode());
+        $responseData = $this->responseToArray($response);
+
+        $this->assertContains('/forms/', $responseData['previous']);
+        $this->assertContains("limit=$formsPerPage", $responseData['previous']);
+        $this->assertContains("offset=0", $responseData['previous']);
+
+    }
 }

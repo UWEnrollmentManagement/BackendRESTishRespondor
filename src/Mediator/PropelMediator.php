@@ -204,7 +204,6 @@ class PropelMediator implements MediatorInterface
     public function limit($collection, $limit)
     {
         $limit = max(1, $limit);
-        $limit = min(100, $limit);
 
         return $collection->limit($limit);
     }
