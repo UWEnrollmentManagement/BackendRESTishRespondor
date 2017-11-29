@@ -38,7 +38,7 @@ class Respondor
         $error = null;
         $status = 500;
         $reasonPhrase = "Internal Server Error";
-        $current = $request->getUri()->getPath();
+        $current = $request->getUri()->getPath() . ($request->getUri()->getQuery() ? '?' . $request->getUri()->getQuery() : '');
         $next = null;
         $previous = null;
 
@@ -98,10 +98,30 @@ class Respondor
                 $success = true;
                 $error = null;
 
-                $objectData = [];
+                $params = $request->getQueryParams();
+                $limit = $request->getQueryParam('limit', 100);
+                $offset = $request->getQueryParam('offset', 0);
 
+                $params['limit'] = $limit;
+                $params['offset'] = $offset;
+
+                $this->mediator->limit($collection, $limit)->offset($offset);
+
+                $objectData = [];
                 foreach($this->mediator->collectionToIterable($collection) as $resource) {
                     $objectData[] = $this->mediator->getAttributes($resource);
+                }
+
+                if (sizeof($objectData) == $limit) {
+                    $nextParams = $params;
+                    $nextParams['offset'] = $offset + $limit;
+                    $next = $request->getUri()->getPath() . '?' . http_build_query($nextParams);
+                }
+
+                if ($offset > 0) {
+                    $previousParams = $params;
+                    $previousParams['offset'] = max(0, $offset - $limit);
+                    $previous = $request->getUri()->getPath() . '?' . http_build_query($previousParams);
                 }
 
             } else {
