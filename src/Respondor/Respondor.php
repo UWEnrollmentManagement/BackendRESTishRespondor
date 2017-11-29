@@ -102,27 +102,54 @@ class Respondor
                 $limit = $request->getQueryParam('limit', 100);
                 $offset = $request->getQueryParam('offset', 0);
 
+                $filterOperators = $request->getQueryParam('filter_operator', []);
+                $filterAttributes = $request->getQueryParam('filter_attribute', []);
+                $filterValues = $request->getQueryParam('filter_value', []);
+
                 $params['limit'] = $limit;
                 $params['offset'] = $offset;
 
-                $this->mediator->limit($collection, $limit)->offset($offset);
+                if (sizeof($filterOperators) != sizeof($filterAttributes) || sizeof($filterOperators) != sizeof($filterValues)) {
+                    $status = 400;
+                    $success = false;
+                    $error = "There must be an equal number of filter operators, attributes, and values. For ".
+                        "operators which do not require a value, include a blank value.";
+                } elseif (array_diff($filterOperators, MediatorInterface::ALL_CONDS) !== []) {
+                    $status = 400;
+                    $success = false;
+                    $error = "Filter operators must be among [" . implode(', ', MediatorInterface::ALL_CONDS) . '], ' .
+                        'but you provided operators [' . implode($filterOperators) . '].';
 
-                $objectData = [];
-                foreach($this->mediator->collectionToIterable($collection) as $resource) {
-                    $objectData[] = $this->mediator->getAttributes($resource);
+                }
+                else {
+                    foreach ($filterOperators as $key => $operator) {
+                        $this->mediator->filter(
+                            $collection,
+                            $filterAttributes[$key],
+                            $filterOperators[$key], $filterValues[$key]
+                        );
+                    }
+                    $this->mediator->limit($collection, $limit)->offset($offset);
+
+                    $objectData = [];
+                    foreach($this->mediator->collectionToIterable($collection) as $resource) {
+                        $objectData[] = $this->mediator->getAttributes($resource);
+                    }
+
+                    if (sizeof($objectData) == $limit) {
+                        $nextParams = $params;
+                        $nextParams['offset'] = $offset + $limit;
+                        $next = $request->getUri()->getPath() . '?' . http_build_query($nextParams);
+                    }
+
+                    if ($offset > 0) {
+                        $previousParams = $params;
+                        $previousParams['offset'] = max(0, $offset - $limit);
+                        $previous = $request->getUri()->getPath() . '?' . http_build_query($previousParams);
+                    }
+
                 }
 
-                if (sizeof($objectData) == $limit) {
-                    $nextParams = $params;
-                    $nextParams['offset'] = $offset + $limit;
-                    $next = $request->getUri()->getPath() . '?' . http_build_query($nextParams);
-                }
-
-                if ($offset > 0) {
-                    $previousParams = $params;
-                    $previousParams['offset'] = max(0, $offset - $limit);
-                    $previous = $request->getUri()->getPath() . '?' . http_build_query($previousParams);
-                }
 
             } else {
                 $status = 404;

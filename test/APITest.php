@@ -518,11 +518,12 @@ class APITest extends BaseTest
 
         $request = [
             'method' => 'GET',
-            'path' => "/forms/?limit=$formsPerPage"
+            'path' => '/forms/',
+            'query' => ['limit' => $formsPerPage],
         ];
 
         // Issue the request
-        $response = $this->doRequest($request['method'], $request['path']);
+        $response = $this->doRequest($request['method'], $request['path'] . '?' . http_build_query($request['query']));
 
         // Assert that the return code is 200
         $this->assertEquals(200, $response->getStatusCode());
@@ -595,5 +596,98 @@ class APITest extends BaseTest
         $this->assertContains("limit=$formsPerPage", $responseData['previous']);
         $this->assertContains("offset=0", $responseData['previous']);
 
+    }
+
+
+    /**
+     * Client can filter their list results using query variables
+     **/
+    public function testQueryFilter()
+    {
+
+        $responseContents = [
+            0, 1, 2, 3, 4, 5, "bob", "bobby", "Bob", "Sally"
+        ];
+
+        // Make some forms so we can return more than one
+        $createResponseData = [];
+        foreach($responseContents as $responseContent) {
+            $response = $this->doCreate('responses', ['content' => $responseContent]);
+            $responseData = $this->responseToArray($response);
+            $createResponseData[$responseData['data']['id']] = $responseData;
+        }
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/responses/',
+            'data' => null,
+            'query' => [
+                'filter_attribute' => ['content'],
+                'filter_operator' => ['='],
+                'filter_value' => ['2'],
+            ]
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'] . '?' . http_build_query($request['query']));
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array
+        $this->assertInternalType('array', $responseData['data']);
+
+        // Assert that 1 element has been returned
+        $this->assertEquals(1, sizeof($responseData['data']));
+
+
+        $request = [
+            'method' => 'GET',
+            'path' => '/responses/',
+            'data' => null,
+            'query' => [
+                'filter_attribute' => ['content'],
+                'filter_operator' => ['LIKE'],
+                'filter_value' => ['%bob%'],
+            ]
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'] . '?' . http_build_query($request['query']));
+
+        // Assert that the return code is 200
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Retrieve the response data, assert that it is valid
+        $responseData = $this->responseToArray($response);
+        $this->assertHasRequiredResponseElements($responseData);
+
+        // Assert that data is an array
+        $this->assertInternalType('array', $responseData['data']);
+
+        // Assert that 1 element has been returned
+        $this->assertEquals(3, sizeof($responseData['data']));
+
+        // Issue a request with a bad operator
+        $request = [
+            'method' => 'GET',
+            'path' => '/responses/',
+            'data' => null,
+            'query' => [
+                'filter_attribute' => ['content'],
+                'filter_operator' => ['BADOPERATOR'],
+                'filter_value' => ['%bob%'],
+            ]
+        ];
+
+        // Issue the request
+        $response = $this->doRequest($request['method'], $request['path'] . '?' . http_build_query($request['query']));
+
+        // Assert that the return code is 200
+        $this->assertEquals(400, $response->getStatusCode());
     }
 }
