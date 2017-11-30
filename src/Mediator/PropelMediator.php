@@ -114,7 +114,6 @@ class PropelMediator implements MediatorInterface
     }
 
     public function create($resourceType) {
-        //might receive strings forms, elements
         $selectedClass = static::$classMap[$resourceType];
 
         $resource = new $selectedClass();
@@ -132,68 +131,30 @@ class PropelMediator implements MediatorInterface
 
         $resourceType = array_search(get_class($resource), static::$classMap);
 
+        $tableMapClass = $resource::TABLE_MAP;
+        $columns = $tableMapClass::getTableMap()->getColumns();
+
+        foreach ($columns as $key => $column) {
+            if ($column->isForeignKey()) {
+                $foreignKeyName = $column->getName();
+                $foreignResourceType = array_search(trim($column->getRelatedTable()->getClassName(), '\\'), static::$classMap);
+                $foreignReferenceName = substr($foreignKeyName, 0, -3);
+
+                if (array_key_exists($foreignKeyName, $attributes) && $attributes[$foreignKeyName] !== null) {
+                    $attributes[$foreignReferenceName] = "{$this->href}/$foreignResourceType/{$attributes[$foreignKeyName]}";
+                } else {
+                    $attributes[$foreignReferenceName] = null;
+                }
+            } elseif ($column->getType() === 'TIMESTAMP') {
+                $attributes[$column->getName()] = strtotime($attributes[$column->getName()]);
+            }
+        }
+
         $attributes["href"] = "{$this->href}/$resourceType/{$attributes['id']}/";
 
         if ($resourceType === 'forms') {
             $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
-            $attributes["root_element"] = "{$this->href}/elements/{$attributes['root_element_id']}/";
-
-        } elseif ($resourceType === 'elements') {
-            $attributes['parent'] = "{$this->href}/$resourceType/{$attributes['parent_id']}/";
-        } elseif ($resourceType === 'dependencies') {
-            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
-            $attributes['slave'] = "{$this->href}/elements/{$attributes['slave_id']}";
-            $attributes['condition'] = "{$this->href}/conditions/{$attributes['condition_id']}";
-        } elseif ($resourceType === "requirements") {
-            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
-            $attributes['condition'] = "{$this->href}/conditions/{$attributes['condition_id']}";
-        } elseif ($resourceType === "submissions") {
-            $attributes['visitor'] = "{$this->href}/visitors/{$attributes['visitor_id']}";
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
-            $attributes['status'] = "{$this->href}/statuses/{$attributes['status_id']}";
-            $attributes['assignee'] = "{$this->href}/visitors/{$attributes['assignee_id']}";
-            $attributes['submitted'] = strtotime($attributes['submitted']);
-            if (array_key_exists('parent', $attributes)) {
-                $attributes['parent'] = "{$this->href}/submissions/{$attributes['parent_id']}";
-            } else {
-                $attributes['parent'] = null;
-            }
-        } elseif ($resourceType === "recipients") {
-            $attributes["note"] = "{$this->href}/notes/{$attributes['note_id']}";
-
-        } elseif ($resourceType === 'responses') {
-            $attributes['submission'] = "{$this->href}/submissions/{$attributes['submission_id']}";
-            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
-        } elseif ($resourceType === 'stakeholders') {
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
-        } elseif ($resourceType === 'childformrelationships') {
-            $attributes['child'] = "{$this->href}/forms/{$attributes['child_id']}";
-            $attributes['parent'] = "{$this->href}/forms/{$attributes['parent_id']}";
-            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
-            $attributes['reaction'] = "{$this->href}/reactions/{$attributes['reaction_id']}";
-        } elseif ($resourceType === 'elementchoices') {
-            $attributes['element'] = "{$this->href}/elements/{$attributes['element_id']}";
-            $attributes['choice'] = "{$this->href}/choices/{$attributes['choice_id']}";
-        } elseif ($resourceType === 'submissiontags') {
-            $attributes['submission'] = "{$this->href}/submissions/{$attributes['submission_id']}";
-            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
-        } elseif ($resourceType === 'formstatuses') {
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
-            $attributes['status'] = "{$this->href}/statuses/{$attributes['status_id']}";
-        } elseif ($resourceType === 'formtags') {
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
-            $attributes['tag'] = "{$this->href}/tags/{$attributes['tag_id']}";
-        } elseif ($resourceType === 'formreactions') {
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
-            $attributes['reaction'] = "{$this->href}/reactions/{$attributes['reaction_id']}";
-        } elseif ($resourceType === 'dashboardelements') {
-            $attributes['dashboard'] = "{$this->href}/dashboards/{$attributes['dashboard_id']}";
-            $attributes['element'] = "{$this->href}/element/{$attributes['element_id']}";
-        } elseif ($resourceType === 'dashboardforms') {
-            $attributes['dashboard'] = "{$this->href}/dashboards/{$attributes['dashboard_id']}";
-            $attributes['form'] = "{$this->href}/forms/{$attributes['form_id']}";
         }
-
 
         return $attributes;
 

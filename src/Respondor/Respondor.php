@@ -62,11 +62,6 @@ class Respondor
         } elseif ($request->getMethod() === "POST") {                                // CREATE
             $resource = $this->mediator->create($resourceType);
             if($resourceType == "submissions") {
-                // remove submitted
-//                unset($parsedBody["submitted"]);
-//                $parsedBody["submitted"] = "2017-12-25 08:15:35";
-//                $parsedBody["submitted"] = DateTime::date('2017-12-25');
-                // bandaid until we figure out datetime here
                 $parsedBody["submitted"] = null;
             }
 
