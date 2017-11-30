@@ -11,37 +11,12 @@ namespace FormsAPI\Mediator;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\ActiveQuery\Criteria;
 
-use FormsAPI\ChildFormRelationship;
-use FormsAPI\ChoiceValue as Choice;
-use FormsAPI\DashboardElement;
-use FormsAPI\DashboardForm;
-use FormsAPI\Dashboard;
-use FormsAPI\Dependency;
-use FormsAPI\ElementChoice;
-use FormsAPI\Form;
-use FormsAPI\Element;
-use FormsAPI\FormQuery;
-use FormsAPI\Condition;
-use FormsAPI\FormReaction;
-use FormsAPI\FormTag;
-use FormsAPI\FormStatus;
-use FormsAPI\Response;
-use FormsAPI\Note;
-use FormsAPI\Reaction;
-use FormsAPI\Recipient;
-use FormsAPI\Requirement;
-use FormsAPI\Setting;
-use FormsAPI\Stakeholder;
-use FormsAPI\Status;
-use FormsAPI\Submission;
-use FormsAPI\SubmissionTag;
-use FormsAPI\Tag;
-use FormsAPI\Visitor;
-
 
 class PropelMediator implements MediatorInterface
 {
     protected $href;
+
+    protected $classMap;
 
     protected $extraAttributeProviders;
 
@@ -59,36 +34,10 @@ class PropelMediator implements MediatorInterface
         MediatorInterface::COND_NOT_NULL => Criteria::ISNOTNULL,
     ];
 
-    protected static $classMap = [
-        'forms' => Form::class,
-        'elements' => Element::class,
-        'visitors' => Visitor::class,
-        'choices' => Choice::class,
-        'conditions' => Condition::class,
-        'dependencies' => Dependency::class,
-        'requirements' => Requirement::class,
-        'submissions' => Submission::class,
-        'responses' => Response::class,
-        'statuses' => Status::class,
-        'tags' => Tag::class,
-        'notes' => Note::class,
-        'recipients' => Recipient::class,
-        'stakeholders' => Stakeholder::class,
-        'reactions' => Reaction::class,
-        'settings' => Setting::class,
-        'dashboards' => Dashboard::class,
-        'childformrelationships' => ChildFormRelationship::class,
-        'elementchoices' => ElementChoice::class,
-        'submissiontags' => SubmissionTag::class,
-        'formtags' => FormTag::class,
-        'formstatuses' => FormStatus::class,
-        'formreactions' => FormReaction::class,
-        'dashboardelements' => DashboardElement::class,
-        'dashboardforms' => DashboardForm::class,
-    ];
 
-    public function __construct($baseHref, array $extraAttributeProviders = []) {
+    public function __construct($baseHref, array $classMap, array $extraAttributeProviders = []) {
         $this->href = $baseHref;
+        $this->classMap = $classMap;
         $this->extraAttributeProviders = $extraAttributeProviders;
     }
 
@@ -117,7 +66,7 @@ class PropelMediator implements MediatorInterface
     }
 
     public function create($resourceType) {
-        $selectedClass = static::$classMap[$resourceType];
+        $selectedClass = $this->classMap[$resourceType];
 
         $resource = new $selectedClass();
         return $resource;
@@ -132,7 +81,7 @@ class PropelMediator implements MediatorInterface
 
         $attributes = $resource->toArray(TableMap::TYPE_FIELDNAME);
 
-        $resourceType = array_search(get_class($resource), static::$classMap);
+        $resourceType = array_search(get_class($resource), $this->classMap);
 
         $tableMapClass = $resource::TABLE_MAP;
         $columns = $tableMapClass::getTableMap()->getColumns();
@@ -140,7 +89,7 @@ class PropelMediator implements MediatorInterface
         foreach ($columns as $key => $column) {
             if ($column->isForeignKey()) {
                 $foreignKeyName = $column->getName();
-                $foreignResourceType = array_search(trim($column->getRelatedTable()->getClassName(), '\\'), static::$classMap);
+                $foreignResourceType = array_search(trim($column->getRelatedTable()->getClassName(), '\\'), $this->classMap);
                 $foreignReferenceName = substr($foreignKeyName, 0, -3);
 
                 if (array_key_exists($foreignKeyName, $attributes) && $attributes[$foreignKeyName] !== null) {
@@ -164,7 +113,7 @@ class PropelMediator implements MediatorInterface
 
     public function retrieve($resourceType, $key)
     {
-        $queryClass = static::$classMap[$resourceType];
+        $queryClass = $this->classMap[$resourceType];
         $queryClass .= "Query";
         $query = $queryClass::create()->findOneById($key);
         return ($query != null ? $query : false);
@@ -172,7 +121,7 @@ class PropelMediator implements MediatorInterface
 
     public function retrieveList($resourceType)
     {
-        $queryClass = static::$classMap[$resourceType];
+        $queryClass = $this->classMap[$resourceType];
         $queryClass .= "Query";
         $query = $queryClass::create();
         return $query;
@@ -211,7 +160,7 @@ class PropelMediator implements MediatorInterface
 
     public function resourceTypeExists($resourceType)
     {
-        return array_key_exists($resourceType, static::$classMap);
+        return array_key_exists($resourceType, $this->classMap);
     }
 
     public function error()
