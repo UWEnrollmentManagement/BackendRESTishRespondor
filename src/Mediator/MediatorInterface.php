@@ -35,13 +35,6 @@ Interface MediatorInterface
     ];
 
     /**
-     * MediatorInterface constructor.
-     *
-     * @param string $baseHref The base href for the API. Eg: https://example.com/api/v1/
-     */
-    public function __construct($baseHref);
-
-    /**
      * Creates and returns an interface of the indicated $resourceType.
      *
      * Eg: `create("forms")` creates and returns a new form.
