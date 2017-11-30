@@ -25,6 +25,7 @@ class App
             [
                 'forms' => function(array $attributes) {
                     $attributes['elements'] = $attributes['href'] . '/elements/';
+                    return $attributes;
                 }
             ]
             )
