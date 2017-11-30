@@ -43,6 +43,8 @@ class PropelMediator implements MediatorInterface
 {
     protected $href;
 
+    protected $extraAttributeProviders;
+
     protected $errors = [];
 
     protected static $condMap = [
@@ -85,8 +87,9 @@ class PropelMediator implements MediatorInterface
         'dashboardforms' => DashboardForm::class,
     ];
 
-    public function __construct($baseHref) {
+    public function __construct($baseHref, array $extraAttributeProviders = []) {
         $this->href = $baseHref;
+        $this->extraAttributeProviders = $extraAttributeProviders;
     }
 
     public function save($resource)
@@ -152,12 +155,11 @@ class PropelMediator implements MediatorInterface
 
         $attributes["href"] = "{$this->href}/$resourceType/{$attributes['id']}/";
 
-        if ($resourceType === 'forms') {
-            $attributes['elements'] = "{$this->href}/$resourceType/{$attributes['id']}/elements/";
+        if (array_key_exists($resourceType, $this->extraAttributeProviders)) {
+            $attributes = $this->extraAttributeProviders[$resourceType]($attributes);
         }
 
         return $attributes;
-
     }
 
     public function retrieve($resourceType, $key)

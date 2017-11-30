@@ -3,6 +3,7 @@ namespace FormsAPI\App;
 
 require_once __DIR__ . '/../setup.php';
 
+use FormsAPI\Mediator\PropelMediator;
 use FormsAPI\Respondor\Respondor;
 
 class App
@@ -19,7 +20,16 @@ class App
     {
         $app = new \Slim\App;
 
-        $respondor = new Respondor();
+        $respondor = new Respondor(new PropelMediator(
+            '\\',
+            [
+                'forms' => function(array $attributes) {
+                    $attributes['elements'] = $attributes['href'] . '/elements/';
+                    return $attributes;
+                }
+            ]
+            )
+        );
 
         $app->get('/forms/{id}/elements/', $respondor);
 

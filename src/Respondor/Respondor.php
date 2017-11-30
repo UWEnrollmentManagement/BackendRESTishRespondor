@@ -13,12 +13,15 @@ use FormsAPI\Mediator\PropelMediator;
 
 class Respondor
 {
-    /** @var MediatorInterface PropelMediator  */
+    /** @var MediatorInterface $mediator  */
     public $mediator;
 
-    public function __construct()
+    /** @var callable[] $extraAttributeProviders */
+    protected $extraAttributeProviders;
+
+    public function __construct(MediatorInterface $mediator)
     {
-        $this->mediator = new PropelMediator("/");
+        $this->mediator = $mediator;
     }
 
     public function __invoke(Request $request, Response $response)
