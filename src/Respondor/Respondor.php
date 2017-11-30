@@ -1,6 +1,6 @@
 <?php
 
-namespace FormsAPI\Respondor;
+namespace UWDOEM\REST\Backend\Respondor;
 
 require_once __DIR__ . '/../setup.php';
 
