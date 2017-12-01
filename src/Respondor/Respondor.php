@@ -2,16 +2,16 @@
 
 namespace UWDOEM\REST\Backend\Respondor;
 
-require_once __DIR__ . '/../setup.php';
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
-use Faker\Provider\DateTime;
-use FormsAPI\Mediator\MediatorInterface;
-use \Psr\Http\Message\ServerRequestInterface as Request;
-use \Psr\Http\Message\ResponseInterface as Response;
-use FormsAPI\Form;
-use FormsAPI\Mediator\PropelMediator;
+use UWDOEM\REST\Backend\Mediator\MediatorInterface;
 
-class Respondor
+/**
+ * Class Respondor
+ * @package UWDOEM\REST\Backend\Respondor
+ */
+class Respondor implements RespondorInterface
 {
     /** @var MediatorInterface $mediator  */
     public $mediator;
@@ -19,18 +19,22 @@ class Respondor
     /** @var callable[] $extraAttributeProviders */
     protected $extraAttributeProviders;
 
+    /**
+     * Respondor constructor.
+     * @param MediatorInterface $mediator
+     */
     public function __construct(MediatorInterface $mediator)
     {
         $this->mediator = $mediator;
     }
 
+    /**
+     * @param Request  $request
+     * @param Response $response
+     * @return static
+     */
     public function __invoke(Request $request, Response $response)
     {
-
-        // Retrieve the response body from the response
-        // That's a bunch of json that looks like { name: "Mah form", slug: "my-form", successMessage: "you did it!"}
-        // Turn that into an array
-         // Then I think that there is a way to feed that array into the new form in one line
 
         $parsedBody = $request->getParsedBody();
         $routeInfo = $request->getAttribute('routeInfo')[2];
@@ -41,30 +45,39 @@ class Respondor
         $error = null;
         $status = 500;
         $reasonPhrase = "Internal Server Error";
-        $current = $request->getUri()->getPath() . ($request->getUri()->getQuery() ? '?' . $request->getUri()->getQuery() : '');
+
+        $current = $request->getUri()->getPath();
+        if (((string)$request->getUri()->getQuery()) !== '') {
+            $current .= $request->getUri()->getQuery();
+        }
         $next = null;
         $previous = null;
 
         $resourceType = $routeInfo['resourceType'];
-        $resourceId = null;
 
-        $resourceId = array_key_exists('id', $routeInfo) ? $routeInfo['id'] : null;
+        $resourceId = null;
+        if (array_key_exists('id', $routeInfo) === true) {
+            $resourceId = $routeInfo['id'];
+        }
 
         $validResourceType = $this->mediator->resourceTypeExists($resourceType);
 
-        $resource = $validResourceType && $resourceId ? $this->mediator->retrieve($resourceType, $resourceId) : null;
+        $resource = null;
+        if ($validResourceType === true && $resourceId !== null) {
+            $resource = $this->mediator->retrieve($resourceType, $resourceId);
+        }
 
         if ($validResourceType === false) {                                           // Invalid resource type
             $status = 404;
             $success = false;
             $error = ['message' => "No such resource type '$resourceType'."];
-        } elseif ($resourceId && !$resource) {                                       // Invalid resource id
+        } elseif ($resourceId !== null && $resource === null) {                      // Invalid resource id
             $status = 404;
             $success = false;
             $error = ['message' => "No such resource type '$resourceType'" . implode("; ", $this->mediator->error())];
         } elseif ($request->getMethod() === "POST") {                                // CREATE
             $resource = $this->mediator->create($resourceType);
-            if($resourceType == "submissions") {
+            if ($resourceType === "submissions") {
                 $parsedBody["submitted"] = null;
             }
 
@@ -81,17 +94,16 @@ class Respondor
                 $success = false;
                 $error = ['message' => implode("; ", $this->mediator->error())];
             }
-        } elseif ($request->getMethod() === "GET" && $resource) {                  // RETRIEVE
+        } elseif ($request->getMethod() === "GET" && $resource !== null) {                  // RETRIEVE
             $status = 200;
             $success = true;
             $error = null;
 
             $objectData = $this->mediator->getAttributes($resource);
-        } elseif ($request->getMethod() === "GET" && !$resource) {                 // LIST
+        } elseif ($request->getMethod() === "GET" && $resource === null) {                 // LIST
 
-            // don't forget to consider pagination and x amount of results per page
             $collection = $this->mediator->retrieveList($resourceType);
-            if ($collection) {
+            if ($collection !== null) {
                 $status = 200;
                 $success = true;
                 $error = null;
@@ -107,7 +119,8 @@ class Respondor
                 $params['limit'] = $limit;
                 $params['offset'] = $offset;
 
-                if (sizeof($filterOperators) != sizeof($filterAttributes) || sizeof($filterOperators) != sizeof($filterValues)) {
+                if (sizeof($filterOperators) !== sizeof($filterAttributes)
+                    || sizeof($filterOperators) !== sizeof($filterValues)) {
                     $status = 400;
                     $success = false;
                     $error = "There must be an equal number of filter operators, attributes, and values. For ".
@@ -117,24 +130,23 @@ class Respondor
                     $success = false;
                     $error = "Filter operators must be among [" . implode(', ', MediatorInterface::ALL_CONDS) . '], ' .
                         'but you provided operators [' . implode($filterOperators) . '].';
-
-                }
-                else {
+                } else {
                     foreach ($filterOperators as $key => $operator) {
                         $this->mediator->filter(
                             $collection,
                             $filterAttributes[$key],
-                            $filterOperators[$key], $filterValues[$key]
+                            $filterOperators[$key],
+                            $filterValues[$key]
                         );
                     }
                     $this->mediator->limit($collection, $limit)->offset($offset);
 
                     $objectData = [];
-                    foreach($this->mediator->collectionToIterable($collection) as $resource) {
+                    foreach ($this->mediator->collectionToIterable($collection) as $resource) {
                         $objectData[] = $this->mediator->getAttributes($resource);
                     }
 
-                    if (sizeof($objectData) == $limit) {
+                    if (sizeof($objectData) === $limit) {
                         $nextParams = $params;
                         $nextParams['offset'] = $offset + $limit;
                         $next = $request->getUri()->getPath() . '?' . http_build_query($nextParams);
@@ -145,20 +157,16 @@ class Respondor
                         $previousParams['offset'] = max(0, $offset - $limit);
                         $previous = $request->getUri()->getPath() . '?' . http_build_query($previousParams);
                     }
-
                 }
-
-
             } else {
                 $status = 404;
                 $success = false;
                 $error = implode("; ", $this->mediator->error());
             }
-
-        } elseif ($request->getMethod() === "DELETE" && $resource) {               // DELETE
+        } elseif ($request->getMethod() === "DELETE" && $resource !== null) {               // DELETE
             $deletion = $this->mediator->delete($resource);
 
-            if ($deletion) {
+            if ($deletion === true) {
                 $status = 200;
                 $success = true;
                 $error = null;
@@ -167,7 +175,7 @@ class Respondor
                 $success = true;
                 $error = ['message' => implode("; ", $this->mediator->error())];
             }
-        } elseif ($request->getMethod() === "PATCH" && $resource) {                // UPDATE
+        } elseif ($request->getMethod() === "PATCH" && $resource !== null) {                // UPDATE
             $resource = $this->mediator->setAttributes($resource, $parsedBody);
             $resource = $this->mediator->save($resource);
 
@@ -176,11 +184,8 @@ class Respondor
             $error = null;
 
             $objectData = $this->mediator->getAttributes($resource);
-
         }
 
-
-        // let time match 2017-10-03T21:16:08.379Z
         $responseContents = [
             "success" => $success,
             "status" => $status,
