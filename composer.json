@@ -1,4 +1,4 @@
-{  "name": "uwdoem/rest-backend-propel-respondor",
+{  "name": "uwdoem/rest-backend-respondor",
     "description": "Respondor for the UWDOEM REST backend framework",
     "license": "MIT",
     "require": {
