@@ -31,5 +31,14 @@ switch ($arg) {
         $mediator = $argv[2];
         $namespace = $argv[3];
         copy_dir(__DIR__ . "\\file-templates\\$mediator", '', getcwd(), ['{{ namespace }}'], [$namespace]);
+
+        echo("Project initiated. You may now wish to:\n");
+        echo("$: cd schema\n");
+        echo("$: ../vendor/bin/propel model:build\n");
+        echo("$: ../vendor/bin/propel sql:build\n");
+        echo("$: ../vendor/bin/propel sql:insert\n");
+        echo("$: cd ..\n");
+        echo("$: composer dump-autoload\n");
+        echo("$: ./vendor/bin/phpunit test\n");
         break;
 }
