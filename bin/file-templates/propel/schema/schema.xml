@@ -1,0 +1,31 @@
+<database name="default" defaultIdMethod="native"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://xsd.propelorm.org/1.6/database.xsd"
+          namespace="{{ namespace }}"
+>
+
+<table name="status">
+    <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+    <column name="name" type="varchar" size="127" required="true" />
+
+    <behavior name="validate">
+        <parameter name="rule1" value="{column: name, validator: NotNull}" />
+    </behavior>
+</table>
+
+<table name="thing">
+    <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true"/>
+    <column name="name" type="varchar" size="127" required="true" default="false" />
+    <column name="active" type="boolean" required="false" />
+
+    <column name="status_id" type="integer" required="false"/>
+    <foreign-key foreignTable="status" onDelete="setnull">
+        <reference local="status_id" foreign="id"/>
+    </foreign-key>
+
+    <behavior name="validate">
+        <parameter name="rule1" value="{column: name, validator: NotNull}" />
+    </behavior>
+</table>
+
+</database>

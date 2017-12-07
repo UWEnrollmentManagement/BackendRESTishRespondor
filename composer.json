@@ -4,7 +4,7 @@
     "require": {
         "slim/slim": "^3.8",
         "propel/propel": "~2.0@dev",
-        "uwdoem/rest-backend-interfaces": "^0.0.1"
+        "uwdoem/rest-backend-interfaces": "^0.0.4"
     },
     "require-dev": {
         "phpunit/phpunit": "5.4.*",
@@ -16,5 +16,8 @@
         ]
     },
     "autoload-dev": {
-    }
+    },
+    "bin": [
+        "bin/rest-backend-respondor"
+    ]
 }
