@@ -44,7 +44,6 @@ class Respondor implements RespondorInterface
         $success = false;
         $error = null;
         $status = 500;
-        $reasonPhrase = "Internal Server Error";
 
         $current = $request->getUri()->getPath();
         if (((string)$request->getUri()->getQuery()) !== '') {
@@ -71,7 +70,7 @@ class Respondor implements RespondorInterface
             $status = 404;
             $success = false;
             $error = ['message' => "No such resource type '$resourceType'."];
-        } elseif ($resourceId !== null && $resource === null) {                      // Invalid resource id
+        } elseif ($resourceId !== null && (boolean)$resource === false) {                      // Invalid resource id
             $status = 404;
             $success = false;
             $error = ['message' => "No such resource type '$resourceType'" . implode("; ", $this->mediator->error())];
@@ -94,7 +93,7 @@ class Respondor implements RespondorInterface
                 $success = false;
                 $error = ['message' => implode("; ", $this->mediator->error())];
             }
-        } elseif ($request->getMethod() === "GET" && $resource !== null) {                  // RETRIEVE
+        } elseif ($request->getMethod() === "GET" && (boolean)$resource !== false) {                  // RETRIEVE
             $status = 200;
             $success = true;
             $error = null;
@@ -109,8 +108,8 @@ class Respondor implements RespondorInterface
                 $error = null;
 
                 $params = $request->getQueryParams();
-                $limit = $request->getQueryParam('limit', 100);
-                $offset = $request->getQueryParam('offset', 0);
+                $limit = (int)$request->getQueryParam('limit', 100);
+                $offset = (int)$request->getQueryParam('offset', 0);
 
                 $filterOperators = $request->getQueryParam('filter_operator', []);
                 $filterAttributes = $request->getQueryParam('filter_attribute', []);
