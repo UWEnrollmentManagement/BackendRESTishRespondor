@@ -1,0 +1,8 @@
+vendor/
+.idea/
+coverage/
+
+schema/propel.php
+schema/*.sq*
+
+.htaccess

@@ -5,8 +5,8 @@ namespace {{ namespace }}\App;
 
 require_once __DIR__ . '/../setup.php';
 
-use UWDOEM\REST\Backend\Mediator\PropelMediator;
-use UWDOEM\REST\Backend\Respondor\Respondor;
+use UWDOEM\Backend\Mediator\PropelMediator;
+use UWDOEM\Backend\Respondor\RESTishRespondor;
 
 use {{ namespace }}\Thing;
 use {{ namespace }}\Status;
@@ -31,7 +31,7 @@ class App
             'statuses' => Status::class,
         ];
 
-        $respondor = new Respondor(new PropelMediator(
+        $respondor = new RESTishRespondor(new PropelMediator(
                 '\\',
                 $classMap,
                 [

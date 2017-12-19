@@ -33,12 +33,16 @@ switch ($arg) {
         copy_dir(__DIR__ . "\\file-templates\\$mediator", '', getcwd(), ['{{ namespace }}'], [$namespace]);
 
         echo("Project initiated. You may now wish to:\n");
+        echo("$: composer dump-autoload\n");
         echo("$: cd schema\n");
         echo("$: ../vendor/bin/propel model:build\n");
         echo("$: ../vendor/bin/propel sql:build\n");
         echo("$: ../vendor/bin/propel sql:insert\n");
         echo("$: cd ..\n");
         echo("$: composer dump-autoload\n");
-        echo("$: ./vendor/bin/phpunit test\n");
+        echo("$: git remote rm origin  # OR GIT INIT, IF YOU DID NOT CLONE DOWN THIS STARTER PROJECT\n");
+        echo("$: git remote add origin  # PUT ORIGIN FOR YOUR PROJECT HERE\n");
+        echo("$: git add .; git commit -a -m 'Initial commit.'; git push origin master\n");
+        echo("$: # Setup pipelines and tests on EMKojima\n");
         break;
 }

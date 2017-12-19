@@ -19,7 +19,7 @@ return [
             'connections' => [
                 'default' => [
                     'adapter' => 'sqlite',
-                    'dsn' => 'sqlite:' . $dir . '/db.sq3',
+                    'dsn' => 'sqlite:' . $dir . '/db/db.sq3',
                     'user' => 'root',
                     'password' => '',
                     'settings' => [

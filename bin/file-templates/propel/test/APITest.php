@@ -8,8 +8,8 @@ use {{ namespace }}\App\App;
 
 use Propel\Runtime\Propel;
 
-use UWDOEM\REST\Backend\Test\BaseTest;
-use UWDOEM\REST\Backend\Test\APIFaker;
+use UWDOEM\Backend\Test\BaseTest;
+use UWDOEM\Backend\Test\APIFaker;
 
 
 class APITest extends BaseTest

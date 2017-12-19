@@ -1,17 +1,17 @@
 <?php
 
-namespace UWDOEM\REST\Backend\Respondor;
+namespace UWDOEM\Backend\Respondor;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-use UWDOEM\REST\Backend\Mediator\MediatorInterface;
+use UWDOEM\Backend\Mediator\MediatorInterface;
 
 /**
- * Class Respondor
- * @package UWDOEM\REST\Backend\Respondor
+ * Class RESTishRespondor
+ * @package UWDOEM\Backend\Respondor
  */
-class Respondor implements RespondorInterface
+class RESTishRespondor implements RespondorInterface
 {
     /** @var MediatorInterface $mediator  */
     public $mediator;
