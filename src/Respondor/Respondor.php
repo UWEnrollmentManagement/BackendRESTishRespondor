@@ -204,7 +204,7 @@ class RESTishRespondor implements RespondorInterface
         ];
 
         $reasonPhrase = $statusMap[$status];
-        $responseContents = json_encode($responseContents);
+        $responseContents = json_encode($responseContents, JSON_UNESCAPED_SLASHES);
         $response->getBody()->write($responseContents);
         return $response->withStatus($status, $reasonPhrase);
     }
